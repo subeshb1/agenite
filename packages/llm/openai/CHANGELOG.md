@@ -1,5 +1,16 @@
 # @agenite/llm-openai
 
+## 0.3.0-alpha.0
+
+### Minor Changes
+
+- 8a59dfe: Test pre release
+
+### Patch Changes
+
+- Updated dependencies [8a59dfe]
+  - @agenite/llm-core@0.3.0-alpha.0
+
 ## 0.2.0
 
 ### Minor Changes
