@@ -1,5 +1,11 @@
 # @agenite/llm-core
 
+## 0.3.0
+
+### Minor Changes
+
+- 8a59dfe: Test pre release
+
 ## 0.3.0-alpha.0
 
 ### Minor Changes
