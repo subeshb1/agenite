@@ -5,9 +5,15 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "publish-packages": "turbo run build lint && changeset version && changeset publish",
+    "publish-alpha": "turbo build && changeset && changeset pre enter alpha && changeset version && changeset publish && changeset pre exit",
+    "cspell-ignore": "cspell --words-only --unique \"**/*.md\" | sort --ignore-case >> .cspell/project-words.txt",
+    "cspell-check": "cspell"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.11",
+    "cspell": "^8.17.2",
     "prettier": "^3.2.5",
     "turbo": "^2.3.3",
     "typescript": "5.5.4"

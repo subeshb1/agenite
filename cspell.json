@@ -1,0 +1,109 @@
+{
+  "version": "0.2",
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "dictionaryDefinitions": [
+    {
+      "name": "project-words",
+      "path": ".cspell/project-words.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["project-words"],
+  "useGitignore": true,
+  "ignoreRegExpList": [
+    "markdown-link",
+    "Email",
+    "css-class-def",
+    "import-statement",
+    "totp-url",
+    "app-id",
+    "mention",
+    "regions",
+    "component-usage",
+    "date-time-format"
+  ],
+  "ignorePaths": [
+    ".cspell/project-words.txt",
+    ".git/*",
+    ".git/!{COMMIT_EDITMSG,EDITMSG}",
+    ".git/*/**",
+    ".yarn",
+    ".pnp.js",
+    ".vscode",
+    ".gitignore",
+    "coverage",
+    "cspell.json",
+    "__snapshots__",
+    "__recordings__",
+    "**/coverage/**",
+    "**/fixtures/**/*.json",
+    "**/fixtures/sampleCode/*errors/",
+    "**/*.svg",
+    "**/webpack.*.js",
+    "**/pnpm-lock.yaml",
+    "**/*.composition.tsx",
+    "**/*.stories.ts*",
+    "**/dummyDetails.ts",
+    "**/config/*.json",
+    "**/ui/**/*.json",
+    "**/*.jsonc",
+    "**/*.css",
+    "node_modules",
+    "package.json",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "turbo.json"
+  ],
+  "patterns": [
+    {
+      "name": "Email",
+      "pattern": "/<?\\b[\\w.\\-+]{1,64}@\\w{1,63}(\\.\\w{1,63}){1,3}\\b>?/gi"
+    },
+    {
+      "name": "markdown-link",
+      "pattern": "\\[[\\w.\\- ]+\\]\\([\\w/.\\-#]+\\)"
+    },
+    {
+      "name": "css-class-def",
+      "pattern": ".* {"
+    },
+    {
+      "name": "import-statement",
+      "pattern": "import\\s+?(?:(?:(?:[\\w*\\s{},]*)\\s+from\\s+?)|)(?:(?:\".*?\")|(?:'.*?'))[\\s]*?(?:;|$|)"
+    },
+    {
+      "name": "totp-url",
+      "pattern": "otpauth://totp/*"
+    },
+    {
+      "name": "app-id",
+      "pattern": "omb6iqws"
+    },
+    {
+      "name": "regions",
+      "pattern": "(\\B{([ ]+|\\n|))(([ ]+|)\\w+:([ ]+|)'(\\w+).*')"
+    },
+    {
+      "name": "mention",
+      "pattern": "\\B@\\w+"
+    },
+    {
+      "name": "component-usage",
+      "pattern": "(\\B<\\w+)(.*)(([ ]+|)(|\\n)([ ]+)(\\w+)((([ ]+|)=([ ]+|)(.*))|)([ ]+|)(|\\n))+"
+    },
+    {
+      "name": "date-time-format",
+      "pattern": "YYYY-MM-DD.*"
+    }
+  ],
+  "overrides": [
+    {
+      "filename": "*.har",
+      "languageId": "json",
+      "dictionaries": ["http", "node", "typescript"],
+      "words": ["etag", "maxage", "ratelimit", "nosniff"]
+    }
+  ],
+  "enableFiletypes": ["shellscript"]
+}
