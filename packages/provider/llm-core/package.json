@@ -1,6 +1,6 @@
 {
-  "name": "@agenite/llm-anthropic",
-  "version": "0.1.0",
+  "name": "@agenite/llm-core",
+  "version": "0.0.0",
   "private": false,
   "type": "module",
   "exports": {
@@ -11,10 +11,6 @@
     "check-types": "tsc --noEmit",
     "build": "tsc",
     "dev": "tsc --watch"
-  },
-  "dependencies": {
-    "@agenite/llm-core": "workspace:*",
-    "@anthropic-ai/sdk": "^0.17.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

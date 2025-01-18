@@ -1,11 +1,11 @@
-import OpenAI from 'openai';
+import OpenAI from "openai";
 import {
   LLMProvider,
   Message,
   BaseGenerateOptions,
   AIResponse,
-} from '@agenite/llm-core';
-import { type OpenAIConfig } from './types';
+} from "@agenite/llm-core";
+import { type OpenAIConfig } from "./types";
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
@@ -18,12 +18,12 @@ export class OpenAIProvider implements LLMProvider {
       baseURL: config.baseURL,
       maxRetries: config.maxRetries,
     });
-    this.model = config.model ?? 'gpt-4-turbo-preview';
+    this.model = config.model ?? "gpt-4-turbo-preview";
   }
 
   async *generateResponse(
     messages: Message[],
-    options: BaseGenerateOptions = {}
+    options: BaseGenerateOptions = {},
   ): AsyncGenerator<AIResponse> {
     const stream = await this.client.chat.completions.create({
       model: this.model,
@@ -33,10 +33,10 @@ export class OpenAIProvider implements LLMProvider {
       stream: true,
     });
 
-    let accumulatedContent = '';
+    let accumulatedContent = "";
 
     for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || '';
+      const content = chunk.choices[0]?.delta?.content || "";
       accumulatedContent += content;
 
       if (options.onToken) {
@@ -47,7 +47,7 @@ export class OpenAIProvider implements LLMProvider {
         content: accumulatedContent,
         isComplete: false,
         metadata: {
-          provider: 'openai',
+          provider: "openai",
           model: this.model,
         },
       };
@@ -57,7 +57,7 @@ export class OpenAIProvider implements LLMProvider {
       content: accumulatedContent,
       isComplete: true,
       metadata: {
-        provider: 'openai',
+        provider: "openai",
         model: this.model,
       },
     };

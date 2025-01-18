@@ -4,4 +4,4 @@ export interface OpenAIConfig {
   model?: string;
   baseURL?: string;
   maxRetries?: number;
-} 
+}

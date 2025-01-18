@@ -1,4 +1,4 @@
-export type Role = 'system' | 'user' | 'assistant';
+export type Role = "system" | "user" | "assistant";
 
 export interface Message {
   role: Role;
@@ -32,6 +32,6 @@ export interface BaseGenerateOptions extends StreamingOptions {
 export interface LLMProvider {
   generateResponse(
     messages: Message[],
-    options?: BaseGenerateOptions
+    options?: BaseGenerateOptions,
   ): AsyncGenerator<AIResponse>;
-} 
+}

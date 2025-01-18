@@ -1,11 +1,11 @@
-import Anthropic from '@anthropic-ai/sdk';
+import Anthropic from "@anthropic-ai/sdk";
 import {
   type LLMProvider,
   type Message,
   type BaseGenerateOptions,
   type AIResponse,
-} from '@agenite/llm-core';
-import { type AnthropicConfig } from './types';
+} from "@agenite/llm-core";
+import { type AnthropicConfig } from "./types";
 
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
@@ -15,17 +15,17 @@ export class AnthropicProvider implements LLMProvider {
     this.client = new Anthropic({
       apiKey: config.apiKey,
     });
-    this.model = config.model ?? 'claude-3-opus-20240229';
+    this.model = config.model ?? "claude-3-opus-20240229";
   }
 
   async *generateResponse(
     messages: Message[],
-    options: BaseGenerateOptions = {}
+    options: BaseGenerateOptions = {},
   ): AsyncGenerator<AIResponse> {
     const stream = await this.client.messages.create({
       model: this.model,
       messages: messages.map((msg) => ({
-        role: msg.role === 'user' ? 'user' : 'assistant',
+        role: msg.role === "user" ? "user" : "assistant",
         content: msg.content,
       })),
       temperature: options.temperature ?? 0.7,
@@ -33,10 +33,10 @@ export class AnthropicProvider implements LLMProvider {
       stream: true,
     });
 
-    let accumulatedContent = '';
+    let accumulatedContent = "";
 
     for await (const chunk of stream) {
-      if (chunk.type === 'content_block_delta') {
+      if (chunk.type === "content_block_delta") {
         const content = chunk.delta.text;
         accumulatedContent += content;
 
@@ -48,7 +48,7 @@ export class AnthropicProvider implements LLMProvider {
           content: accumulatedContent,
           isComplete: false,
           metadata: {
-            provider: 'anthropic',
+            provider: "anthropic",
             model: this.model,
           },
         };
@@ -59,7 +59,7 @@ export class AnthropicProvider implements LLMProvider {
       content: accumulatedContent,
       isComplete: true,
       metadata: {
-        provider: 'anthropic',
+        provider: "anthropic",
         model: this.model,
       },
     };
