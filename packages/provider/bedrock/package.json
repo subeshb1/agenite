@@ -1,6 +1,6 @@
 {
   "name": "@agenite/bedrock",
-  "version": "0.0.2-alpha.2",
+  "version": "0.1.0",
   "description": "AWS Bedrock provider for Agenite",
   "private": false,
   "type": "module",
