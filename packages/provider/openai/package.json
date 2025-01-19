@@ -13,7 +13,7 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@agenite/llm-core": "workspace:*",
+    "@agenite/llm": "workspace:*",
     "openai": "*"
   },
   "devDependencies": {

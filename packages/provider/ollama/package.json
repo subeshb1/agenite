@@ -1,5 +1,5 @@
 {
-  "name": "@agenite/llm-core",
+  "name": "@agenite/ollama",
   "version": "0.0.0",
   "private": false,
   "type": "module",
@@ -12,12 +12,17 @@
     "build": "tsc",
     "dev": "tsc --watch"
   },
+  "dependencies": {
+    "@agenite/llm": "workspace:*",
+    "ollama": "^0.5.12",
+    "openai": "*"
+  },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20.11.24",
-    "typescript": "^5.3.3",
-    "tsup": "^8.0.2"
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public",

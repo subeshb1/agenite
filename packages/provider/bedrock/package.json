@@ -1,5 +1,5 @@
 {
-  "name": "@agenite/anthropic",
+  "name": "@agenite/bedrock",
   "version": "0.0.0",
   "private": false,
   "type": "module",
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@agenite/llm": "workspace:*",
-    "@anthropic-ai/sdk": "^0.33.1"
+    "@aws-sdk/client-bedrock-runtime": "^3.731.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

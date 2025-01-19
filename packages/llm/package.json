@@ -1,5 +1,5 @@
 {
-  "name": "@agenite/anthropic",
+  "name": "@agenite/llm",
   "version": "0.0.0",
   "private": false,
   "type": "module",
@@ -12,16 +12,12 @@
     "build": "tsc",
     "dev": "tsc --watch"
   },
-  "dependencies": {
-    "@agenite/llm": "workspace:*",
-    "@anthropic-ai/sdk": "^0.33.1"
-  },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20.11.24",
-    "tsup": "^8.0.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "tsup": "^8.0.2"
   },
   "publishConfig": {
     "access": "public",
