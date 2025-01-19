@@ -5,15 +5,17 @@
     "docs": "0.1.0",
     "web": "0.1.0",
     "@repo/eslint-config": "0.0.1",
+    "@repo/tsup-config": "0.0.1",
     "@repo/typescript-config": "0.0.1",
-    "@agenite/llm": "0.1.0-alpha.0",
-    "@agenite/anthropic": "0.1.0-alpha.0",
-    "@agenite/bedrock": "0.1.0-alpha.0",
-    "@agenite/ollama": "0.1.0-alpha.0",
-    "@agenite/openai": "0.1.0-alpha.0",
+    "@agenite/llm": "0.0.1",
+    "@agenite/anthropic": "0.0.1",
+    "@agenite/bedrock": "0.0.1",
+    "@agenite/ollama": "0.0.1",
+    "@agenite/openai": "0.0.1",
     "@repo/ui": "0.0.0"
   },
   "changesets": [
-    "orange-brooms-guess"
+    "orange-brooms-guess",
+    "shy-beers-smash"
   ]
 }

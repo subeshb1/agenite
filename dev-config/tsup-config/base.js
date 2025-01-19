@@ -16,7 +16,7 @@ export function createTsupConfig(options = undefined) {
     treeshake: true,
     outExtension({ format }) {
       return {
-        js: format === 'cjs' ? '.js' : '.mjs',
+        js: format === 'cjs' ? '.cjs' : '.js',
       };
     },
     ...options,
