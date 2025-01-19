@@ -1,21 +1,21 @@
-import { BaseLLMConfig, ToolDefinition } from "@agenite/llm";
+import { BaseLLMConfig, ToolDefinition } from '@agenite/llm';
 
 /**
  * Available Ollama model types
  */
 export type OllamaModel =
-  | "llama3.2"
-  | "llama2"
-  | "codellama"
-  | "mistral"
-  | "mixtral"
-  | "phi"
-  | "neural-chat"
-  | "starling-lm"
-  | "openchat"
-  | "dolphin-phi"
-  | "stable-beluga"
-  | string; // Allow custom models
+  | 'llama3.2'
+  | 'llama2'
+  | 'codellama'
+  | 'mistral'
+  | 'mixtral'
+  | 'phi'
+  | 'neural-chat'
+  | 'starling-lm'
+  | 'openchat'
+  | 'dolphin-phi'
+  | 'stable-beluga'
+  | (string & {}); // Allow custom models
 
 /**
  * Ollama-specific configuration options
@@ -61,4 +61,4 @@ export interface OllamaConfig extends BaseLLMConfig {
     top_k?: number;
     top_p?: number;
   };
-} 
+}

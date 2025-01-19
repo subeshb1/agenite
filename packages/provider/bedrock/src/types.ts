@@ -25,7 +25,7 @@ export type BedrockModel =
   | 'amazon.titan-text-lite-v1'
   | 'meta.llama2-70b-chat-v1'
   | 'meta.llama2-13b-chat-v1'
-  | string; // Allow custom models
+  | (string & {}); // Allow custom models
 
 /**
  * Bedrock-specific configuration options
@@ -63,4 +63,11 @@ export interface BedrockConfig extends BaseLLMConfig {
   };
 }
 
-export type BedrockStopReason = 'max_tokens' | 'stop_sequence' | 'end_turn' | 'tool_use' | 'content_filtered' | 'guardrail_intervened' | null; 
+export type BedrockStopReason =
+  | 'max_tokens'
+  | 'stop_sequence'
+  | 'end_turn'
+  | 'tool_use'
+  | 'content_filtered'
+  | 'guardrail_intervened'
+  | null;
