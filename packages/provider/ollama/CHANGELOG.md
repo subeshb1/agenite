@@ -1,5 +1,11 @@
 # @agenite/ollama
 
+## 0.1.1
+
+### Patch Changes
+
+- aab69b3: Use string literal union for model names
+
 ## 0.1.0
 
 ### Minor Changes
