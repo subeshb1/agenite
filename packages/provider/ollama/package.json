@@ -1,28 +1,36 @@
 {
   "name": "@agenite/ollama",
-  "version": "0.1.0-alpha.0",
+  "version": "0.0.1",
+  "description": "Ollama provider for Agenite",
   "private": false,
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "build": "tsc",
+    "build": "tsup",
     "dev": "tsc --watch"
   },
   "dependencies": {
     "@agenite/llm": "workspace:*",
-    "ollama": "^0.5.12",
-    "openai": "*"
+    "ollama": "^0.5.12"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
+    "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.11.24",
-    "tsup": "^8.0.2",
-    "typescript": "^5.3.3"
+    "@types/node": "^20.17.14",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.3"
   },
   "publishConfig": {
     "access": "public",

@@ -1,0 +1,19 @@
+{
+  "mode": "exit",
+  "tag": "alpha",
+  "initialVersions": {
+    "docs": "0.1.0",
+    "web": "0.1.0",
+    "@repo/eslint-config": "0.0.1",
+    "@repo/typescript-config": "0.0.1",
+    "@agenite/llm": "0.1.0-alpha.0",
+    "@agenite/anthropic": "0.1.0-alpha.0",
+    "@agenite/bedrock": "0.1.0-alpha.0",
+    "@agenite/ollama": "0.1.0-alpha.0",
+    "@agenite/openai": "0.1.0-alpha.0",
+    "@repo/ui": "0.0.0"
+  },
+  "changesets": [
+    "orange-brooms-guess"
+  ]
+}
