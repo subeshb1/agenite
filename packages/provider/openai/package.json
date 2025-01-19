@@ -1,6 +1,6 @@
 {
   "name": "@agenite/openai",
-  "version": "0.0.2-alpha.1",
+  "version": "0.0.2-alpha.2",
   "description": "OpenAI provider for Agenite",
   "private": false,
   "type": "module",
@@ -34,5 +34,11 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
-  }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "CHANGELOG.md"
+  ]
 }

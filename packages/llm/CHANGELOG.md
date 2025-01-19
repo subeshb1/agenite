@@ -1,5 +1,11 @@
 # @agenite/llm
 
+## 0.0.2-alpha.2
+
+### Patch Changes
+
+- 59218a1: Remove unrequired files from publish
+
 ## 0.0.2-alpha.1
 
 ### Patch Changes
