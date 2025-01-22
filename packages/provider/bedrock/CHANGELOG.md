@@ -1,5 +1,13 @@
 # @agenite/bedrock
 
+## 0.1.2
+
+### Patch Changes
+
+- 7a46a49: Add new methods for simple usage
+- Updated dependencies [7a46a49]
+  - @agenite/llm@0.1.1
+
 ## 0.1.1
 
 ### Patch Changes

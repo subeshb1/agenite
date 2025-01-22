@@ -1,5 +1,11 @@
 # @agenite/llm
 
+## 0.1.1
+
+### Patch Changes
+
+- 7a46a49: Add new methods for simple usage
+
 ## 0.1.0
 
 ### Minor Changes
