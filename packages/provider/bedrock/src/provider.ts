@@ -9,8 +9,13 @@ import {
   LLMProvider,
   BaseMessage,
   GenerateResponse,
-  ToolDefinition,
   ToolUseBlock,
+  GenerateOptions,
+  PartialReturn,
+  convertStringToMessages,
+  generateFromIterate,
+  streamFromIterate,
+  IterateGenerateOptions,
 } from '../../../llm/src';
 import { BedrockConfig } from './types';
 import { mapContent, mapStopReason, convertToMessageFormat } from './utils';
@@ -36,37 +41,37 @@ export class BedrockProvider implements LLMProvider {
     this.toolAdapter = new BedrockToolAdapter();
   }
 
-  async *generate(params: {
-    messages: BaseMessage[];
-    tools?: ToolDefinition[];
-    temperature?: number;
-    maxTokens?: number;
-    stopSequences?: string[];
-    systemPrompt?: string;
-    extraContext?: Record<string, unknown>;
-    stream?: boolean;
-  }): AsyncGenerator<
-    {
-      type: 'partial';
-      content:
-        | [{ type: 'text'; text: string }]
-        | [{ type: 'toolUse'; input: ToolUseBlock }];
-    },
-    GenerateResponse,
-    unknown
-  > {
+  async generate(
+    input: string,
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse> {
+    return generateFromIterate(this, input, options);
+  }
+
+  async *stream(
+    input: string,
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn> {
+    yield* streamFromIterate(this, input, options);
+  }
+
+  async *iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
     const {
-      messages,
       tools,
       systemPrompt,
       temperature = this.config.temperature ?? 0.7,
       maxTokens = this.config.maxTokens ?? DEFAULT_MAX_TOKENS,
       stopSequences,
       stream = false,
-    } = params;
-
+    } = options;
     const startTime = Date.now();
-    const transformedMessages = convertToMessageFormat(messages);
+
+    const messageArray =
+      typeof input === 'string' ? convertStringToMessages(input) : input;
+    const transformedMessages = convertToMessageFormat(messageArray);
     const providerTools = tools?.map((tool) =>
       this.toolAdapter.convertToProviderTool(tool)
     );
@@ -135,14 +140,12 @@ export class BedrockProvider implements LLMProvider {
               );
               yield {
                 type: 'partial',
-                content: [
-                  {
-                    type: 'toolUse',
-                    input: mapContent([
-                      contentBlocks[event.contentBlockStop.contentBlockIndex]!,
-                    ])[0] as ToolUseBlock,
-                  },
-                ],
+                content: {
+                  type: 'toolUse',
+                  input: mapContent([
+                    contentBlocks[event.contentBlockStop.contentBlockIndex]!,
+                  ])[0] as ToolUseBlock,
+                },
               };
             }
 
@@ -152,7 +155,7 @@ export class BedrockProvider implements LLMProvider {
             ) {
               yield {
                 type: 'partial',
-                content: [{ type: 'text' as const, text: buffer }],
+                content: { type: 'text', text: buffer },
               };
               buffer = '';
             }
@@ -185,7 +188,7 @@ export class BedrockProvider implements LLMProvider {
               if (buffer.length > 10) {
                 yield {
                   type: 'partial',
-                  content: [{ type: 'text', text: buffer }],
+                  content: { type: 'text', text: buffer },
                 };
                 buffer = '';
               }

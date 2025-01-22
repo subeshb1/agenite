@@ -56,8 +56,7 @@ async function main() {
   ];
 
   // Generate a response
-  const generator = provider.generate({
-    messages,
+  const generator = provider.iterate(messages, {
     tools: [calculatorTool],
     stream: true,
   });
@@ -67,12 +66,10 @@ async function main() {
   let result = await generator.next();
   while (!result.done) {
     const chunk = result.value;
-    if ('content' in chunk) {
-      if ('text' in chunk.content[0]) {
-        process.stdout.write(chunk.content[0].text);
-      } else {
-        console.log(chunk.content[0]);
-      }
+    if ('text' in chunk.content) {
+      process.stdout.write(chunk.content.text);
+    } else {
+      console.log(chunk.content);
     }
     result = await generator.next();
   }

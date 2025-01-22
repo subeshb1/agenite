@@ -47,41 +47,26 @@ function calculate(operation: string, a: number, b: number): number {
 async function main() {
   // Initialize the provider
   const provider = new OllamaProvider({
-    model: 'llama3.2',
+    model: 'deepseek-r1:8b',
     host: 'http://localhost:11434',
     temperature: 0.7,
     maxTokens: 2048,
   });
 
-  // Example conversation with tool use
-  const messages: BaseMessage[] = [
-    {
-      role: 'system',
-      content: [
-        {
-          type: 'text',
-          text: 'You are a helpful AI assistant with access to a calculator tool. Use it to help users with math problems.',
-        },
-      ],
-    },
+  // Process the conversation
+  let currentMessages: BaseMessage[] = [
     {
       role: 'user',
-      content: [
-        {
-          type: 'text',
-          text: 'What is 123 multiplied by 456?',
-        },
-      ],
+      content: [{ type: 'text', text: 'What is 123 multiplied by 456?' }],
     },
   ];
 
-  // Process the conversation
-  let currentMessages = messages;
   while (true) {
-    const generator = provider.generate({
-      messages: currentMessages,
+    const generator = provider.iterate(currentMessages, {
       tools: [calculatorTool],
       stream: false,
+      systemPrompt:
+        'You are a helpful AI assistant with access to a calculator tool. Use it to help users with math problems.',
     });
 
     const response = await generator.next();
@@ -110,7 +95,6 @@ async function main() {
         a: number;
         b: number;
       };
-      console.log('Tool use', toolUse);
       try {
         const calculationResult = calculate(input.operation, input.a, input.b);
 

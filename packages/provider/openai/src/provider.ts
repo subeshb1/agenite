@@ -1,11 +1,18 @@
 import OpenAI from 'openai';
+import {
+  convertStringToMessages,
+  generateFromIterate,
+  streamFromIterate,
+} from '@agenite/llm';
 import type {
   LLMProvider,
   BaseMessage,
   GenerateResponse,
   ContentBlock,
   StopReason,
-  ToolDefinition,
+  GenerateOptions,
+  PartialReturn,
+  IterateGenerateOptions,
 } from '@agenite/llm';
 import type { OpenAIConfig } from './types';
 
@@ -90,33 +97,38 @@ export class OpenAIProvider implements LLMProvider {
     this.model = config.model ?? 'gpt-4-turbo-preview';
   }
 
-  async *generate(params: {
-    messages: BaseMessage[];
-    tools?: ToolDefinition[];
-    temperature?: number;
-    maxTokens?: number;
-    stopSequences?: string[];
-    systemPrompt?: string;
-    extraContext?: Record<string, unknown>;
-    stream?: boolean;
-  }): AsyncGenerator<
-    { type: 'partial'; content: [{ type: 'text'; text: string }] },
-    GenerateResponse,
-    unknown
-  > {
+  async generate(
+    input: string,
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse> {
+    return generateFromIterate(this, input, options);
+  }
+
+  async *stream(
+    input: string,
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn> {
+    yield* streamFromIterate(this, input, options);
+  }
+
+  async *iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
     const {
-      messages,
       tools,
       systemPrompt,
       maxTokens,
       temperature,
       stopSequences,
       stream = false,
-    } = params;
+    } = options;
     const startTime = Date.now();
 
     try {
-      const transformedMessages = convertMessages(messages);
+      const messageArray =
+        typeof input === 'string' ? convertStringToMessages(input) : input;
+      const transformedMessages = convertMessages(messageArray);
       if (systemPrompt) {
         transformedMessages.unshift({
           role: 'system',
@@ -176,7 +188,7 @@ export class OpenAIProvider implements LLMProvider {
           if (buffer.length > 10) {
             yield {
               type: 'partial',
-              content: [{ type: 'text', text: buffer }],
+              content: { type: 'text', text: buffer },
             };
             buffer = '';
           }
@@ -186,7 +198,7 @@ export class OpenAIProvider implements LLMProvider {
       if (buffer.length > 0) {
         yield {
           type: 'partial',
-          content: [{ type: 'text', text: buffer }],
+          content: { type: 'text', text: buffer },
         };
       }
 

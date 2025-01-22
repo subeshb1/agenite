@@ -84,6 +84,31 @@ export interface BaseLLMConfig {
   timeout?: number;
 }
 
+export interface PartialReturn {
+  type: 'partial';
+  content:
+    | { type: 'text'; text: string }
+    | { type: 'toolUse'; input: ToolUseBlock };
+}
+
+/**
+ * Options for generation
+ */
+export interface GenerateOptions {
+  tools?: ToolDefinition[];
+  temperature?: number;
+  maxTokens?: number;
+  stopSequences?: string[];
+  systemPrompt?: string;
+}
+
+/**
+ * Options for iterate method
+ */
+export interface IterateGenerateOptions extends GenerateOptions {
+  stream: boolean;
+}
+
 /**
  * Core LLM provider interface
  */
@@ -91,25 +116,26 @@ export interface LLMProvider {
   name: string;
   version?: string;
 
-  generate(params: {
-    messages: BaseMessage[];
-    tools?: ToolDefinition[];
-    temperature?: number;
-    maxTokens?: number;
-    stopSequences?: string[];
-    systemPrompt?: string;
-    extraContext?: Record<string, unknown>;
-    stream?: boolean;
-  }): AsyncGenerator<
-    {
-      type: 'partial';
-      content:
-        | [{ type: 'text'; text: string }]
-        | [{ type: 'toolUse'; input: ToolUseBlock }];
-    },
-    GenerateResponse,
-    unknown
-  >;
+  /**
+   * Simple text generation with full response
+   */
+  generate(input: string, options?: Partial<GenerateOptions>): Promise<GenerateResponse>;
+
+  /**
+   * Simple streaming with partial returns
+   */
+  stream(
+    input: string,
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown>;
+
+  /**
+   * Low-level generation API with full control
+   */
+  iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown>;
 }
 
 /**
