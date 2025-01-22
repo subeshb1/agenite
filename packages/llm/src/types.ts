@@ -85,7 +85,7 @@ export interface BaseLLMConfig {
 
 export type PartialReturn =
   | { type: 'text'; text: string }
-  | { type: 'toolUse'; input: ToolUseBlock };
+  | { type: 'toolUse'; toolUse: ToolUseBlock };
 
 /**
  * Options for generation

@@ -6,7 +6,6 @@ import type {
   GenerateOptions,
   PartialReturn,
   ContentBlock,
-  ToolUseBlock,
 } from '@agenite/llm';
 import type { OllamaConfig, OllamaMessage } from './types';
 import {
@@ -171,11 +170,12 @@ export class OllamaProvider extends BaseLLMProvider {
           for (const toolCall of chunk.message.tool_calls) {
             const tool = {
               type: 'toolUse' as const,
-              content: createToolUseContent(
+              toolUse: createToolUseContent(
                 toolCall.function.name,
                 toolCall.function.arguments
               ),
             };
+
             toolCalls.push(toolCall);
 
             yield tool;

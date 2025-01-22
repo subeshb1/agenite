@@ -228,7 +228,7 @@ export class BedrockProvider extends BaseLLMProvider {
         block.toolUse.input = JSON.parse(String(block.toolUse.input));
         const toolUseResult = {
           type: 'toolUse' as const,
-          input: mapContent([block])[0] as ToolUseBlock,
+          toolUse: mapContent([block])[0] as ToolUseBlock,
         };
 
         if (state.buffer.length > 10) {

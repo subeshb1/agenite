@@ -1,5 +1,4 @@
 import { BaseLLMConfig, ToolDefinition } from '@agenite/llm';
-import type { Tool } from 'ollama';
 
 /**
  * Available Ollama model types

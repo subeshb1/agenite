@@ -137,24 +137,6 @@ export function extractImages(blocks: ContentBlock[]): string[] {
 }
 
 /**
- * Creates a tool use message in Ollama's format
- */
-function createToolUseMessage(toolUse: ToolUseBlock): OllamaMessage {
-  return {
-    role: 'assistant',
-    content: '',
-    tool_calls: [
-      {
-        function: {
-          name: toolUse.name,
-          arguments: toolUse.input as Record<string, unknown>,
-        },
-      },
-    ],
-  };
-}
-
-/**
  * Creates a tool result message in Ollama's format
  */
 function createToolResultMessage(toolResult: ToolResultBlock): OllamaMessage {
