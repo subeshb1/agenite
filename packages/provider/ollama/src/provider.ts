@@ -1,9 +1,5 @@
 import { Ollama, type Tool } from 'ollama';
-import {
-  convertStringToMessages,
-  generateFromIterate,
-  streamFromIterate,
-} from '@agenite/llm';
+import { convertStringToMessages, iterateFromMethods } from '@agenite/llm';
 import type {
   LLMProvider,
   BaseMessage,
@@ -227,134 +223,29 @@ export class OllamaProvider implements LLMProvider {
     input: string,
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
-    return generateFromIterate(this, input, options);
-  }
-
-  async *stream(
-    input: string,
-    options?: Partial<GenerateOptions>
-  ): AsyncGenerator<PartialReturn> {
-    yield* streamFromIterate(this, input, options);
-  }
-
-  async *iterate(
-    input: string | BaseMessage[],
-    options: IterateGenerateOptions
-  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    const {
-      tools,
-      systemPrompt,
-      temperature = this.config.temperature ?? 0.7,
-      maxTokens = this.config.maxTokens,
-      stopSequences,
-      stream = false,
-    } = options;
-
     const startTime = Date.now();
-    const messageArray =
-      typeof input === 'string' ? convertStringToMessages(input) : input;
-    const ollamaMessages = convertMessages(messageArray);
-
-    if (systemPrompt) {
-      ollamaMessages.unshift({
-        role: 'system',
-        content: systemPrompt,
-      });
-    }
-
     try {
-      if (stream) {
-        const response = await this.client.chat({
-          model: this.config.model,
-          messages: ollamaMessages,
-          stream: true,
-          options: {
-            temperature,
-            num_predict: maxTokens,
-            stop: stopSequences,
-            ...this.config.parameters,
-          },
-          tools: convertToolDefinitions(tools),
+      const messageArray = convertStringToMessages(input);
+      const ollamaMessages = convertMessages(messageArray);
+
+      if (options?.systemPrompt) {
+        ollamaMessages.unshift({
+          role: 'system',
+          content: options.systemPrompt,
         });
-
-        let buffer = '';
-        let finalResponse:
-          | undefined
-          | Awaited<ReturnType<typeof this.client.chat>> = undefined;
-
-        for await (const chunk of response) {
-          if (chunk.message?.tool_calls?.length) {
-            // If we get tool calls in a stream, return them immediately
-            return {
-              content: convertFunctionCallsToToolUses(chunk.message.tool_calls),
-              tokens: [
-                {
-                  inputTokens: chunk.prompt_eval_count ?? 0,
-                  outputTokens: chunk.eval_count ?? 0,
-                  modelId: this.config.model,
-                },
-              ],
-              duration: Date.now() - startTime,
-              stopReason: 'toolUse',
-            };
-          }
-
-          const content = chunk.message?.content;
-          if (content) {
-            buffer += content;
-
-            // Yield chunks when buffer has reasonable size
-            if (buffer.length > 4) {
-              yield {
-                type: 'partial',
-                content: { type: 'text', text: buffer },
-              };
-              buffer = '';
-            }
-          }
-          finalResponse = chunk;
-        }
-
-        // Yield any remaining content in buffer
-        if (buffer.length > 0) {
-          yield {
-            type: 'partial',
-            content: { type: 'text', text: buffer },
-          };
-        }
-        if (!finalResponse) {
-          throw new Error('No final response received');
-        }
-
-        // Return final response with metadata
-        return {
-          content: [
-            { type: 'text', text: finalResponse.message?.content ?? '' },
-          ],
-          tokens: [
-            {
-              inputTokens: finalResponse.prompt_eval_count ?? 0,
-              outputTokens: finalResponse.eval_count ?? 0,
-              modelId: this.config.model,
-            },
-          ],
-          duration: Date.now() - startTime,
-          stopReason: mapStopReason(finalResponse.done ? 'stop' : null),
-        };
       }
 
-      // Handle non-streaming response
       const response = await this.client.chat({
         model: this.config.model,
         messages: ollamaMessages,
         stream: false,
         options: {
-          temperature,
-          num_predict: maxTokens,
-          stop: stopSequences,
+          temperature: options?.temperature,
+          num_predict: options?.maxTokens,
+          stop: options?.stopSequences,
           ...this.config.parameters,
         },
-        tools: convertToolDefinitions(tools),
+        tools: convertToolDefinitions(options?.tools),
       });
 
       // Handle tool calls
@@ -391,5 +282,110 @@ export class OllamaProvider implements LLMProvider {
         ? new Error(`Ollama generation failed: ${error.message}`)
         : new Error('Ollama generation failed with unknown error');
     }
+  }
+
+  async *stream(
+    input: string,
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    const startTime = Date.now();
+    try {
+      const messageArray = convertStringToMessages(input);
+      const ollamaMessages = convertMessages(messageArray);
+      let buffer = '';
+      let finalResponse:
+        | undefined
+        | Awaited<ReturnType<typeof this.client.chat>> = undefined;
+
+      if (options?.systemPrompt) {
+        ollamaMessages.unshift({
+          role: 'system',
+          content: options.systemPrompt,
+        });
+      }
+
+      const response = await this.client.chat({
+        model: this.config.model,
+        messages: ollamaMessages,
+        stream: true,
+        options: {
+          temperature: options?.temperature,
+          num_predict: options?.maxTokens,
+          stop: options?.stopSequences,
+          ...this.config.parameters,
+        },
+        tools: convertToolDefinitions(options?.tools),
+      });
+
+      for await (const chunk of response) {
+        if (chunk.message?.tool_calls?.length) {
+          // If we get tool calls in a stream, return them immediately
+          return {
+            content: convertFunctionCallsToToolUses(chunk.message.tool_calls),
+            tokens: [
+              {
+                inputTokens: chunk.prompt_eval_count ?? 0,
+                outputTokens: chunk.eval_count ?? 0,
+                modelId: this.config.model,
+              },
+            ],
+            duration: Date.now() - startTime,
+            stopReason: 'toolUse',
+          };
+        }
+
+        const content = chunk.message?.content;
+        if (content) {
+          buffer += content;
+
+          // Yield chunks when buffer has reasonable size
+          if (buffer.length > 4) {
+            yield {
+              type: 'partial',
+              content: { type: 'text', text: buffer },
+            };
+            buffer = '';
+          }
+        }
+        finalResponse = chunk;
+      }
+
+      // Yield any remaining content in buffer
+      if (buffer.length > 0) {
+        yield {
+          type: 'partial',
+          content: { type: 'text', text: buffer },
+        };
+      }
+      if (!finalResponse) {
+        throw new Error('No final response received');
+      }
+
+      // Return final response with metadata
+      return {
+        content: [{ type: 'text', text: finalResponse.message?.content ?? '' }],
+        tokens: [
+          {
+            inputTokens: finalResponse.prompt_eval_count ?? 0,
+            outputTokens: finalResponse.eval_count ?? 0,
+            modelId: this.config.model,
+          },
+        ],
+        duration: Date.now() - startTime,
+        stopReason: mapStopReason(finalResponse.done ? 'stop' : null),
+      };
+    } catch (error) {
+      console.error('Ollama generation failed:', error);
+      throw error instanceof Error
+        ? new Error(`Ollama generation failed: ${error.message}`)
+        : new Error('Ollama generation failed with unknown error');
+    }
+  }
+
+  async *iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    return yield* iterateFromMethods(this, input, options);
   }
 }

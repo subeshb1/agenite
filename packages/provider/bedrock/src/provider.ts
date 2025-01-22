@@ -13,8 +13,7 @@ import {
   GenerateOptions,
   PartialReturn,
   convertStringToMessages,
-  generateFromIterate,
-  streamFromIterate,
+  iterateFromMethods,
   IterateGenerateOptions,
 } from '../../../llm/src';
 import { BedrockConfig } from './types';
@@ -45,195 +44,31 @@ export class BedrockProvider implements LLMProvider {
     input: string,
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
-    return generateFromIterate(this, input, options);
-  }
-
-  async *stream(
-    input: string,
-    options?: Partial<GenerateOptions>
-  ): AsyncGenerator<PartialReturn> {
-    yield* streamFromIterate(this, input, options);
-  }
-
-  async *iterate(
-    input: string | BaseMessage[],
-    options: IterateGenerateOptions
-  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    const {
-      tools,
-      systemPrompt,
-      temperature = this.config.temperature ?? 0.7,
-      maxTokens = this.config.maxTokens ?? DEFAULT_MAX_TOKENS,
-      stopSequences,
-      stream = false,
-    } = options;
     const startTime = Date.now();
-
-    const messageArray =
-      typeof input === 'string' ? convertStringToMessages(input) : input;
-    const transformedMessages = convertToMessageFormat(messageArray);
-    const providerTools = tools?.map((tool) =>
-      this.toolAdapter.convertToProviderTool(tool)
-    );
-
-    const requestBody = {
-      modelId: this.config.model || DEFAULT_MODEL,
-      system: systemPrompt ? [{ text: systemPrompt }] : undefined,
-      messages: transformedMessages,
-      inferenceConfig: {
-        maxTokens,
-        temperature,
-        stopSequences,
-      },
-      toolConfig: providerTools?.length
-        ? {
-            tools: providerTools,
-            toolChoice: { auto: {} },
-          }
-        : undefined,
-    };
-
     try {
-      if (stream) {
-        const response = await this.client.send(
-          new ConverseStreamCommand(requestBody)
-        );
+      const messageArray = convertStringToMessages(input);
+      const transformedMessages = convertToMessageFormat(messageArray);
+      const providerTools = options?.tools?.map((tool) =>
+        this.toolAdapter.convertToProviderTool(tool)
+      );
 
-        let buffer = '';
-        let inputTokens = 0;
-        let outputTokens = 0;
-        let finalStopReason: StopReason | undefined;
-        const contentBlocks: Record<number, BedrockContentBlock> = {};
-
-        if (!response.stream) {
-          throw new Error('No stream found in response');
-        }
-
-        for await (const event of response.stream) {
-          // Track token usage
-          if (event.metadata?.usage) {
-            inputTokens = event.metadata.usage.inputTokens || inputTokens;
-            outputTokens = event.metadata.usage.outputTokens || outputTokens;
-          }
-
-          // Handle message stop
-          if ('messageStop' in event) {
-            finalStopReason = event.messageStop?.stopReason;
-            continue;
-          }
-
-          if (
-            event.contentBlockStop &&
-            event.contentBlockStop.contentBlockIndex !== undefined
-          ) {
-            if (
-              contentBlocks[event.contentBlockStop.contentBlockIndex]?.toolUse
-                ?.input
-            ) {
-              contentBlocks[
-                event.contentBlockStop.contentBlockIndex
-              ]!.toolUse!.input = JSON.parse(
-                String(
-                  contentBlocks[event.contentBlockStop.contentBlockIndex]!
-                    .toolUse!.input
-                )
-              );
-              yield {
-                type: 'partial',
-                content: {
-                  type: 'toolUse',
-                  input: mapContent([
-                    contentBlocks[event.contentBlockStop.contentBlockIndex]!,
-                  ])[0] as ToolUseBlock,
-                },
-              };
+      const requestBody = {
+        modelId: this.config.model || DEFAULT_MODEL,
+        system: options?.systemPrompt ? [{ text: options.systemPrompt }] : undefined,
+        messages: transformedMessages,
+        inferenceConfig: {
+          maxTokens: options?.maxTokens ?? DEFAULT_MAX_TOKENS,
+          temperature: options?.temperature ?? this.config.temperature ?? 0.7,
+          stopSequences: options?.stopSequences,
+        },
+        toolConfig: providerTools?.length
+          ? {
+              tools: providerTools,
+              toolChoice: { auto: {} },
             }
+          : undefined,
+      };
 
-            if (
-              contentBlocks[event.contentBlockStop.contentBlockIndex]?.text &&
-              buffer.length > 0
-            ) {
-              yield {
-                type: 'partial',
-                content: { type: 'text', text: buffer },
-              };
-              buffer = '';
-            }
-          }
-
-          // Handle content block start
-          if (event.contentBlockStart) {
-            const { contentBlockIndex = 0, start } = event.contentBlockStart;
-
-            if (start?.toolUse) {
-              contentBlocks[contentBlockIndex] = {
-                ...contentBlocks[contentBlockIndex],
-                toolUse: {
-                  ...start.toolUse,
-                  ...contentBlocks[contentBlockIndex]?.toolUse,
-                },
-              } as BedrockContentBlock;
-            }
-            continue;
-          }
-
-          // Handle content block delta
-          if (event.contentBlockDelta?.delta) {
-            const { delta, contentBlockIndex = 0 } = event.contentBlockDelta;
-
-            // Stream text content
-            if (delta.text) {
-              buffer += delta.text;
-
-              if (buffer.length > 10) {
-                yield {
-                  type: 'partial',
-                  content: { type: 'text', text: buffer },
-                };
-                buffer = '';
-              }
-
-              // Also accumulate text in contentBlocks
-              contentBlocks[contentBlockIndex] = {
-                ...contentBlocks[contentBlockIndex],
-                text:
-                  (contentBlocks[contentBlockIndex]?.text || '') + delta.text,
-              } as BedrockContentBlock;
-            } else if (delta.toolUse) {
-              // Accumulate non-text content blocks
-              contentBlocks[contentBlockIndex] = {
-                toolUse: {
-                  ...contentBlocks[contentBlockIndex]?.toolUse,
-                  input:
-                    (contentBlocks[contentBlockIndex]?.toolUse?.input || '') +
-                    (delta.toolUse.input || ''),
-                },
-              } as BedrockContentBlock;
-            }
-          }
-        }
-
-        // Final response
-        const content =
-          Object.values(contentBlocks).length > 0
-            ? mapContent(Object.values(contentBlocks))
-            : [{ type: 'text' as const, text: buffer }];
-
-        return {
-          content,
-          stopReason: mapStopReason(finalStopReason),
-          tokens: [
-            {
-              modelId: this.config.model || DEFAULT_MODEL,
-              inputTokens,
-              outputTokens,
-            },
-          ],
-          duration: Date.now() - startTime,
-        };
-      }
-
-      // Handle non-streaming response
       const response = await this.client.send(new ConverseCommand(requestBody));
 
       return {
@@ -254,5 +89,185 @@ export class BedrockProvider implements LLMProvider {
         ? new Error(`Bedrock generation failed: ${error.message}`)
         : new Error('Bedrock generation failed with unknown error');
     }
+  }
+
+  async *stream(
+    input: string,
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    const startTime = Date.now();
+    try {
+      const messageArray = convertStringToMessages(input);
+      const transformedMessages = convertToMessageFormat(messageArray);
+      const providerTools = options?.tools?.map((tool) =>
+        this.toolAdapter.convertToProviderTool(tool)
+      );
+
+      const requestBody = {
+        modelId: this.config.model || DEFAULT_MODEL,
+        system: options?.systemPrompt ? [{ text: options.systemPrompt }] : undefined,
+        messages: transformedMessages,
+        inferenceConfig: {
+          maxTokens: options?.maxTokens ?? DEFAULT_MAX_TOKENS,
+          temperature: options?.temperature ?? this.config.temperature ?? 0.7,
+          stopSequences: options?.stopSequences,
+        },
+        toolConfig: providerTools?.length
+          ? {
+              tools: providerTools,
+              toolChoice: { auto: {} },
+            }
+          : undefined,
+      };
+
+      const response = await this.client.send(
+        new ConverseStreamCommand(requestBody)
+      );
+
+      let buffer = '';
+      let inputTokens = 0;
+      let outputTokens = 0;
+      let finalStopReason: StopReason | undefined;
+      const contentBlocks: Record<number, BedrockContentBlock> = {};
+
+      if (!response.stream) {
+        throw new Error('No stream found in response');
+      }
+
+      for await (const event of response.stream) {
+        // Track token usage
+        if (event.metadata?.usage) {
+          inputTokens = event.metadata.usage.inputTokens || inputTokens;
+          outputTokens = event.metadata.usage.outputTokens || outputTokens;
+        }
+
+        // Handle message stop
+        if ('messageStop' in event) {
+          finalStopReason = event.messageStop?.stopReason;
+          continue;
+        }
+
+        if (
+          event.contentBlockStop &&
+          event.contentBlockStop.contentBlockIndex !== undefined
+        ) {
+          if (
+            contentBlocks[event.contentBlockStop.contentBlockIndex]?.toolUse
+              ?.input
+          ) {
+            contentBlocks[
+              event.contentBlockStop.contentBlockIndex
+            ]!.toolUse!.input = JSON.parse(
+              String(
+                contentBlocks[event.contentBlockStop.contentBlockIndex]!
+                  .toolUse!.input
+              )
+            );
+            yield {
+              type: 'partial',
+              content: {
+                type: 'toolUse',
+                input: mapContent([
+                  contentBlocks[event.contentBlockStop.contentBlockIndex]!,
+                ])[0] as ToolUseBlock,
+              },
+            };
+          }
+
+          if (
+            contentBlocks[event.contentBlockStop.contentBlockIndex]?.text &&
+            buffer.length > 0
+          ) {
+            yield {
+              type: 'partial',
+              content: { type: 'text', text: buffer },
+            };
+            buffer = '';
+          }
+        }
+
+        // Handle content block start
+        if (event.contentBlockStart) {
+          const { contentBlockIndex = 0, start } = event.contentBlockStart;
+
+          if (start?.toolUse) {
+            contentBlocks[contentBlockIndex] = {
+              ...contentBlocks[contentBlockIndex],
+              toolUse: {
+                ...start.toolUse,
+                ...contentBlocks[contentBlockIndex]?.toolUse,
+              },
+            } as BedrockContentBlock;
+          }
+          continue;
+        }
+
+        // Handle content block delta
+        if (event.contentBlockDelta?.delta) {
+          const { delta, contentBlockIndex = 0 } = event.contentBlockDelta;
+
+          // Stream text content
+          if (delta.text) {
+            buffer += delta.text;
+
+            if (buffer.length > 10) {
+              yield {
+                type: 'partial',
+                content: { type: 'text', text: buffer },
+              };
+              buffer = '';
+            }
+
+            // Also accumulate text in contentBlocks
+            contentBlocks[contentBlockIndex] = {
+              ...contentBlocks[contentBlockIndex],
+              text:
+                (contentBlocks[contentBlockIndex]?.text || '') + delta.text,
+            } as BedrockContentBlock;
+          } else if (delta.toolUse) {
+            // Accumulate non-text content blocks
+            contentBlocks[contentBlockIndex] = {
+              toolUse: {
+                ...contentBlocks[contentBlockIndex]?.toolUse,
+                input:
+                  (contentBlocks[contentBlockIndex]?.toolUse?.input || '') +
+                  (delta.toolUse.input || ''),
+              },
+            } as BedrockContentBlock;
+          }
+        }
+      }
+
+      // Final response
+      const content =
+        Object.values(contentBlocks).length > 0
+          ? mapContent(Object.values(contentBlocks))
+          : [{ type: 'text' as const, text: buffer }];
+
+      return {
+        content,
+        stopReason: mapStopReason(finalStopReason),
+        tokens: [
+          {
+            modelId: this.config.model || DEFAULT_MODEL,
+            inputTokens,
+            outputTokens,
+          },
+        ],
+        duration: Date.now() - startTime,
+      };
+    } catch (error) {
+      console.error('Bedrock generation failed:', error);
+      throw error instanceof Error
+        ? new Error(`Bedrock generation failed: ${error.message}`)
+        : new Error('Bedrock generation failed with unknown error');
+    }
+  }
+
+  async *iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    return yield* iterateFromMethods(this, input, options);
   }
 }

@@ -1,9 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import {
-  convertStringToMessages,
-  generateFromIterate,
-  streamFromIterate,
-} from '@agenite/llm';
+import { convertStringToMessages, iterateFromMethods } from '@agenite/llm';
 import type {
   LLMProvider,
   BaseMessage,
@@ -135,60 +131,57 @@ export class AnthropicProvider implements LLMProvider {
     input: string,
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
-    return generateFromIterate(this, input, options);
+    const startTime = Date.now();
+    try {
+      const messageArray = convertStringToMessages(input);
+      const transformedMessages = convertMessages(messageArray);
+
+      const response = await this.client.messages.create({
+        model: this.model,
+        messages: transformedMessages,
+        system: options?.systemPrompt,
+        max_tokens: options?.maxTokens ?? 4096,
+        temperature: options?.temperature,
+        stop_sequences: options?.stopSequences,
+      });
+
+      return {
+        content: mapContent(response.content),
+        stopReason: mapStopReason(response.stop_reason),
+        tokens: [
+          {
+            modelId: response.model,
+            inputTokens: response.usage.input_tokens,
+            outputTokens: response.usage.output_tokens,
+          },
+        ],
+        duration: Date.now() - startTime,
+      };
+    } catch (error) {
+      console.error('Anthropic generation failed:', error);
+      throw error instanceof Error
+        ? new Error(`Anthropic generation failed: ${error.message}`)
+        : new Error('Anthropic generation failed with unknown error');
+    }
   }
 
   async *stream(
     input: string,
     options?: Partial<GenerateOptions>
-  ): AsyncGenerator<PartialReturn> {
-    yield* streamFromIterate(this, input, options);
-  }
-
-  async *iterate(
-    input: string | BaseMessage[],
-    options: IterateGenerateOptions
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    const {
-      systemPrompt,
-      maxTokens = 4096,
-      temperature,
-      stopSequences,
-      stream = false,
-    } = options;
     const startTime = Date.now();
-
     try {
-      const messageArray =
-        typeof input === 'string' ? convertStringToMessages(input) : input;
+      const messageArray = convertStringToMessages(input);
       const transformedMessages = convertMessages(messageArray);
-      const baseParams = {
+
+      const messageStream = await this.client.messages.stream({
         model: this.model,
         messages: transformedMessages,
-        system: systemPrompt,
-        max_tokens: maxTokens,
-        temperature,
-        stop_sequences: stopSequences,
-      };
-
-      if (!stream) {
-        const response = await this.client.messages.create(baseParams);
-
-        return {
-          content: mapContent(response.content),
-          stopReason: mapStopReason(response.stop_reason),
-          tokens: [
-            {
-              modelId: response.model,
-              inputTokens: response.usage.input_tokens,
-              outputTokens: response.usage.output_tokens,
-            },
-          ],
-          duration: Date.now() - startTime,
-        };
-      }
-
-      const messageStream = await this.client.messages.stream(baseParams);
+        system: options?.systemPrompt,
+        max_tokens: options?.maxTokens ?? 4096,
+        temperature: options?.temperature,
+        stop_sequences: options?.stopSequences,
+      });
 
       let buffer = '';
       for await (const chunk of messageStream) {
@@ -234,5 +227,12 @@ export class AnthropicProvider implements LLMProvider {
         ? new Error(`Anthropic generation failed: ${error.message}`)
         : new Error('Anthropic generation failed with unknown error');
     }
+  }
+
+  async *iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    return yield* iterateFromMethods(this, input, options);
   }
 }

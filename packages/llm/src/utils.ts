@@ -20,55 +20,34 @@ export function convertStringToMessages(message: string): BaseMessage[] {
 }
 
 /**
- * Base implementation of generate using iterate
+ * Base implementation of iterate using generate and stream
  */
-export async function generateFromIterate(
+export async function* iterateFromMethods(
   provider: LLMProvider,
-  input: string,
-  options?: Partial<GenerateOptions>
-): Promise<GenerateResponse> {
-  const fullOptions: IterateGenerateOptions = {
-    ...options,
-    stream: false,
-  };
-
-  const iterator = provider.iterate(input, fullOptions);
-  let response = await iterator.next();
-  
-  while (!response.done) {
-    response = await iterator.next();
-  }
-
-  if (!response.value) {
-    throw new Error('No response received');
-  }
-
-  return response.value;
-}
-
-/**
- * Base implementation of stream using iterate
- */
-export async function* streamFromIterate(
-  provider: LLMProvider,
-  input: string,
-  options?: Partial<GenerateOptions>
+  input: string | BaseMessage[],
+  options: IterateGenerateOptions
 ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-  const fullOptions: IterateGenerateOptions = {
-    ...options,
-    stream: true,
-  };
+  const { stream } = options;
 
-  const iterator = provider.iterate(input, fullOptions);
-  let result = await iterator.next();
-  
-  while (!result.done) {
-    const part = result.value;
-    if (part.type === 'partial') {
-      yield part;
+  if (stream) {
+    // For streaming, use the stream method and yield each chunk
+    const streamGen = provider.stream(
+      typeof input === 'string' ? input : JSON.stringify(input),
+      options
+    );
+    
+    let result = await streamGen.next();
+    while (!result.done) {
+      yield result.value;
+      result = await streamGen.next();
     }
-    result = await iterator.next();
+    
+    return result.value;
+  } else {
+    // For non-streaming, use generate and return the response
+    return await provider.generate(
+      typeof input === 'string' ? input : JSON.stringify(input),
+      options
+    );
   }
-
-  return result.value;
 }

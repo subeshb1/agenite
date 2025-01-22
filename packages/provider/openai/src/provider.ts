@@ -1,9 +1,5 @@
 import OpenAI from 'openai';
-import {
-  convertStringToMessages,
-  generateFromIterate,
-  streamFromIterate,
-} from '@agenite/llm';
+import { convertStringToMessages, iterateFromMethods } from '@agenite/llm';
 import type {
   LLMProvider,
   BaseMessage,
@@ -101,48 +97,25 @@ export class OpenAIProvider implements LLMProvider {
     input: string,
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
-    return generateFromIterate(this, input, options);
-  }
-
-  async *stream(
-    input: string,
-    options?: Partial<GenerateOptions>
-  ): AsyncGenerator<PartialReturn> {
-    yield* streamFromIterate(this, input, options);
-  }
-
-  async *iterate(
-    input: string | BaseMessage[],
-    options: IterateGenerateOptions
-  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    const {
-      tools,
-      systemPrompt,
-      maxTokens,
-      temperature,
-      stopSequences,
-      stream = false,
-    } = options;
     const startTime = Date.now();
-
     try {
-      const messageArray =
-        typeof input === 'string' ? convertStringToMessages(input) : input;
+      const messageArray = convertStringToMessages(input);
       const transformedMessages = convertMessages(messageArray);
-      if (systemPrompt) {
+
+      if (options?.systemPrompt) {
         transformedMessages.unshift({
           role: 'system',
-          content: systemPrompt,
+          content: options.systemPrompt,
         });
       }
 
-      const baseParams = {
+      const response = await this.client.chat.completions.create({
         model: this.model,
         messages: transformedMessages,
-        temperature,
-        max_tokens: maxTokens,
-        stop: stopSequences,
-        tools: tools?.map((tool) => ({
+        temperature: options?.temperature,
+        max_tokens: options?.maxTokens,
+        stop: options?.stopSequences,
+        tools: options?.tools?.map((tool) => ({
           type: 'function' as const,
           function: {
             name: tool.name,
@@ -150,32 +123,61 @@ export class OpenAIProvider implements LLMProvider {
             parameters: tool.parameters,
           },
         })),
+      });
+
+      const choice = response.choices[0];
+      if (!choice) throw new Error('No completion choice returned');
+
+      return {
+        content: mapContent(choice.message.content, choice.message.tool_calls),
+        stopReason: mapStopReason(choice.finish_reason),
+        tokens: [
+          {
+            modelId: response.model,
+            inputTokens: response.usage?.prompt_tokens ?? 0,
+            outputTokens: response.usage?.completion_tokens ?? 0,
+          },
+        ],
+        duration: Date.now() - startTime,
       };
+    } catch (error) {
+      console.error('OpenAI generation failed:', error);
+      throw error instanceof Error
+        ? new Error(`OpenAI generation failed: ${error.message}`)
+        : new Error('OpenAI generation failed with unknown error');
+    }
+  }
 
-      if (!stream) {
-        const response = await this.client.chat.completions.create(baseParams);
-        const choice = response.choices[0];
-        if (!choice) throw new Error('No completion choice returned');
+  async *stream(
+    input: string,
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    const startTime = Date.now();
+    try {
+      const messageArray = convertStringToMessages(input);
+      const transformedMessages = convertMessages(messageArray);
 
-        return {
-          content: mapContent(
-            choice.message.content,
-            choice.message.tool_calls
-          ),
-          stopReason: mapStopReason(choice.finish_reason),
-          tokens: [
-            {
-              modelId: response.model,
-              inputTokens: response.usage?.prompt_tokens ?? 0,
-              outputTokens: response.usage?.completion_tokens ?? 0,
-            },
-          ],
-          duration: Date.now() - startTime,
-        };
+      if (options?.systemPrompt) {
+        transformedMessages.unshift({
+          role: 'system',
+          content: options.systemPrompt,
+        });
       }
 
       const streamResponse = await this.client.chat.completions.create({
-        ...baseParams,
+        model: this.model,
+        messages: transformedMessages,
+        temperature: options?.temperature,
+        max_tokens: options?.maxTokens,
+        stop: options?.stopSequences,
+        tools: options?.tools?.map((tool) => ({
+          type: 'function' as const,
+          function: {
+            name: tool.name,
+            description: tool.description,
+            parameters: tool.parameters,
+          },
+        })),
         stream: true,
       });
 
@@ -203,7 +205,22 @@ export class OpenAIProvider implements LLMProvider {
       }
 
       // Get the final completion for metadata
-      const completion = await this.client.chat.completions.create(baseParams);
+      const completion = await this.client.chat.completions.create({
+        model: this.model,
+        messages: transformedMessages,
+        temperature: options?.temperature,
+        max_tokens: options?.maxTokens,
+        stop: options?.stopSequences,
+        tools: options?.tools?.map((tool) => ({
+          type: 'function' as const,
+          function: {
+            name: tool.name,
+            description: tool.description,
+            parameters: tool.parameters,
+          },
+        })),
+      });
+
       const choice = completion.choices[0];
       if (!choice) throw new Error('No completion choice returned');
 
@@ -225,5 +242,12 @@ export class OpenAIProvider implements LLMProvider {
         ? new Error(`OpenAI generation failed: ${error.message}`)
         : new Error('OpenAI generation failed with unknown error');
     }
+  }
+
+  async *iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    return yield* iterateFromMethods(this, input, options);
   }
 }
