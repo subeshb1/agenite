@@ -1,5 +1,13 @@
 # @agenite/bedrock
 
+## 0.1.3
+
+### Patch Changes
+
+- 71f8a67: Fix types
+- Updated dependencies [71f8a67]
+  - @agenite/llm@0.1.2
+
 ## 0.1.2
 
 ### Patch Changes
