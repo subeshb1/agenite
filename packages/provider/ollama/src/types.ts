@@ -1,4 +1,5 @@
 import { BaseLLMConfig, ToolDefinition } from '@agenite/llm';
+import type { Tool } from 'ollama';
 
 /**
  * Available Ollama model types
@@ -60,5 +61,31 @@ export interface OllamaConfig extends BaseLLMConfig {
     tfs_z?: number;
     top_k?: number;
     top_p?: number;
+  };
+}
+
+export interface OllamaMessage {
+  role: string;
+  content: string;
+  images?: string[];
+  tool_calls?: Array<{
+    function: {
+      name: string;
+      arguments: Record<string, unknown>;
+    };
+  }>;
+  name?: string;
+}
+
+export interface ToolParameterValue {
+  type: string;
+  description?: string;
+  enum?: string[];
+}
+
+export interface OllamaToolCall {
+  function: {
+    name: string;
+    arguments: string | Record<string, unknown>;
   };
 }
