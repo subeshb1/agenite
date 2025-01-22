@@ -41,7 +41,7 @@ export interface BedrockConfig extends BaseLLMConfig {
    * Model ID to use
    * @default anthropic.claude-3-sonnet-20240229-v1:0
    */
-  model: BedrockModel;
+  model?: BedrockModel;
 
   /**
    * Default temperature for generation

@@ -65,7 +65,7 @@ async function main() {
       content: [
         {
           type: 'text',
-          text: 'What is 123 multiplied by 456? then 4 multiplied by 412312, 6*1212 and 3 / 1212122 and 1+1212312. Break step by step show your thought process',
+          text: 'What is 123 multiplied by 456? then 4 multiplied by 412312, 6*1212 and 3 / 1212122 and 1+1212312. Break step by step show your thought process. Think before you execute a tool',
         },
       ],
     },
@@ -81,6 +81,13 @@ async function main() {
 
     let response = await generator.next();
     while (!response.done) {
+      if (response.value.type === 'text') {
+        process.stdout.write(response.value.text);
+      } else if (response.value.type === 'toolUse') {
+        console.log('\n');
+        console.log('toolUse', JSON.stringify(response.value, null));
+      }
+
       response = await generator.next();
     }
 
@@ -92,8 +99,6 @@ async function main() {
     );
 
     if (toolUses.length > 0) {
-      console.log('\nAssistant: Let me calculate that for you...');
-
       // Process all tool uses and collect results
       const toolResults: ToolResultBlock[] = await Promise.all(
         toolUses.map(async (toolUse) => {
@@ -132,7 +137,7 @@ async function main() {
         ...currentMessages,
         {
           role: 'assistant',
-          content: toolUses,
+          content: result.content,
         },
         {
           role: 'user',

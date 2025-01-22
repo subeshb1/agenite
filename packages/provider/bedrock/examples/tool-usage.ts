@@ -1,80 +1,159 @@
 import { BedrockProvider } from '../src';
-import { ToolDefinition } from '../../../llm/src';
+import type {
+  BaseMessage,
+  ToolDefinition,
+  ToolResultBlock,
+  ToolUseBlock,
+} from '@agenite/llm';
+
+// Define a simple calculator tool
+const calculatorTool: ToolDefinition = {
+  name: 'calculator',
+  description:
+    'A simple calculator that can perform basic arithmetic operations',
+  parameters: {
+    type: 'object',
+    properties: {
+      operation: {
+        type: 'string',
+        enum: ['add', 'subtract', 'multiply', 'divide'],
+        description: 'The arithmetic operation to perform',
+      },
+      a: {
+        type: 'number',
+        description: 'First number',
+      },
+      b: {
+        type: 'number',
+        description: 'Second number',
+      },
+    },
+    required: ['operation', 'a', 'b'],
+  },
+};
+
+// Calculator function implementation
+function calculate(operation: string, a: number, b: number): number {
+  switch (operation) {
+    case 'add':
+      return a + b;
+    case 'subtract':
+      return a - b;
+    case 'multiply':
+      return a * b;
+    case 'divide':
+      if (b === 0) throw new Error('Division by zero');
+      return a / b;
+    default:
+      throw new Error('Unknown operation');
+  }
+}
 
 async function main() {
   // Initialize the provider
   const provider = new BedrockProvider({
-    model: 'amazon.nova-micro-v1:0',
-    region: 'us-east-1',
+    model: 'anthropic.claude-3-5-haiku-20241022-v1:0',
+    region: 'us-west-2',
   });
-
-  // Define a calculator tool
-  const calculatorTool: ToolDefinition = {
-    name: 'calculator',
-    description: 'Performs basic arithmetic operations',
-    parameters: {
-      type: 'object',
-      properties: {
-        operation: {
-          type: 'string',
-          enum: ['add', 'subtract', 'multiply', 'divide'],
-          description: 'The arithmetic operation to perform',
-        },
-        a: {
-          type: 'number',
-          description: 'First number',
-        },
-        b: {
-          type: 'number',
-          description: 'Second number',
-        },
-      },
-      required: ['operation', 'a', 'b'],
-    },
-  };
-
-  // Example conversation with tool use
-  const messages = [
+  // Process the conversation
+  let currentMessages: BaseMessage[] = [
     {
-      role: 'system' as const,
+      role: 'user',
       content: [
         {
-          type: 'text' as const,
-          text: 'You are a helpful AI assistant that can perform calculations. When invoking a tool make parallel calls. For each tool call you make add <thinking> blocks',
-        },
-      ],
-    },
-    {
-      role: 'user' as const,
-      content: [
-        {
-          type: 'text' as const,
-          text: 'What is 123 multiplied by 456 and 2 multiplied by 3? Parellel call these. For each tool call you make add <thinking> blocks',
+          type: 'text',
+          text: 'What is 123 multiplied by 456? then 4 multiplied by 412312, 6*1212 and 3 / 1212122 and 1+1212312. Break step by step show your thought process',
         },
       ],
     },
   ];
 
-  // Generate a response
-  const generator = provider.iterate(messages, {
-    tools: [calculatorTool],
-    stream: true,
-  });
+  while (true) {
+    const generator = provider.iterate(currentMessages, {
+      tools: [calculatorTool],
+      stream: true,
+      systemPrompt:
+        'You are a helpful AI assistant with access to a calculator tool. Always use tool to calculate and do it in parallel. Parallel tool calls please. And before you do anything add your reasoning in <thinking> block',
+    });
 
-  // Handle response
-  console.log('\nAssistant: ');
-  let result = await generator.next();
-  while (!result.done) {
-    const chunk = result.value;
-    if ('text' in chunk.content) {
-      process.stdout.write(chunk.content.text);
-    } else {
-      console.log(chunk.content);
+    let response = await generator.next();
+    while (!response.done) {
+      if (response.value.type === 'text') {
+        process.stdout.write(response.value.text);
+      } else if (response.value.type === 'toolUse') {
+        console.log('\n');
+        console.log('toolUse', JSON.stringify(response.value, null));
+      }
+
+      response = await generator.next();
     }
-    result = await generator.next();
+
+    const result = response.value;
+
+    // Check if the model wants to use a tool
+    const toolUses = result.content.filter(
+      (block): block is ToolUseBlock => block.type === 'toolUse'
+    );
+
+    if (toolUses.length > 0) {
+      // Process all tool uses and collect results
+      const toolResults: ToolResultBlock[] = await Promise.all(
+        toolUses.map(async (toolUse) => {
+          const input = toolUse.input as {
+            operation: string;
+            a: number;
+            b: number;
+          };
+          try {
+            const calculationResult = calculate(
+              input.operation,
+              input.a,
+              input.b
+            );
+            return {
+              type: 'toolResult',
+              toolUseId: toolUse.id,
+              toolName: toolUse.name,
+              content: calculationResult.toString(),
+            };
+          } catch (error) {
+            return {
+              type: 'toolResult',
+              toolUseId: toolUse.id,
+              toolName: toolUse.name,
+              content:
+                error instanceof Error ? error.message : 'Calculation error',
+              isError: true,
+            };
+          }
+        })
+      );
+
+      // Add tool uses and results to messages
+      currentMessages = [
+        ...currentMessages,
+        {
+          role: 'assistant',
+          content: result.content,
+        },
+        {
+          role: 'user',
+          content: toolResults,
+        },
+      ];
+    } else {
+      currentMessages = [
+        ...currentMessages,
+        {
+          role: 'assistant',
+          content: result.content,
+        },
+      ];
+      // Model provided a final answer
+      console.log('\nAssistant:', JSON.stringify(currentMessages, null, 2));
+      break;
+    }
   }
-  console.log('\n');
-  console.log('result', JSON.stringify(result, null, 2));
 }
 
 main().catch(console.error);

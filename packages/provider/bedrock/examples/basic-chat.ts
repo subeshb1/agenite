@@ -2,35 +2,31 @@ import { BedrockProvider } from '../src';
 
 async function main() {
   // Initialize the provider
-  const anthropic = new BedrockProvider({
+  const provider = new BedrockProvider({
     model: 'anthropic.claude-3-5-haiku-20241022-v1:0',
-    region: 'us-east-1',
+    region: 'us-west-2',
   });
 
   // Generate a response
-  const generator = anthropic.iterate(
-    'What are the main features of Claude 3?',
-    {
-      stream: true,
-    }
+  const result = await provider.generate(
+    'What are the main features of Llama 2?'
   );
+  console.log('\nAssistant: ', result);
 
-  // Handle response
-  console.log('\nAssistant: ');
-  let result = await generator.next();
+  const generator = provider.stream('What are the main features of Llama 2?');
 
-  while (!result.done) {
-    const chunk = result.value;
-    if (chunk.content.type === 'text') {
-      process.stdout.write(chunk.content.text);
-    } else {
-      console.log(chunk.content);
+  for await (const chunk of generator) {
+    console.log(chunk);
+    if (chunk.type === 'text') {
+      process.stdout.write(chunk.text);
+    } else if (chunk.type === 'toolUse') {
+      console.log('toolUse', JSON.stringify(chunk, null));
     }
-    result = await generator.next();
   }
 
+  // Handle streaming response
+
   console.log('\n');
-  console.log('result', JSON.stringify(result, null, 2));
 }
 
 main().catch(console.error);

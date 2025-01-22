@@ -4,6 +4,10 @@ import {
   ConverseStreamCommand,
   StopReason,
   ContentBlock as BedrockContentBlock,
+  ContentBlockStartEvent,
+  ContentBlockDeltaEvent,
+  ContentBlockStopEvent,
+  ConverseStreamOutput,
 } from '@aws-sdk/client-bedrock-runtime';
 import {
   GenerateResponse,
@@ -38,57 +42,208 @@ export class BedrockProvider extends BaseLLMProvider {
     this.toolAdapter = new BedrockToolAdapter();
   }
 
-  async generate(
-    input: string,
-    options?: Partial<GenerateOptions>
-  ): Promise<GenerateResponse> {
-    const startTime = Date.now();
-    try {
-      const messageArray = convertStringToMessages(input);
-      const transformedMessages = convertToMessageFormat(messageArray);
-      const providerTools = options?.tools?.map((tool) =>
-        this.toolAdapter.convertToProviderTool(tool)
-      );
+  private createRequestBody(input: string, options?: Partial<GenerateOptions>) {
+    const messageArray = convertStringToMessages(input);
+    const transformedMessages = convertToMessageFormat(messageArray);
 
-      const requestBody = {
-        modelId: this.config.model || DEFAULT_MODEL,
-        system: options?.systemPrompt
-          ? [{ text: options.systemPrompt }]
-          : undefined,
-        messages: transformedMessages,
-        inferenceConfig: {
-          maxTokens: options?.maxTokens ?? DEFAULT_MAX_TOKENS,
-          temperature: options?.temperature ?? this.config.temperature ?? 0.7,
-          stopSequences: options?.stopSequences,
+    const providerTools = options?.tools?.map((tool) =>
+      this.toolAdapter.convertToProviderTool(tool)
+    );
+
+    return {
+      modelId: this.config.model || DEFAULT_MODEL,
+      system: options?.systemPrompt
+        ? [{ text: options.systemPrompt }]
+        : undefined,
+      messages: transformedMessages,
+      inferenceConfig: {
+        maxTokens: options?.maxTokens ?? DEFAULT_MAX_TOKENS,
+        temperature: options?.temperature ?? this.config.temperature ?? 0.7,
+        stopSequences: options?.stopSequences,
+      },
+      toolConfig: providerTools?.length
+        ? {
+            tools: providerTools,
+            toolChoice: { auto: {} },
+          }
+        : undefined,
+    };
+  }
+
+  private handleError(error: unknown): never {
+    console.error('Bedrock generation failed:', error);
+    throw error instanceof Error
+      ? new Error(`Bedrock generation failed: ${error.message}`)
+      : new Error('Bedrock generation failed with unknown error');
+  }
+
+  private createGenerateResponse(
+    content: GenerateResponse['content'],
+    stopReason: StopReason | undefined,
+    inputTokens: number,
+    outputTokens: number,
+    startTime: number
+  ): GenerateResponse {
+    return {
+      content,
+      stopReason: mapStopReason(stopReason),
+      tokens: [
+        {
+          modelId: this.config.model || DEFAULT_MODEL,
+          inputTokens,
+          outputTokens,
         },
-        toolConfig: providerTools?.length
-          ? {
-              tools: providerTools,
-              toolChoice: { auto: {} },
-            }
-          : undefined,
-      };
+      ],
+      duration: Date.now() - startTime,
+    };
+  }
 
-      const response = await this.client.send(new ConverseCommand(requestBody));
-
-      return {
-        content: mapContent(response.output?.message?.content || []),
-        stopReason: mapStopReason(response.stopReason),
-        tokens: [
-          {
-            modelId: this.config.model || DEFAULT_MODEL,
-            inputTokens: response.usage?.inputTokens || 0,
-            outputTokens: response.usage?.outputTokens || 0,
-          },
-        ],
-        duration: Date.now() - startTime,
-      };
-    } catch (error) {
-      console.error('Bedrock generation failed:', error);
-      throw error instanceof Error
-        ? new Error(`Bedrock generation failed: ${error.message}`)
-        : new Error('Bedrock generation failed with unknown error');
+  private handleStreamEvent(
+    event: ConverseStreamOutput,
+    state: {
+      buffer: string;
+      inputTokens: number;
+      outputTokens: number;
+      contentBlocks: BedrockContentBlock[];
     }
+  ) {
+    // Handle usage metadata
+    if ('metadata' in event && event.metadata) {
+      state.inputTokens =
+        event.metadata.usage?.inputTokens || state.inputTokens;
+      state.outputTokens =
+        event.metadata.usage?.outputTokens || state.outputTokens;
+    }
+
+    // Handle content block start
+    if ('contentBlockStart' in event && event.contentBlockStart) {
+      this.handleContentBlockStart(
+        event.contentBlockStart,
+        state.contentBlocks
+      );
+      return null;
+    }
+
+    // Handle content block delta
+    if ('contentBlockDelta' in event && event.contentBlockDelta) {
+      return this.handleContentBlockDelta(event.contentBlockDelta, state);
+    }
+
+    return null;
+  }
+
+  private handleContentBlockStart(
+    { contentBlockIndex = 0, start }: ContentBlockStartEvent,
+    contentBlocks: BedrockContentBlock[]
+  ) {
+    if (start?.toolUse) {
+      contentBlocks[contentBlockIndex] = {
+        ...contentBlocks[contentBlockIndex],
+        toolUse: {
+          ...start.toolUse,
+          ...contentBlocks[contentBlockIndex]?.toolUse,
+        },
+      } as BedrockContentBlock;
+    }
+  }
+
+  private handleContentBlockDelta(
+    { delta, contentBlockIndex = 0 }: ContentBlockDeltaEvent,
+    state: {
+      buffer: string;
+      contentBlocks: BedrockContentBlock[];
+    }
+  ) {
+    if (!delta) return null;
+
+    if (delta.text) {
+      return this.handleTextDelta(delta.text, contentBlockIndex, state);
+    } else if (delta.toolUse) {
+      this.handleToolUseDelta(
+        delta.toolUse,
+        contentBlockIndex,
+        state.contentBlocks
+      );
+    }
+    return null;
+  }
+
+  private handleTextDelta(
+    text: string,
+    contentBlockIndex: number,
+    state: {
+      buffer: string;
+      contentBlocks: BedrockContentBlock[];
+    }
+  ) {
+    state.buffer += text;
+
+    // Accumulate text in contentBlocks
+    state.contentBlocks[contentBlockIndex] = {
+      ...state.contentBlocks[contentBlockIndex],
+      text: (state.contentBlocks[contentBlockIndex]?.text || '') + text,
+    } as BedrockContentBlock;
+
+    if (state.buffer.length > 10) {
+      const result = {
+        type: 'text' as const,
+        text: state.buffer,
+      };
+      state.buffer = '';
+      return result;
+    }
+    return null;
+  }
+
+  private handleToolUseDelta(
+    toolUse: { input?: string },
+    contentBlockIndex: number,
+    contentBlocks: BedrockContentBlock[]
+  ) {
+    contentBlocks[contentBlockIndex] = {
+      toolUse: {
+        ...contentBlocks[contentBlockIndex]?.toolUse,
+        input:
+          (contentBlocks[contentBlockIndex]?.toolUse?.input || '') +
+          (toolUse.input || ''),
+      },
+    } as BedrockContentBlock;
+  }
+
+  private handleContentBlockStop(
+    event: { contentBlockStop?: ContentBlockStopEvent },
+    state: {
+      buffer: string;
+      contentBlocks: BedrockContentBlock[];
+    }
+  ) {
+    if (
+      event.contentBlockStop &&
+      event.contentBlockStop.contentBlockIndex !== undefined
+    ) {
+      const blockIndex = event.contentBlockStop.contentBlockIndex;
+      const block = state.contentBlocks[blockIndex];
+
+      if (block?.toolUse?.input) {
+        block.toolUse.input = JSON.parse(String(block.toolUse.input));
+        const toolUseResult = {
+          type: 'toolUse' as const,
+          input: mapContent([block])[0] as ToolUseBlock,
+        };
+
+        if (state.buffer.length > 10) {
+          return {
+            toolUse: toolUseResult,
+            bufferedText: {
+              type: 'text' as const,
+              text: state.buffer,
+            },
+          };
+        }
+        return { toolUse: toolUseResult };
+      }
+    }
+    return null;
   }
 
   async *stream(
@@ -97,165 +252,76 @@ export class BedrockProvider extends BaseLLMProvider {
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
     const startTime = Date.now();
     try {
-      const messageArray = convertStringToMessages(input);
-      const transformedMessages = convertToMessageFormat(messageArray);
-      const providerTools = options?.tools?.map((tool) =>
-        this.toolAdapter.convertToProviderTool(tool)
-      );
-
-      const requestBody = {
-        modelId: this.config.model || DEFAULT_MODEL,
-        system: options?.systemPrompt
-          ? [{ text: options.systemPrompt }]
-          : undefined,
-        messages: transformedMessages,
-        inferenceConfig: {
-          maxTokens: options?.maxTokens ?? DEFAULT_MAX_TOKENS,
-          temperature: options?.temperature ?? this.config.temperature ?? 0.7,
-          stopSequences: options?.stopSequences,
-        },
-        toolConfig: providerTools?.length
-          ? {
-              tools: providerTools,
-              toolChoice: { auto: {} },
-            }
-          : undefined,
-      };
-
+      const requestBody = this.createRequestBody(input, options);
       const response = await this.client.send(
         new ConverseStreamCommand(requestBody)
       );
-
-      let buffer = '';
-      let inputTokens = 0;
-      let outputTokens = 0;
-      let finalStopReason: StopReason | undefined;
-      const contentBlocks: Record<number, BedrockContentBlock> = {};
 
       if (!response.stream) {
         throw new Error('No stream found in response');
       }
 
-      for await (const event of response.stream) {
-        // Track token usage
-        if (event.metadata?.usage) {
-          inputTokens = event.metadata.usage.inputTokens || inputTokens;
-          outputTokens = event.metadata.usage.outputTokens || outputTokens;
-        }
+      const state = {
+        buffer: '',
+        inputTokens: 0,
+        outputTokens: 0,
+        contentBlocks: [] as BedrockContentBlock[],
+      };
+      let finalStopReason: StopReason | undefined;
 
+      for await (const event of response.stream) {
         // Handle message stop
         if ('messageStop' in event) {
           finalStopReason = event.messageStop?.stopReason;
           continue;
         }
 
-        if (
-          event.contentBlockStop &&
-          event.contentBlockStop.contentBlockIndex !== undefined
-        ) {
-          if (
-            contentBlocks[event.contentBlockStop.contentBlockIndex]?.toolUse
-              ?.input
-          ) {
-            contentBlocks[
-              event.contentBlockStop.contentBlockIndex
-            ]!.toolUse!.input = JSON.parse(
-              String(
-                contentBlocks[event.contentBlockStop.contentBlockIndex]!
-                  .toolUse!.input
-              )
-            );
-            yield {
-              type: 'toolUse',
-              input: mapContent([
-                contentBlocks[event.contentBlockStop.contentBlockIndex]!,
-              ])[0] as ToolUseBlock,
-            };
+        // Handle content block stop
+        const stopResult = this.handleContentBlockStop(event, state);
 
-            if (buffer.length > 10) {
-              yield {
-                type: 'text',
-                text: buffer,
-              };
-              buffer = '';
-            }
-          }
-        }
-
-        // Handle content block start
-        if (event.contentBlockStart) {
-          const { contentBlockIndex = 0, start } = event.contentBlockStart;
-
-          if (start?.toolUse) {
-            contentBlocks[contentBlockIndex] = {
-              ...contentBlocks[contentBlockIndex],
-              toolUse: {
-                ...start.toolUse,
-                ...contentBlocks[contentBlockIndex]?.toolUse,
-              },
-            } as BedrockContentBlock;
-          }
+        if (stopResult) {
+          if (stopResult.toolUse) yield stopResult.toolUse;
+          if (stopResult.bufferedText) yield stopResult.bufferedText;
+          state.buffer = '';
           continue;
         }
 
-        // Handle content block delta
-        if (event.contentBlockDelta?.delta) {
-          const { delta, contentBlockIndex = 0 } = event.contentBlockDelta;
+        // Handle other events
+        const result = this.handleStreamEvent(event, state);
 
-          // Stream text content
-          if (delta.text) {
-            buffer += delta.text;
-
-            if (buffer.length > 10) {
-              yield {
-                type: 'text',
-                text: buffer,
-              };
-              buffer = '';
-            }
-
-            // Also accumulate text in contentBlocks
-            contentBlocks[contentBlockIndex] = {
-              ...contentBlocks[contentBlockIndex],
-              text: (contentBlocks[contentBlockIndex]?.text || '') + delta.text,
-            } as BedrockContentBlock;
-          } else if (delta.toolUse) {
-            // Accumulate non-text content blocks
-            contentBlocks[contentBlockIndex] = {
-              toolUse: {
-                ...contentBlocks[contentBlockIndex]?.toolUse,
-                input:
-                  (contentBlocks[contentBlockIndex]?.toolUse?.input || '') +
-                  (delta.toolUse.input || ''),
-              },
-            } as BedrockContentBlock;
-          }
-        }
+        if (result) yield result;
       }
 
-      // Final response
-      const content =
-        Object.values(contentBlocks).length > 0
-          ? mapContent(Object.values(contentBlocks))
-          : [{ type: 'text' as const, text: buffer }];
-
-      return {
-        content,
-        stopReason: mapStopReason(finalStopReason),
-        tokens: [
-          {
-            modelId: this.config.model || DEFAULT_MODEL,
-            inputTokens,
-            outputTokens,
-          },
-        ],
-        duration: Date.now() - startTime,
-      };
+      return this.createGenerateResponse(
+        mapContent(state.contentBlocks),
+        finalStopReason,
+        state.inputTokens,
+        state.outputTokens,
+        startTime
+      );
     } catch (error) {
-      console.error('Bedrock generation failed:', error);
-      throw error instanceof Error
-        ? new Error(`Bedrock generation failed: ${error.message}`)
-        : new Error('Bedrock generation failed with unknown error');
+      this.handleError(error);
+    }
+  }
+
+  async generate(
+    input: string,
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse> {
+    const startTime = Date.now();
+    try {
+      const requestBody = this.createRequestBody(input, options);
+      const response = await this.client.send(new ConverseCommand(requestBody));
+
+      return this.createGenerateResponse(
+        mapContent(response.output?.message?.content || []),
+        response.stopReason,
+        response.usage?.inputTokens || 0,
+        response.usage?.outputTokens || 0,
+        startTime
+      );
+    } catch (error) {
+      this.handleError(error);
     }
   }
 }
