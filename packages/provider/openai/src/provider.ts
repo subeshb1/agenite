@@ -1,14 +1,13 @@
 import OpenAI from 'openai';
-import { convertStringToMessages, iterateFromMethods } from '@agenite/llm';
+import { convertStringToMessages, BaseLLMProvider } from '@agenite/llm';
+
 import type {
-  LLMProvider,
   BaseMessage,
   GenerateResponse,
   ContentBlock,
   StopReason,
   GenerateOptions,
   PartialReturn,
-  IterateGenerateOptions,
 } from '@agenite/llm';
 import type { OpenAIConfig } from './types';
 
@@ -63,7 +62,6 @@ function convertMessages(
   return messages.map((msg): OpenAI.Chat.ChatCompletionMessageParam => {
     const content = msg.content
       .map((block) => {
-        if (typeof block === 'string') return block;
         if (block.type === 'text') return block.text;
         return '';
       })
@@ -77,13 +75,14 @@ function convertMessages(
   });
 }
 
-export class OpenAIProvider implements LLMProvider {
+export class OpenAIProvider extends BaseLLMProvider {
   private client: OpenAI;
   private model: string;
   readonly name = 'OpenAI';
   readonly version = '1.0';
 
   constructor(config: OpenAIConfig) {
+    super();
     this.client = new OpenAI({
       apiKey: config.apiKey,
       organization: config.organization,
@@ -189,8 +188,8 @@ export class OpenAIProvider implements LLMProvider {
 
           if (buffer.length > 10) {
             yield {
-              type: 'partial',
-              content: { type: 'text', text: buffer },
+              type: 'text',
+              text: buffer,
             };
             buffer = '';
           }
@@ -199,8 +198,8 @@ export class OpenAIProvider implements LLMProvider {
 
       if (buffer.length > 0) {
         yield {
-          type: 'partial',
-          content: { type: 'text', text: buffer },
+          type: 'text',
+          text: buffer,
         };
       }
 
@@ -242,12 +241,5 @@ export class OpenAIProvider implements LLMProvider {
         ? new Error(`OpenAI generation failed: ${error.message}`)
         : new Error('OpenAI generation failed with unknown error');
     }
-  }
-
-  async *iterate(
-    input: string | BaseMessage[],
-    options: IterateGenerateOptions
-  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    return yield* iterateFromMethods(this, input, options);
   }
 }

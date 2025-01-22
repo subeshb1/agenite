@@ -1,7 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { convertStringToMessages, iterateFromMethods } from '@agenite/llm';
+import { convertStringToMessages, iterateFromMethods, BaseLLMProvider } from '@agenite/llm';
 import type {
-  LLMProvider,
   BaseMessage,
   GenerateResponse,
   ContentBlock,
@@ -74,10 +73,6 @@ function convertMessages(messages: BaseMessage[]): Anthropic.MessageParam[] {
     .map((msg) => ({
       role: msg.role,
       content: msg.content.map((block): Anthropic.ContentBlockParam => {
-        if (typeof block === 'string') {
-          return { type: 'text', text: block };
-        }
-
         switch (block.type) {
           case 'text':
             return { type: 'text', text: block.text };
@@ -113,13 +108,14 @@ function convertMessages(messages: BaseMessage[]): Anthropic.MessageParam[] {
     }));
 }
 
-export class AnthropicProvider implements LLMProvider {
+export class AnthropicProvider extends BaseLLMProvider {
   private client: Anthropic;
   private model: string;
   readonly name = 'Claude';
   readonly version = '3';
 
   constructor(config: AnthropicConfig) {
+    super();
     this.client = new Anthropic({
       apiKey: config.apiKey,
       baseURL: config.baseURL,
@@ -193,8 +189,8 @@ export class AnthropicProvider implements LLMProvider {
 
           if (buffer.length > 10) {
             yield {
-              type: 'partial',
-              content: { type: 'text', text: buffer },
+              type: 'text',
+              text: buffer,
             };
             buffer = '';
           }
@@ -203,8 +199,8 @@ export class AnthropicProvider implements LLMProvider {
 
       if (buffer.length > 0) {
         yield {
-          type: 'partial',
-          content: { type: 'text', text: buffer },
+          type: 'text',
+          text: buffer,
         };
       }
 

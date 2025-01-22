@@ -1,5 +1,5 @@
 import { OllamaProvider } from '../src';
-import type { BaseMessage, ToolDefinition } from '@agenite/llm';
+import type { BaseMessage, ToolDefinition, ToolUseBlock } from '@agenite/llm';
 
 // Define a simple calculator tool
 const calculatorTool: ToolDefinition = {
@@ -47,7 +47,7 @@ function calculate(operation: string, a: number, b: number): number {
 async function main() {
   // Initialize the provider
   const provider = new OllamaProvider({
-    model: 'deepseek-r1:8b',
+    model: 'llama3.2',
     host: 'http://localhost:11434',
     temperature: 0.7,
     maxTokens: 2048,
@@ -76,14 +76,7 @@ async function main() {
 
     // Check if the model wants to use a tool
     const toolUse = result.content.find(
-      (
-        block
-      ): block is {
-        type: 'toolUse';
-        id: string;
-        name: string;
-        input: unknown;
-      } => typeof block !== 'string' && block.type === 'toolUse'
+      (block): block is ToolUseBlock => block.type === 'toolUse'
     );
 
     if (toolUse) {

@@ -1,7 +1,6 @@
 import { Ollama, type Tool } from 'ollama';
-import { convertStringToMessages, iterateFromMethods } from '@agenite/llm';
+import { convertStringToMessages, BaseLLMProvider } from '@agenite/llm';
 import type {
-  LLMProvider,
   BaseMessage,
   GenerateResponse,
   ContentBlock,
@@ -11,7 +10,6 @@ import type {
   ToolResultBlock,
   GenerateOptions,
   PartialReturn,
-  IterateGenerateOptions,
 } from '@agenite/llm';
 import type { OllamaConfig } from './types';
 
@@ -60,15 +58,13 @@ function convertMessages(messages: BaseMessage[]): Array<{
 
     // Find tool use and its corresponding result
     const toolUse = msg.content.find(
-      (block): block is ToolUseBlock =>
-        typeof block !== 'string' && block.type === 'toolUse'
+      (block): block is ToolUseBlock => block.type === 'toolUse'
     );
 
     let toolResult: ToolResultBlock | undefined;
     if (toolUse && nextMsg) {
       toolResult = nextMsg.content.find(
         (block): block is ToolResultBlock =>
-          typeof block !== 'string' &&
           block.type === 'toolResult' &&
           block.toolUseId === toolUse.id
       );
@@ -106,7 +102,6 @@ function convertMessages(messages: BaseMessage[]): Array<{
       // Extract images if any
       const images = msg.content
         .map((block) => {
-          if (typeof block === 'string') return null;
           if (block.type === 'image' && block.source.type === 'base64') {
             return block.source.data;
           }
@@ -123,7 +118,6 @@ function convertMessages(messages: BaseMessage[]): Array<{
         role: msg.role,
         content: msg.content
           .map((block) => {
-            if (typeof block === 'string') return block;
             if (block.type === 'text') return block.text;
             return '';
           })
@@ -206,13 +200,14 @@ function convertFunctionCallsToToolUses(
   });
 }
 
-export class OllamaProvider implements LLMProvider {
+export class OllamaProvider extends BaseLLMProvider {
   private client: Ollama;
   private config: OllamaConfig;
   readonly name = 'Ollama';
   readonly version = '1.0';
 
   constructor(config: OllamaConfig) {
+    super();
     this.config = config;
     this.client = new Ollama({
       host: config.host,
@@ -285,13 +280,16 @@ export class OllamaProvider implements LLMProvider {
   }
 
   async *stream(
-    input: string,
+    input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
     const startTime = Date.now();
     try {
       const messageArray = convertStringToMessages(input);
+      // console.log(JSON.stringify(messageArray, null, 2));
+
       const ollamaMessages = convertMessages(messageArray);
+
       let buffer = '';
       let finalResponse:
         | undefined
@@ -341,8 +339,8 @@ export class OllamaProvider implements LLMProvider {
           // Yield chunks when buffer has reasonable size
           if (buffer.length > 4) {
             yield {
-              type: 'partial',
-              content: { type: 'text', text: buffer },
+              type: 'text',
+              text: buffer,
             };
             buffer = '';
           }
@@ -353,8 +351,8 @@ export class OllamaProvider implements LLMProvider {
       // Yield any remaining content in buffer
       if (buffer.length > 0) {
         yield {
-          type: 'partial',
-          content: { type: 'text', text: buffer },
+          type: 'text',
+          text: buffer,
         };
       }
       if (!finalResponse) {
@@ -380,12 +378,5 @@ export class OllamaProvider implements LLMProvider {
         ? new Error(`Ollama generation failed: ${error.message}`)
         : new Error('Ollama generation failed with unknown error');
     }
-  }
-
-  async *iterate(
-    input: string | BaseMessage[],
-    options: IterateGenerateOptions
-  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    return yield* iterateFromMethods(this, input, options);
   }
 }

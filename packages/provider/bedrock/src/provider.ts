@@ -6,15 +6,12 @@ import {
   ContentBlock as BedrockContentBlock,
 } from '@aws-sdk/client-bedrock-runtime';
 import {
-  LLMProvider,
-  BaseMessage,
   GenerateResponse,
   ToolUseBlock,
   GenerateOptions,
   PartialReturn,
   convertStringToMessages,
-  iterateFromMethods,
-  IterateGenerateOptions,
+  BaseLLMProvider,
 } from '../../../llm/src';
 import { BedrockConfig } from './types';
 import { mapContent, mapStopReason, convertToMessageFormat } from './utils';
@@ -24,7 +21,7 @@ const DEFAULT_MODEL = 'anthropic.claude-3-sonnet-20240229-v1:0';
 const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_REGION = 'us-west-2';
 
-export class BedrockProvider implements LLMProvider {
+export class BedrockProvider extends BaseLLMProvider {
   private client: BedrockRuntimeClient;
   private config: BedrockConfig;
   private toolAdapter: BedrockToolAdapter;
@@ -32,6 +29,7 @@ export class BedrockProvider implements LLMProvider {
   readonly version = '1.0';
 
   constructor(config: BedrockConfig) {
+    super();
     this.config = config;
     this.client = new BedrockRuntimeClient({
       region: config.region || DEFAULT_REGION,
@@ -54,7 +52,9 @@ export class BedrockProvider implements LLMProvider {
 
       const requestBody = {
         modelId: this.config.model || DEFAULT_MODEL,
-        system: options?.systemPrompt ? [{ text: options.systemPrompt }] : undefined,
+        system: options?.systemPrompt
+          ? [{ text: options.systemPrompt }]
+          : undefined,
         messages: transformedMessages,
         inferenceConfig: {
           maxTokens: options?.maxTokens ?? DEFAULT_MAX_TOKENS,
@@ -105,7 +105,9 @@ export class BedrockProvider implements LLMProvider {
 
       const requestBody = {
         modelId: this.config.model || DEFAULT_MODEL,
-        system: options?.systemPrompt ? [{ text: options.systemPrompt }] : undefined,
+        system: options?.systemPrompt
+          ? [{ text: options.systemPrompt }]
+          : undefined,
         messages: transformedMessages,
         inferenceConfig: {
           maxTokens: options?.maxTokens ?? DEFAULT_MAX_TOKENS,
@@ -164,25 +166,19 @@ export class BedrockProvider implements LLMProvider {
               )
             );
             yield {
-              type: 'partial',
-              content: {
-                type: 'toolUse',
-                input: mapContent([
-                  contentBlocks[event.contentBlockStop.contentBlockIndex]!,
-                ])[0] as ToolUseBlock,
-              },
+              type: 'toolUse',
+              input: mapContent([
+                contentBlocks[event.contentBlockStop.contentBlockIndex]!,
+              ])[0] as ToolUseBlock,
             };
-          }
 
-          if (
-            contentBlocks[event.contentBlockStop.contentBlockIndex]?.text &&
-            buffer.length > 0
-          ) {
-            yield {
-              type: 'partial',
-              content: { type: 'text', text: buffer },
-            };
-            buffer = '';
+            if (buffer.length > 10) {
+              yield {
+                type: 'text',
+                text: buffer,
+              };
+              buffer = '';
+            }
           }
         }
 
@@ -212,8 +208,8 @@ export class BedrockProvider implements LLMProvider {
 
             if (buffer.length > 10) {
               yield {
-                type: 'partial',
-                content: { type: 'text', text: buffer },
+                type: 'text',
+                text: buffer,
               };
               buffer = '';
             }
@@ -221,8 +217,7 @@ export class BedrockProvider implements LLMProvider {
             // Also accumulate text in contentBlocks
             contentBlocks[contentBlockIndex] = {
               ...contentBlocks[contentBlockIndex],
-              text:
-                (contentBlocks[contentBlockIndex]?.text || '') + delta.text,
+              text: (contentBlocks[contentBlockIndex]?.text || '') + delta.text,
             } as BedrockContentBlock;
           } else if (delta.toolUse) {
             // Accumulate non-text content blocks
@@ -262,12 +257,5 @@ export class BedrockProvider implements LLMProvider {
         ? new Error(`Bedrock generation failed: ${error.message}`)
         : new Error('Bedrock generation failed with unknown error');
     }
-  }
-
-  async *iterate(
-    input: string | BaseMessage[],
-    options: IterateGenerateOptions
-  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    return yield* iterateFromMethods(this, input, options);
   }
 }

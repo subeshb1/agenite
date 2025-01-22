@@ -5,8 +5,7 @@ export type ContentBlock =
   | TextBlock
   | ImageBlock
   | ToolUseBlock
-  | ToolResultBlock
-  | string;
+  | ToolResultBlock;
 
 export interface TextBlock {
   type: 'text';
@@ -84,12 +83,9 @@ export interface BaseLLMConfig {
   timeout?: number;
 }
 
-export interface PartialReturn {
-  type: 'partial';
-  content:
-    | { type: 'text'; text: string }
-    | { type: 'toolUse'; input: ToolUseBlock };
-}
+export type PartialReturn =
+  | { type: 'text'; text: string }
+  | { type: 'toolUse'; input: ToolUseBlock };
 
 /**
  * Options for generation
@@ -119,13 +115,16 @@ export interface LLMProvider {
   /**
    * Simple text generation with full response
    */
-  generate(input: string, options?: Partial<GenerateOptions>): Promise<GenerateResponse>;
+  generate(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse>;
 
   /**
    * Simple streaming with partial returns
    */
   stream(
-    input: string,
+    input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown>;
 
