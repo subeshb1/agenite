@@ -132,7 +132,7 @@ export class OllamaProvider extends BaseLLMProvider {
       const ollamaMessages = this.prepareMessages(input);
       let buffer = '';
       let finalResponse = undefined;
-
+      let textAccumulator = '';
       const toolCalls = [];
       const response = await this.client.chat({
         ...this.createBaseRequest(ollamaMessages, options),
@@ -144,7 +144,7 @@ export class OllamaProvider extends BaseLLMProvider {
         const content = chunk.message?.content;
         if (content) {
           buffer += content;
-
+          textAccumulator += content;
           // Yield chunks when buffer has reasonable size
           if (buffer.length > 4) {
             yield {
@@ -199,7 +199,7 @@ export class OllamaProvider extends BaseLLMProvider {
 
       // Return final response with combined content
       return createResponse(
-        this.combineResponseContent(finalResponse.message?.content, toolCalls),
+        this.combineResponseContent(textAccumulator, toolCalls),
         startTime,
         this.config.model,
         finalResponse.prompt_eval_count,

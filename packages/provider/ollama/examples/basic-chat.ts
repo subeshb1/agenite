@@ -14,12 +14,15 @@ async function main() {
 
   const generator = provider.stream('What are the main features of Llama 2?');
 
-  for await (const chunk of generator) {
-    if (chunk.type === 'text') {
-      process.stdout.write(chunk.text);
+  let chunk = await generator.next();
+  while (!chunk.done) {
+    if (chunk.value.type === 'text') {
+      process.stdout.write(chunk.value.text);
     }
+    chunk = await generator.next();
   }
 
+  console.log('\nFinal response: ', chunk.value);
   // Handle streaming response
 
   console.log('\n');

@@ -197,25 +197,7 @@ export class Agent implements AgentInterface {
           metadata: context.metadata,
         });
 
-        let completion = await generator.next();
-        while (!completion.done) {
-          yield completion.value;
-          completion = await generator.next();
-        }
-        const finalResponse = completion.value;
-
-        if (!finalResponse) {
-          throw new Error('No response received from LLM');
-        }
-
-        const agentResponse: AgentResponse = {
-          message: {
-            role: 'assistant',
-            content: finalResponse.content,
-          },
-          tokens: finalResponse.tokens,
-          stopReason: finalResponse.stopReason,
-        };
+        const agentResponse = yield* generator;
 
         // Track LLM token usage
         tokenTracker.addCompletionTokens(agentResponse.tokens);
@@ -223,11 +205,6 @@ export class Agent implements AgentInterface {
         // Update conversation
         context.currentMessages.push(agentResponse.message);
 
-        console.log(
-          'isTerminalState',
-          agentResponse.stopReason,
-          JSON.stringify(context.currentMessages, null, 2)
-        );
         // Check for terminal state
         const isTerminalState =
           !agentResponse.stopReason ||

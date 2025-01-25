@@ -5,9 +5,8 @@ import {
   PartialReturn,
   Role,
   TextBlock,
-  GenerateResponse,
 } from '@agenite/llm';
-import { AgentTool } from '../types/agent';
+import { AgentResponse, AgentTool } from '../types/agent';
 import { ExecutionMetadata, ExecutionStep } from '../types/execution';
 
 export function transformToToolDefinitions(
@@ -45,7 +44,7 @@ export async function* generateLLMResponse({
   stream?: boolean;
   agentName: string;
   metadata: ExecutionMetadata;
-}): AsyncGenerator<ExecutionStep, GenerateResponse, unknown> {
+}): AsyncGenerator<ExecutionStep, AgentResponse, unknown> {
   const generator = provider.iterate(messages, {
     systemPrompt,
     tools: tools ? transformToToolDefinitions(tools) : undefined,
@@ -79,5 +78,12 @@ export async function* generateLLMResponse({
     completion = await generator.next();
   }
 
-  return completion.value;
+  return {
+    message: {
+      role: 'assistant',
+      content: completion.value.content,
+    },
+    tokens: completion.value.tokens,
+    stopReason: completion.value.stopReason,
+  };
 }
