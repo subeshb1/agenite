@@ -10,8 +10,8 @@ export class BedrockToolAdapter {
         inputSchema: {
           json: {
             type: 'object',
-            properties: tool.parameters.properties,
-            required: tool.parameters.required,
+            properties: tool.inputSchema.properties,
+            required: tool.inputSchema.required,
           },
         },
       },

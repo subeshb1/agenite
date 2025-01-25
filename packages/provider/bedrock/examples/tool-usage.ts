@@ -11,7 +11,7 @@ const calculatorTool: ToolDefinition = {
   name: 'calculator',
   description:
     'A simple calculator that can perform basic arithmetic operations',
-  parameters: {
+  inputSchema: {
     type: 'object',
     properties: {
       operation: {

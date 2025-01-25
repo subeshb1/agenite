@@ -1,7 +1,7 @@
 {
   "name": "@agenite/tool",
-  "version": "0.0.0",
-  "description": "Simple and maintainable agent library",
+  "version": "0.0.1",
+  "description": "Tool interface for Agenite",
   "private": false,
   "type": "module",
   "main": "./dist/index.js",
@@ -18,18 +18,23 @@
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "build": "tsup",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "test": "jest"
   },
   "dependencies": {
-    "@agenite/llm": "workspace:*"
+    "@agenite/llm": "workspace:*",
+    "ajv": "^8.12.0",
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.17.14",
-    "tsup": "^8.0.0",
-    "typescript": "^5.7.3"
+    "@types/node": "^20.11.19",
+    "@types/ajv": "^1.0.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public",

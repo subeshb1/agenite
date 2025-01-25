@@ -1,4 +1,4 @@
-import { BaseMessage, TokenUsage, LLMProvider } from '@agenite/llm';
+import { BaseMessage, TokenUsage, LLMProvider, ToolDefinition } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
 import { Logger } from './logger';
 import { ExecutionStep } from './execution';
@@ -17,56 +17,55 @@ export interface DetailedTokenUsage {
   };
 }
 
+// Update AgentTool to be a union type
+export type AgentTool = Tool | Agent;
+
 export interface Agent {
   name: string;
   provider: LLMProvider;
-  tools: (Tool | Agent)[];
+  tools: AgentTool[];
   systemPrompt?: string;
   description?: string;
-  executableType: 'agent';
   stopCondition: StopCondition;
+  inputSchema?: ToolDefinition['inputSchema'];
 
-  iterate(params: {
-    messages: string | BaseMessage[];
-    context?: AgentContext;
-    stream?: boolean;
-  }): AsyncGenerator<ExecutionStep, { messages: BaseMessage[] }, unknown>;
-
-  execute(params: {
-    messages: string | BaseMessage[];
-    context?: AgentContext;
-    stream?: boolean;
-  }): Promise<{
-    messages: BaseMessage[];
-    tokenUsage: DetailedTokenUsage;
-  }>;
+  iterate(params: AgentExecuteParams): AsyncGenerator<ExecutionStep, { messages: BaseMessage[] }, unknown>;
+  execute(params: AgentExecuteParams): Promise<AgentExecuteResult>;
 }
 
-export interface AgentConfig {
+export interface AgentExecuteParams {
+  messages: string | BaseMessage[];
+  context?: AgentContext;
+  stream?: boolean;
+}
+
+export interface AgentExecuteResult {
+  messages: BaseMessage[];
+  tokenUsage: DetailedTokenUsage;
+}
+
+export interface AgentOptions {
   name: string;
-  description?: string;
-  provider?: LLMProvider;
+  provider: LLMProvider;
+  tools?: AgentTool[];
   systemPrompt?: string;
-  tools?: Agent['tools'];
-  logger?: Logger;
+  description?: string;
   stopCondition?: StopCondition;
+  logger?: Logger;
 }
 
 export interface AgentContext {
   executionId: string;
   parentExecutionId?: string;
-  extraContext?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+  state?: Record<string, unknown>;
 }
 
 export interface AgentResponse {
   message: BaseMessage;
-  stopReason?: 'toolUse' | 'maxTokens' | 'stopSequence' | 'endTurn';
+  stopReason?: StopReason;
   tokens: TokenUsage[];
 }
 
-export interface ToolExecution {
-  toolName: string;
-  tokens?: TokenUsage[];
-}
-
-export type StopCondition = 'terminal' | 'toolUse' | 'toolResult'; 
+export type StopReason = 'toolUse' | 'maxTokens' | 'stopSequence' | 'endTurn';
+export type StopCondition = 'terminal' | 'toolUse' | 'toolResult';

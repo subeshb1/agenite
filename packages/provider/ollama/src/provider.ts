@@ -204,7 +204,7 @@ export class OllamaProvider extends BaseLLMProvider {
         this.config.model,
         finalResponse.prompt_eval_count,
         finalResponse.eval_count,
-        finalResponse.message.tool_calls?.length
+        toolCalls?.length
           ? 'toolUse'
           : mapStopReason(finalResponse.done ? 'stop' : null)
       );

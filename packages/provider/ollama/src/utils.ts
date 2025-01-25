@@ -142,7 +142,10 @@ export function extractImages(blocks: ContentBlock[]): string[] {
 function createToolResultMessage(toolResult: ToolResultBlock): OllamaMessage {
   return {
     role: 'tool',
-    content: JSON.stringify(toolResult.content),
+    content: JSON.stringify({
+      output: toolResult.content,
+      isError: toolResult.isError,
+    }),
     name: toolResult.toolName,
   };
 }
@@ -294,12 +297,12 @@ function convertToolParameters(tool: ToolDefinition) {
   return {
     type: 'object',
     properties: Object.fromEntries(
-      Object.entries(tool.parameters.properties).map(([key, value]) =>
+      Object.entries(tool.inputSchema.properties || {}).map(([key, value]) =>
         convertParameterDefinition(key, value)
       )
     ),
-    required: tool.parameters.required ?? [],
-  };
+    required: tool.inputSchema.required ?? [],
+  } as unknown as Tool['function']['parameters'];
 }
 
 /**

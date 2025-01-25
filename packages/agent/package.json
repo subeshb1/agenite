@@ -30,7 +30,10 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20.17.14",
     "tsup": "^8.0.0",
+    "@agenite/ollama": "workspace:*",
+    "@agenite/bedrock": "workspace:*",
     "typescript": "^5.7.3"
+
   },
   "publishConfig": {
     "access": "public",

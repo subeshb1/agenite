@@ -119,7 +119,7 @@ export class OpenAIProvider extends BaseLLMProvider {
           function: {
             name: tool.name,
             description: tool.description,
-            parameters: tool.parameters,
+            parameters: tool.inputSchema,
           },
         })),
       });
@@ -174,7 +174,7 @@ export class OpenAIProvider extends BaseLLMProvider {
           function: {
             name: tool.name,
             description: tool.description,
-            parameters: tool.parameters,
+            parameters: tool.inputSchema,
           },
         })),
         stream: true,
@@ -215,7 +215,7 @@ export class OpenAIProvider extends BaseLLMProvider {
           function: {
             name: tool.name,
             description: tool.description,
-            parameters: tool.parameters,
+            parameters: tool.inputSchema,
           },
         })),
       });

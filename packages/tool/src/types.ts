@@ -1,36 +1,66 @@
-import { TokenUsage, BaseMessage } from '@agenite/llm';
+import { z } from 'zod';
+import { TokenUsage, ToolDefinition } from '@agenite/llm';
 
 export interface Tool<TInput = unknown> {
-  name: string;
-  description: string;
-  version?: string;
-  executableType?: 'tool';
-  inputSchema?: ToolSchema;
+  readonly name: string;
+  readonly description: string;
+  readonly version?: string;
+  readonly inputSchema?: ToolDefinition['inputSchema'];
 
-  execute(params: {
-    input: TInput;
-    context?: ToolContext;
-  }): Promise<ToolResponse>;
-
+  execute(params: ToolExecuteParams<TInput>): Promise<ToolResponse>;
   validate?(input: TInput): Promise<ValidationResult>;
 }
 
-export interface ToolSchema {
-  type: 'object';
-  properties?: unknown | null;
+export type SchemaType<T> = z.ZodType<T> | JSONSchema;
+
+export interface JSONSchema {
+  type: string;
+  properties?: Record<string, unknown>;
+  required?: string[];
   [k: string]: unknown;
 }
 
+export interface ToolOptions<TInput> {
+  name: string;
+  description: string;
+  version?: string;
+  inputSchema?: SchemaType<TInput>;
+  execute: (params: ToolExecuteParams<TInput>) => Promise<ToolResponse>;
+  validate?: (input: TInput) => Promise<ValidationResult>;
+}
+
+export interface ToolExecuteParams<TInput> {
+  input: TInput;
+  context?: ToolContext;
+}
+
 export interface ToolContext {
-  agentId: string;
-  executionId: string;
+  agentId?: string;
+  executionId?: string;
   parentToolExecutionId?: string;
   extraContext?: Record<string, unknown>;
 }
 
+export type ToolResponseData = string | Array<ToolResponseBlock>;
+
+export interface ToolResponseBlock {
+  type: 'text' | 'image';
+  text?: string;
+  image?: {
+    type: 'base64';
+    media_type: string;
+    data: string;
+  };
+}
+
 export interface ToolResponse {
   success: boolean;
-  data: string | Array<{ type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }>;
+  data: ToolResponseData;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
   duration?: number;
   tokenUsage?: TokenUsage;
 }
@@ -44,11 +74,3 @@ export interface ValidationError {
   field: string;
   message: string;
 }
-
-export interface ToolConfig<TInput> {
-  name: string;
-  description: string;
-  inputSchema?: Record<string, unknown>;
-  execute: (input: TInput, context?: ToolContext) => Promise<ToolResponse>;
-  validate?: (input: TInput) => Promise<ValidationResult>;
-} 

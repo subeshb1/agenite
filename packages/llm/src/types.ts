@@ -137,15 +137,14 @@ export interface LLMProvider {
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown>;
 }
 
-/**
- * Tool definition interface
- */
 export interface ToolDefinition {
   name: string;
   description: string;
-  parameters: {
-    type: 'object';
-    properties: Record<string, unknown>;
-    required?: string[];
-  };
+  inputSchema: ToolSchema;
+}
+
+export interface ToolSchema {
+  type: 'object';
+  properties?: unknown | null;
+  [k: string]: unknown;
 }
