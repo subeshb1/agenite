@@ -1,7 +1,7 @@
 {
-  "name": "@agenite/bedrock",
-  "version": "0.1.3",
-  "description": "AWS Bedrock provider for Agenite",
+  "name": "@agenite/agent",
+  "version": "0.0.0",
+  "description": "Simple and maintainable agent library",
   "private": false,
   "type": "module",
   "main": "./dist/index.js",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@agenite/llm": "workspace:*",
-    "@aws-sdk/client-bedrock-runtime": "^3.731.1"
+    "@agenite/tool": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

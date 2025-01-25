@@ -140,6 +140,34 @@ importers:
 
   dev-config/typescript-config: {}
 
+  packages/agent:
+    dependencies:
+      '@agenite/llm':
+        specifier: workspace:*
+        version: link:../llm
+      '@agenite/tool':
+        specifier: workspace:*
+        version: link:../tool
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../dev-config/eslint-config
+      '@repo/tsup-config':
+        specifier: workspace:*
+        version: link:../../dev-config/tsup-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../dev-config/typescript-config
+      '@types/node':
+        specifier: ^20.17.14
+        version: 20.17.14
+      tsup:
+        specifier: ^8.0.0
+        version: 8.3.5(postcss@8.4.31)(typescript@5.7.3)(yaml@2.7.0)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.7.3
+
   packages/llm:
     devDependencies:
       '@repo/eslint-config':
@@ -263,6 +291,31 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../../dev-config/typescript-config
+      '@types/node':
+        specifier: ^20.17.14
+        version: 20.17.14
+      tsup:
+        specifier: ^8.0.0
+        version: 8.3.5(postcss@8.4.31)(typescript@5.7.3)(yaml@2.7.0)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.7.3
+
+  packages/tool:
+    dependencies:
+      '@agenite/llm':
+        specifier: workspace:*
+        version: link:../llm
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../dev-config/eslint-config
+      '@repo/tsup-config':
+        specifier: workspace:*
+        version: link:../../dev-config/tsup-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../dev-config/typescript-config
       '@types/node':
         specifier: ^20.17.14
         version: 20.17.14

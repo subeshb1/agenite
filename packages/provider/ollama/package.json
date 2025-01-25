@@ -18,7 +18,7 @@
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "build": "tsup",
-    "dev": "tsc --watch"
+    "dev": "tsup --watch"
   },
   "dependencies": {
     "@agenite/llm": "workspace:*",
