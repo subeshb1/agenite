@@ -1,4 +1,9 @@
-import { BaseMessage, TokenUsage, LLMProvider, ToolDefinition } from '@agenite/llm';
+import {
+  BaseMessage,
+  TokenUsage,
+  LLMProvider,
+  ToolDefinition,
+} from '@agenite/llm';
 import { Tool } from '@agenite/tool';
 import { Logger } from './logger';
 import { ExecutionStep } from './execution';
@@ -29,7 +34,13 @@ export interface Agent {
   stopCondition: StopCondition;
   inputSchema?: ToolDefinition['inputSchema'];
 
-  iterate(params: AgentExecuteParams): AsyncGenerator<ExecutionStep, { messages: BaseMessage[] }, unknown>;
+  iterate(
+    params: AgentExecuteParams
+  ): AsyncGenerator<
+    ExecutionStep,
+    { messages: BaseMessage[]; tokenUsage: DetailedTokenUsage },
+    unknown
+  >;
   execute(params: AgentExecuteParams): Promise<AgentExecuteResult>;
 }
 

@@ -1,11 +1,4 @@
-import {
-  BaseMessage,
-  LLMProvider,
-  ToolDefinition,
-  PartialReturn,
-  Role,
-  TextBlock,
-} from '@agenite/llm';
+import { BaseMessage, LLMProvider, ToolDefinition } from '@agenite/llm';
 import { AgentResponse, AgentTool } from '../types/agent';
 import { ExecutionMetadata, ExecutionStep } from '../types/execution';
 
@@ -51,39 +44,25 @@ export async function* generateLLMResponse({
     stream: stream ?? false,
   });
 
-  let completion = await generator.next();
-  while (!completion.done) {
-    const value = completion.value;
-    if (value && 'type' in value) {
-      const partialReturn = value as PartialReturn;
+  let response = await generator.next();
+  while (!response.done) {
+    const value = response.value;
 
-      if (partialReturn.type === 'text') {
-        // Handle streaming response
-        yield {
-          type: 'streaming',
-          agentName,
-          response: {
-            message: {
-              role: 'assistant' as Role,
-              content: [
-                { type: 'text', text: partialReturn.text } as TextBlock,
-              ],
-            },
-            tokens: [],
-          },
-          metadata,
-        };
-      }
-    }
-    completion = await generator.next();
+    yield {
+      type: 'streaming',
+      response: value,
+      agentName,
+      metadata,
+    };
+    response = await generator.next();
   }
 
   return {
     message: {
       role: 'assistant',
-      content: completion.value.content,
+      content: response.value.content,
     },
-    tokens: completion.value.tokens,
-    stopReason: completion.value.stopReason,
+    tokens: response.value.tokens,
+    stopReason: response.value.stopReason,
   };
 }

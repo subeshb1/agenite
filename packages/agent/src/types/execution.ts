@@ -1,6 +1,17 @@
-import { BaseMessage, ToolUseBlock, ToolResultBlock, LLMProvider } from '@agenite/llm';
+import {
+  BaseMessage,
+  ToolUseBlock,
+  ToolResultBlock,
+  LLMProvider,
+  PartialReturn,
+} from '@agenite/llm';
 import { Tool } from '@agenite/tool';
-import { AgentResponse, DetailedTokenUsage, Agent, AgentContext } from './agent';
+import {
+  AgentResponse,
+  DetailedTokenUsage,
+  Agent,
+  AgentContext,
+} from './agent';
 import { Logger } from './logger';
 
 export interface ExecutionMetadata {
@@ -32,7 +43,7 @@ export interface ExecutionStopStep extends BaseExecutionStep {
 
 export interface ExecutionStreamingStep extends BaseExecutionStep {
   type: 'streaming';
-  response: AgentResponse;
+  response: PartialReturn;
 }
 
 export interface ExecutionToolUseStep extends BaseExecutionStep {
@@ -74,4 +85,4 @@ export interface ExecuteToolsParams {
   stream?: boolean;
   currentExecutionPath: string[];
   messages?: BaseMessage[];
-} 
+}

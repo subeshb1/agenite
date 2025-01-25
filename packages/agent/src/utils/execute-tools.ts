@@ -1,15 +1,11 @@
 import { Tool } from '@agenite/tool';
 import { Agent } from '../types/agent';
-import { 
-  ToolResultBlock, 
-  BaseMessage, 
-  ContentBlock,
-  TokenUsage} from '@agenite/llm';
-import { 
-  ToolExecutionBlock, 
-  ToolResultExecutionBlock, 
+import { ToolResultBlock, ContentBlock, TokenUsage } from '@agenite/llm';
+import {
+  ToolExecutionBlock,
+  ToolResultExecutionBlock,
   ExecutionStep,
-  ExecuteToolsParams
+  ExecuteToolsParams,
 } from '../types/execution';
 import { DetailedTokenUsage, AgentContext } from '../types/agent';
 import { Logger } from '../types/logger';
@@ -30,7 +26,13 @@ function formatContentBlock(block: ContentBlock): string {
   if ('text' in block && block.type === 'text') {
     return block.text;
   }
-  if ('source' in block && block.type === 'image' && block.source && typeof block.source === 'object' && 'media_type' in block.source) {
+  if (
+    'source' in block &&
+    block.type === 'image' &&
+    block.source &&
+    typeof block.source === 'object' &&
+    'media_type' in block.source
+  ) {
     return `[Image: ${block.source.media_type}]`;
   }
   if ('toolUse' in block && block.type === 'toolUse') {
@@ -63,40 +65,53 @@ async function executeRegularTool(
   try {
     const result = await tool.execute({
       input: block.tool.input,
-      context: context ? {
-        executionId: context.executionId,
-      } : undefined
+      context: context
+        ? {
+            executionId: context.executionId,
+          }
+        : undefined,
     });
 
-    const content = typeof result.data === 'string' 
-      ? result.data 
-      : result.data.map(block => {
-          if ('text' in block && block.type === 'text') {
-            return block.text;
-          }
-          if ('source' in block && block.type === 'image' && block.source && typeof block.source === 'object' && 'media_type' in block.source) {
-            return `[Image: ${block.source.media_type}]`;
-          }
-          return JSON.stringify(block);
-        }).join('\n');
+    const content =
+      typeof result.data === 'string'
+        ? result.data
+        : result.data
+            .map((block) => {
+              if ('text' in block && block.type === 'text') {
+                return block.text;
+              }
+              if (
+                'source' in block &&
+                block.type === 'image' &&
+                block.source &&
+                typeof block.source === 'object' &&
+                'media_type' in block.source
+              ) {
+                return `[Image: ${block.source.media_type}]`;
+              }
+              return JSON.stringify(block);
+            })
+            .join('\n');
 
     const toolResult: ToolResultBlock = {
       type: 'toolResult',
       toolUseId: block.tool.id,
       toolName: tool.name,
       content,
-      isError: !result.success
+      isError: !result.success,
     };
 
     return {
       toolResult,
       executionBlock: { type: 'tool', result: toolResult },
-      tokenUsage: result.tokenUsage ? convertTokenUsage(result.tokenUsage) : undefined
+      tokenUsage: result.tokenUsage
+        ? convertTokenUsage(result.tokenUsage)
+        : undefined,
     };
   } catch (error) {
     logger.error('Tool execution failed', error as Error, {
       toolName: tool.name,
-      context
+      context,
     });
 
     const toolResult: ToolResultBlock = {
@@ -104,7 +119,7 @@ async function executeRegularTool(
       toolUseId: block.tool.id,
       toolName: tool.name,
       content: `Tool execution failed: ${error}`,
-      isError: true
+      isError: true,
     };
 
     return {
@@ -121,80 +136,71 @@ async function* executeAgentTool(
   block: ToolExecutionBlock,
   agent: Agent,
   params: ExecuteToolsParams
-): AsyncGenerator<ExecutionStep, {
-  toolResult: ToolResultBlock;
-  executionBlock: ToolResultExecutionBlock;
-  tokenUsage: DetailedTokenUsage;
-}> {
+): AsyncGenerator<
+  ExecutionStep,
+  {
+    toolResult: ToolResultBlock;
+    executionBlock: ToolResultExecutionBlock;
+    tokenUsage: DetailedTokenUsage;
+  }
+> {
   // Create context for nested agent
   const nestedContext: AgentContext = {
     executionId: params.context?.executionId ?? crypto.randomUUID(),
     parentExecutionId: params.context?.executionId,
     metadata: {
       ...params.context?.metadata,
-      executionPath: params.currentExecutionPath
+      executionPath: params.currentExecutionPath,
     },
-    state: params.context?.state
+    state: params.context?.state,
   };
 
   // Execute nested agent
   const iterator = agent.iterate({
     messages: JSON.stringify(block.tool.input),
     context: nestedContext,
-    stream: params.stream
+    stream: params.stream,
   });
 
-  let lastMessages: BaseMessage[] = [];
-  let tokenUsage: DetailedTokenUsage = {
-    total: { inputTokens: 0, outputTokens: 0 },
-    completion: [],
-    children: {}
-  };
+  const agentResponse = yield* iterator;
 
-  // Process all steps from nested agent
-  for await (const step of iterator) {
-    // Pass through all steps
-    yield step;
-
-    if (step.type === 'stop') {
-      lastMessages = step.response.message ? [step.response.message] : [];
-      tokenUsage = step.tokenUsage;
-    }
-  }
+  const lastMessages = agentResponse.messages;
+  const tokenUsage = agentResponse.tokenUsage;
 
   // Create tool result
-  const response = lastMessages.map(msg => 
-    msg.content.map(formatContentBlock).join('\n')
-  ).join('\n');
+  const response = lastMessages
+    .map((msg) => msg.content.map(formatContentBlock).join('\n'))
+    .join('\n');
 
   const toolResult: ToolResultBlock = {
     type: 'toolResult',
     toolUseId: block.tool.id,
     toolName: agent.name,
-    content: response
+    content: response,
   };
 
   return {
     toolResult,
     executionBlock: { type: 'agent', result: toolResult },
-    tokenUsage
+    tokenUsage,
   };
 }
 
 /**
  * Execute a series of tools
  */
-export async function* executeTools(
-  params: ExecuteToolsParams
-): AsyncGenerator<ExecutionStep, {
-  results: ToolResultBlock[];
-  tokenUsages: DetailedTokenUsage[];
-}> {
+export async function* executeTools(params: ExecuteToolsParams): AsyncGenerator<
+  ExecutionStep,
+  {
+    results: ToolResultBlock[];
+    tokenUsages: DetailedTokenUsage[];
+  }
+> {
   const results: ToolResultBlock[] = [];
   const tokenUsages: DetailedTokenUsage[] = [];
 
   for (const block of params.toolExecutionBlocks) {
-    const tool = params.tools.find(t => t.name === block.tool.name);
+    const tool = params.tools.find((t) => t.name === block.tool.name);
     if (!tool) {
       throw new Error(`Tool ${block.tool.name} not found`);
     }
@@ -224,4 +230,4 @@ export async function* executeTools(
   }
 
   return { results, tokenUsages };
-} 
+}
