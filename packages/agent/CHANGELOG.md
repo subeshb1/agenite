@@ -1,5 +1,11 @@
 # @agenite/agent
 
+## 0.1.1
+
+### Patch Changes
+
+- 906b9ce: Fix ollama stream response and refactor agent llm generation
+
 ## 0.1.0
 
 ### Minor Changes
