@@ -1,6 +1,6 @@
 {
   "name": "@agenite/agent",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Simple and maintainable agent library",
   "private": false,
   "type": "module",
@@ -33,7 +33,6 @@
     "@agenite/ollama": "workspace:*",
     "@agenite/bedrock": "workspace:*",
     "typescript": "^5.7.3"
-
   },
   "publishConfig": {
     "access": "public",
