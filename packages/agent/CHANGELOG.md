@@ -1,5 +1,11 @@
 # @agenite/agent
 
+## 0.1.2
+
+### Patch Changes
+
+- f46f709: update streaming iterface and fix nested token usage
+
 ## 0.1.1
 
 ### Patch Changes
