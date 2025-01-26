@@ -166,7 +166,7 @@ export class Agent implements AgentInterface {
       toolExecutionBlocks: ToolExecutionBlock[];
       toolResults: ToolResultBlock[] | undefined;
     },
-    undefined
+    ToolResultBlock[]
   > {
     const toolUseBlocks = agentResponse.message.content.filter(
       (block): block is ToolUseBlock => block.type === 'toolUse'
@@ -204,7 +204,7 @@ export class Agent implements AgentInterface {
     toolResults: ToolResultBlock[] | undefined,
     context: IterationContext,
     tokenTracker: TokenUsageTracker
-  ): AsyncGenerator<ExecutionStep, boolean, undefined> {
+  ): AsyncGenerator<ExecutionStep, boolean> {
     let finalToolResults: ToolResultBlock[];
     let toolTokenUsages: DetailedTokenUsage[] = [];
 
@@ -316,7 +316,7 @@ export class Agent implements AgentInterface {
   ): AsyncGenerator<
     ExecutionStep,
     { messages: BaseMessage[]; tokenUsage: DetailedTokenUsage },
-    undefined
+    ToolResultBlock[]
   > {
     const context = this.initializeContext(params);
     const tokenTracker = new TokenUsageTracker();

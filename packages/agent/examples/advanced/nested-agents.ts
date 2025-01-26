@@ -1,7 +1,12 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 import { Agent } from '../../src';
-import { createWeatherTool } from '../shared/tools';
+import { calculatorTool, createWeatherTool } from '../shared/tools';
 import { createProvider } from '../shared/provider-factory';
+import { Tool } from '@agenite/tool';
+
+interface DelegateInput {
+  input: string;
+}
 
 // Create a travel planning agent that uses a weather agent
 async function main() {
@@ -12,50 +17,95 @@ async function main() {
     model: process.env.MODEL_NAME,
   });
 
-  // Create a weather agent
+  // Create a specialized calculator agent
+  const calculatorAgent = new Agent({
+    name: 'calculator-specialist',
+    provider,
+    tools: [calculatorTool],
+    systemPrompt: 'You are a math specialist. Always use the calculator tool for calculations.',
+  });
+
+  // Create a specialized weather agent
   const weatherAgent = new Agent({
-    name: 'weather-expert',
+    name: 'weather-specialist',
     provider,
-    tools: [createWeatherTool(process.env.WEATHER_API_KEY || '')],
-    systemPrompt:
-      'You are a weather expert. Use the weather tool to provide accurate weather information.',
-    stopCondition: 'toolResult',
+    tools: [createWeatherTool('dummy-key')],
+    systemPrompt: 'You are a weather specialist. Always check the weather when asked about temperature or conditions.',
   });
 
-  // Create a travel planning agent that can use the weather agent
-  const travelAgent = new Agent({
-    name: 'travel-planner',
-    provider,
-    tools: [weatherAgent], // Weather agent is used as a tool
-    systemPrompt: `You are a travel planner. When planning outdoor activities, 
-    consult the weather-expert agent to check weather conditions.
-    Always explain your recommendations based on the weather forecast.`,
-    stopCondition: 'terminal', // Continue until final recommendation
-  });
-
-  // Example: Plan a day trip
-  const result = await travelAgent.execute({
-    messages: 'I want to go hiking in Seattle tomorrow. What do you recommend?',
-    stream: true,
-    // Add execution context for tracking
-    context: {
-      executionId: 'trip-planning-1',
-      metadata: {
-        userId: 'user-123',
-        planningDate: new Date().toISOString(),
+  // Create delegate tools for the coordinator
+  const calculatorDelegateTool = new Tool<DelegateInput>({
+    name: 'askCalculator',
+    description: 'Ask the calculator specialist for help with math',
+    version: '1.0.0',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        input: { type: 'string' },
       },
+      required: ['input'],
+    },
+    execute: async ({ input }) => {
+      const result = await calculatorAgent.execute({
+        messages: input.input,
+        context: {
+          executionId: crypto.randomUUID(),
+          parentExecutionId: 'coordinator',
+        },
+      });
+      return {
+        success: true,
+        data: JSON.stringify(result.messages[result.messages.length - 1]),
+      };
     },
   });
 
+  const weatherDelegateTool = new Tool<DelegateInput>({
+    name: 'askWeather',
+    description: 'Ask the weather specialist about weather conditions',
+    version: '1.0.0',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        input: { type: 'string' },
+      },
+      required: ['input'],
+    },
+    execute: async ({ input }) => {
+      const result = await weatherAgent.execute({
+        messages: input.input,
+        context: {
+          executionId: crypto.randomUUID(),
+          parentExecutionId: 'coordinator',
+        },
+      });
+      return {
+        success: true,
+        data: JSON.stringify(result.messages[result.messages.length - 1]),
+      };
+    },
+  });
+
+  // Create a coordinator agent that can delegate to specialized agents
+  const coordinatorAgent = new Agent({
+    name: 'coordinator',
+    provider,
+    tools: [calculatorDelegateTool, weatherDelegateTool],
+    systemPrompt: `You are a coordinator that delegates tasks to specialized agents.
+For math questions, use askCalculator.
+For weather questions, use askWeather.
+For complex queries involving both, break them down and ask each specialist.`,
+  });
+
+  // Example: Complex query requiring multiple specialists
+  const result = await coordinatorAgent.execute({
+    messages: 'What is the temperature in New York? If we double that temperature, what would it be?',
+    stream: true,
+  });
+
   // Format and print results
-  console.log(
-    'Final recommendation:',
-    JSON.stringify(result.messages, null, 2)
-  );
-  console.log(
-    'Token usage breakdown:',
-    JSON.stringify(result.tokenUsage, null, 2)
-  );
+  console.log('Final messages:', JSON.stringify(result.messages, null, 2));
+  console.log('Token usage:', JSON.stringify(result.tokenUsage, null, 2));
 }
 
 main().catch(console.error);
