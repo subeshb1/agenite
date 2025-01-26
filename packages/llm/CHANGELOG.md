@@ -1,5 +1,11 @@
 # @agenite/llm
 
+## 0.2.0
+
+### Minor Changes
+
+- 490db90: Agenite 0.2.0 release
+
 ## 0.1.3
 
 ### Patch Changes

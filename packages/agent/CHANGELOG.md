@@ -1,5 +1,17 @@
 # @agenite/agent
 
+## 0.2.0
+
+### Minor Changes
+
+- 490db90: Agenite 0.2.0 release
+
+### Patch Changes
+
+- Updated dependencies [490db90]
+  - @agenite/tool@0.2.0
+  - @agenite/llm@0.2.0
+
 ## 0.1.2
 
 ### Patch Changes
