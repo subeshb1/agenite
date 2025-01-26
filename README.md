@@ -3,14 +3,15 @@
   <h1>🤖 Agenite</h1>
   <img src="./assets/agenite.jpg" alt="Agenite Logo" width="200" height="200"/>
   <p><strong>A modern, modular, and type-safe framework for building AI agents using typescript</strong></p>
+ 
 </div>
 
 <div align="center">
   
-[![GitHub license](https://img.shields.io/github/license/yourusername/agenite)](https://github.com/yourusername/agenite/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/subeshb1/agenite)](https://github.com/subeshb1/agenite/blob/main/LICENSE)
 [![npm version](https://img.shields.io/npm/v/@agenite/agent.svg)](https://www.npmjs.com/package/@agenite/agent)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-blue)](https://www.typescriptlang.org/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/yourusername/agenite/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/subeshb1/agenite/pulls)
 
 </div>
 
@@ -133,10 +134,7 @@ const weatherAgent = new Agent({
 const coordinatorAgent = new Agent({
   name: 'coordinator',
   provider,
-  tools: [
-    createDelegateTool('askCalculator', calculatorAgent),
-    createDelegateTool('askWeather', weatherAgent),
-  ],
+  tools: [calculatorAgent, weatherAgent],
 });
 ```
 
@@ -287,7 +285,7 @@ packages/
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/agenite.git
+git clone https://github.com/subeshb1/agenite.git
 cd agenite
 ```
 
@@ -467,7 +465,7 @@ MIT
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/agenite&type=Date)](https://star-history.com/#yourusername/agenite&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=subeshb1/agenite&type=Date)](https://star-history.com/#subeshb1/agenite&Date)
 
 ```
 
