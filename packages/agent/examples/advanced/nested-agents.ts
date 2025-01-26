@@ -22,7 +22,8 @@ async function main() {
     name: 'calculator-specialist',
     provider,
     tools: [calculatorTool],
-    systemPrompt: 'You are a math specialist. Always use the calculator tool for calculations.',
+    systemPrompt:
+      'You are a math specialist. Always use the calculator tool for calculations.',
   });
 
   // Create a specialized weather agent
@@ -30,7 +31,8 @@ async function main() {
     name: 'weather-specialist',
     provider,
     tools: [createWeatherTool('dummy-key')],
-    systemPrompt: 'You are a weather specialist. Always check the weather when asked about temperature or conditions.',
+    systemPrompt:
+      'You are a weather specialist. Always check the weather when asked about temperature or conditions.',
   });
 
   // Create delegate tools for the coordinator
@@ -99,8 +101,8 @@ For complex queries involving both, break them down and ask each specialist.`,
 
   // Example: Complex query requiring multiple specialists
   const result = await coordinatorAgent.execute({
-    messages: 'What is the temperature in New York? If we double that temperature, what would it be?',
-    stream: true,
+    messages:
+      'What is the temperature in New York? If we double that temperature, what would it be?',
   });
 
   // Format and print results

@@ -68,7 +68,7 @@ export class Agent implements AgentInterface {
   }
 
   public async execute(
-    params: AgentExecuteParams
+    params: Omit<AgentExecuteParams, 'stream'>
   ): Promise<AgentExecuteResult> {
     const iterator = this.iterate(params);
     let result = await iterator.next();

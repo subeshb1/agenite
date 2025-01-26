@@ -1,3 +1,5 @@
+/* eslint-disable turbo/no-undeclared-env-vars */
+
 import { Agent } from '../../src';
 import { calculatorTool, createWeatherTool } from '../shared/tools';
 import { createProvider } from '../shared/provider-factory';
@@ -22,8 +24,8 @@ Always use tools when available instead of doing calculations yourself.`,
 
   // Example: Complex query using multiple tools
   const result = await agent.execute({
-    messages: 'What is the temperature in London? Also, can you multiply that temperature by 2?',
-    stream: true, // Enable streaming for real-time responses
+    messages:
+      'What is the temperature in London? Also, can you multiply that temperature by 2?',
   });
 
   // Format and print results
@@ -31,4 +33,4 @@ Always use tools when available instead of doing calculations yourself.`,
   console.log('Token usage:', JSON.stringify(result.tokenUsage, null, 2));
 }
 
-main().catch(console.error); 
+main().catch(console.error);

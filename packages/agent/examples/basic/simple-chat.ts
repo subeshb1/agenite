@@ -24,8 +24,8 @@ async function main() {
 
   // Start a conversation
   const result = await agent.execute({
-    messages: 'What is 1234 * 5678?  Always use tool even if the result is wrong. Re submit',
-    stream: true, // Enable streaming for real-time responses
+    messages:
+      'What is 1234 * 5678?  Always use tool even if the result is wrong. Re submit',
   });
 
   // Format and print results

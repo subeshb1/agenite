@@ -1,3 +1,4 @@
+/* eslint-disable turbo/no-undeclared-env-vars */
 import { Agent } from '../../src';
 import { calculatorTool } from '../shared/tools';
 import { createProvider } from '../shared/provider-factory';
@@ -29,11 +30,13 @@ Remember previous calculations when asked about history.`,
   // Function to process a query and print results
   async function processQuery(query: string) {
     console.log('\n👉 User:', query);
-    
+
     const result = await agent.execute({
       // Pass all previous messages along with the new query
-      messages: [...messages, { role: 'user', content: [{ type: 'text', text: query }] }],
-      stream: true,
+      messages: [
+        ...messages,
+        { role: 'user', content: [{ type: 'text', text: query }] },
+      ],
     });
 
     // Update conversation history with both the user's message and the response
@@ -43,7 +46,7 @@ Remember previous calculations when asked about history.`,
     if (lastMessage) {
       console.log('🤖 Assistant:', formatMessage(lastMessage));
     }
-    
+
     return result;
   }
 
@@ -60,7 +63,9 @@ Remember previous calculations when asked about history.`,
   await processQuery('Divide the current total by 5');
 
   // Ask about history
-  await processQuery('Can you tell me what calculations we did and what the current total is?');
+  await processQuery(
+    'Can you tell me what calculations we did and what the current total is?'
+  );
 }
 
 // Helper function to format messages
@@ -74,4 +79,4 @@ function formatMessage(message: BaseMessage): string {
     .join(' ');
 }
 
-main().catch(console.error); 
+main().catch(console.error);
