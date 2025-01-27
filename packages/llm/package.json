@@ -37,5 +37,29 @@
     "package.json",
     "README.md",
     "CHANGELOG.md"
-  ]
+  ],
+  "keywords": [
+    "ai",
+    "generative-ai",
+    "llm",
+    "language-model",
+    "typescript",
+    "provider",
+    "openai",
+    "anthropic",
+    "bedrock",
+    "ollama",
+    "streaming",
+    "tool-integration"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/subeshb1/agenite.git",
+    "directory": "packages/llm"
+  },
+  "homepage": "https://github.com/subeshb1/agenite/tree/main/packages/llm#readme",
+  "bugs": {
+    "url": "https://github.com/subeshb1/agenite/issues"
+  },
+  "license": "MIT"
 }

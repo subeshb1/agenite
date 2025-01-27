@@ -40,5 +40,29 @@
     "package.json",
     "README.md",
     "CHANGELOG.md"
-  ]
+  ],
+  "keywords": [
+    "ai",
+    "generative-ai",
+    "openai",
+    "gpt",
+    "gpt-4",
+    "chatgpt",
+    "llm",
+    "provider",
+    "typescript",
+    "function-calling",
+    "streaming",
+    "agenite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/subeshb1/agenite.git",
+    "directory": "packages/provider/openai"
+  },
+  "homepage": "https://github.com/subeshb1/agenite/tree/main/packages/provider/openai#readme",
+  "bugs": {
+    "url": "https://github.com/subeshb1/agenite/issues"
+  },
+  "license": "MIT"
 }

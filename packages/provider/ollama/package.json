@@ -41,5 +41,29 @@
     "package.json",
     "README.md",
     "CHANGELOG.md"
-  ]
+  ],
+  "keywords": [
+    "ai",
+    "generative-ai",
+    "ollama",
+    "local-llm",
+    "llama",
+    "mistral",
+    "llm",
+    "provider",
+    "typescript",
+    "function-calling",
+    "streaming",
+    "agenite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/subeshb1/agenite.git",
+    "directory": "packages/provider/ollama"
+  },
+  "homepage": "https://github.com/subeshb1/agenite/tree/main/packages/provider/ollama#readme",
+  "bugs": {
+    "url": "https://github.com/subeshb1/agenite/issues"
+  },
+  "license": "MIT"
 }

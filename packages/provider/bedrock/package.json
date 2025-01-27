@@ -41,5 +41,29 @@
     "package.json",
     "README.md",
     "CHANGELOG.md"
-  ]
+  ],
+  "keywords": [
+    "ai",
+    "generative-ai",
+    "aws",
+    "bedrock",
+    "claude",
+    "titan",
+    "llm",
+    "provider",
+    "typescript",
+    "function-calling",
+    "streaming",
+    "agenite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/subeshb1/agenite.git",
+    "directory": "packages/provider/bedrock"
+  },
+  "homepage": "https://github.com/subeshb1/agenite/tree/main/packages/provider/bedrock#readme",
+  "bugs": {
+    "url": "https://github.com/subeshb1/agenite/issues"
+  },
+  "license": "MIT"
 }

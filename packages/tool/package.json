@@ -45,5 +45,28 @@
     "package.json",
     "README.md",
     "CHANGELOG.md"
-  ]
+  ],
+  "keywords": [
+    "ai",
+    "generative-ai",
+    "tool",
+    "function-calling",
+    "typescript",
+    "schema-validation",
+    "type-safe",
+    "agent-tools",
+    "llm-tools",
+    "api-integration",
+    "json-schema"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/subeshb1/agenite.git",
+    "directory": "packages/tool"
+  },
+  "homepage": "https://github.com/subeshb1/agenite/tree/main/packages/tool#readme",
+  "bugs": {
+    "url": "https://github.com/subeshb1/agenite/issues"
+  },
+  "license": "MIT"
 }

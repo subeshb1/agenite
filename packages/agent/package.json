@@ -43,5 +43,31 @@
     "package.json",
     "README.md",
     "CHANGELOG.md"
-  ]
+  ],
+  "keywords": [
+    "ai",
+    "generative-ai",
+    "agent",
+    "llm",
+    "chatbot",
+    "typescript",
+    "multi-agent",
+    "tool-integration",
+    "openai",
+    "anthropic",
+    "bedrock",
+    "ollama",
+    "streaming",
+    "ioc"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/subeshb1/agenite.git",
+    "directory": "packages/agent"
+  },
+  "homepage": "https://github.com/subeshb1/agenite/tree/main/packages/agent#readme",
+  "bugs": {
+    "url": "https://github.com/subeshb1/agenite/issues"
+  },
+  "license": "MIT"
 }
