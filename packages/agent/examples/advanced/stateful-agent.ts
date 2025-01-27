@@ -33,7 +33,7 @@ Remember previous calculations when asked about history.`,
 
     const result = await agent.execute({
       // Pass all previous messages along with the new query
-      messages: [
+      input: [
         ...messages,
         { role: 'user', content: [{ type: 'text', text: query }] },
       ],

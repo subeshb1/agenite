@@ -24,7 +24,7 @@ Always use tools when available instead of doing calculations yourself.`,
 
   // Example: Complex query using multiple tools
   const result = await agent.execute({
-    messages:
+    input:
       'What is the temperature in London? Also, can you multiply that temperature by 2?',
   });
 

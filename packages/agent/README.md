@@ -30,7 +30,7 @@ const calculatorTool = new Tool({
   execute: async ({ input }) => {
     // Tool implementation
     return { success: true, data: result.toString() };
-  }
+  },
 });
 
 // Initialize the agent
@@ -38,13 +38,13 @@ const agent = new Agent({
   name: 'math-buddy',
   provider: new OllamaProvider({ model: 'llama2' }),
   tools: [calculatorTool],
-  systemPrompt: 'You are a helpful math assistant.'
+  systemPrompt: 'You are a helpful math assistant.',
 });
 
 // Execute the agent
 const result = await agent.execute({
-  messages: 'What is 1234 * 5678?',
-  stream: true // Enable streaming
+  input: 'What is 1234 * 5678?',
+  stream: true, // Enable streaming
 });
 ```
 
@@ -53,6 +53,7 @@ const result = await agent.execute({
 ### Agent
 
 The main class that orchestrates interactions between the LLM and tools. It handles:
+
 - Message processing
 - Tool execution
 - Response streaming
@@ -61,6 +62,7 @@ The main class that orchestrates interactions between the LLM and tools. It hand
 ### Tools
 
 Tools are functions that agents can use to perform specific tasks. Each tool has:
+
 - Name and description
 - Input schema
 - Execute function
@@ -69,6 +71,7 @@ Tools are functions that agents can use to perform specific tasks. Each tool has
 ### Providers
 
 LLM providers that handle the actual language model interactions:
+
 - Ollama
 - Amazon Bedrock
 - Extensible for other providers
@@ -84,13 +87,13 @@ const agent = new Agent({
   name: 'stateful-calculator',
   provider,
   tools: [calculatorTool],
-  systemPrompt: `You are a helpful math assistant that maintains a running total.`
+  systemPrompt: `You are a helpful math assistant that maintains a running total.`,
 });
 
 let messages = [];
 const result = await agent.execute({
-  messages: [...messages, { role: 'user', content: query }],
-  stream: true
+  input: [...messages, { role: 'user', content: query }],
+  stream: true,
 });
 messages = result.messages;
 ```
@@ -104,13 +107,13 @@ Create hierarchical agent structures where agents can delegate tasks:
 const calculatorAgent = new Agent({
   name: 'calculator-specialist',
   provider,
-  tools: [calculatorTool]
+  tools: [calculatorTool],
 });
 
 const weatherAgent = new Agent({
   name: 'weather-specialist',
   provider,
-  tools: [weatherTool]
+  tools: [weatherTool],
 });
 
 // Coordinator agent
@@ -119,8 +122,8 @@ const coordinatorAgent = new Agent({
   provider,
   tools: [
     createDelegateTool('askCalculator', calculatorAgent),
-    createDelegateTool('askWeather', weatherAgent)
-  ]
+    createDelegateTool('askWeather', weatherAgent),
+  ],
 });
 ```
 
@@ -130,8 +133,8 @@ Process agent responses in real-time:
 
 ```typescript
 const iterator = agent.iterate({
-  messages: 'Your query here',
-  stream: true
+  input: 'Your query here',
+  stream: true,
 });
 
 for await (const chunk of iterator) {
@@ -164,7 +167,7 @@ new Agent({
 
 ```typescript
 execute({
-  messages: string | BaseMessage[];
+  input: string | BaseMessage[];
   stream?: boolean;
   context?: ExecutionContext;
 }): Promise<ExecutionResult>
@@ -174,7 +177,7 @@ execute({
 
 ```typescript
 iterate({
-  messages: string | BaseMessage[];
+  input: string | BaseMessage[];
   stream?: boolean;
   context?: ExecutionContext;
 }): AsyncIterator<StreamChunk>

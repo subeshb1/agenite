@@ -138,9 +138,9 @@ export class Agent implements AgentInterface {
   }
 
   private initializeContext(params: AgentExecuteParams): IterationContext {
-    const messages = Array.isArray(params.messages)
-      ? params.messages
-      : convertStringToMessages(params.messages);
+    const messages = Array.isArray(params.input)
+      ? params.input
+      : convertStringToMessages(params.input);
 
     return {
       currentMessages: messages,

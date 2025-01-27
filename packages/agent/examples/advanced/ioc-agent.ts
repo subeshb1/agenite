@@ -26,7 +26,7 @@ Always use the calculator tool for actual calculations.`,
 
   // Create an async iterator to handle the stream
   const iterator = agent.iterate({
-    messages:
+    input:
       'Can you help me calculate 25 divided by 5, and then multiply that by 3?',
   });
 

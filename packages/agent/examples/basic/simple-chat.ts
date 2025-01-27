@@ -24,7 +24,7 @@ async function main() {
 
   // Start a conversation
   const result = await agent.execute({
-    messages:
+    input:
       'What is 1234 * 5678?  Always use tool even if the result is wrong. Re submit',
   });
 

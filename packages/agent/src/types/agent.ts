@@ -45,7 +45,7 @@ export interface Agent {
 }
 
 export interface AgentExecuteParams {
-  messages: string | BaseMessage[];
+  input: string | BaseMessage[];
   context?: AgentContext;
   stream?: boolean;
 }

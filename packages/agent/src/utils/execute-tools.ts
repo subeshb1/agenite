@@ -157,7 +157,7 @@ async function* executeAgentTool(
 
   // Execute nested agent
   const iterator = agent.iterate({
-    messages: JSON.stringify(block.tool.input),
+    input: JSON.stringify(block.tool.input),
     context: nestedContext,
     stream: params.stream,
   });

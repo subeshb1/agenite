@@ -49,7 +49,7 @@ async function main() {
     },
     execute: async ({ input }) => {
       const result = await calculatorAgent.execute({
-        messages: input.input,
+        input: input.input,
         context: {
           executionId: crypto.randomUUID(),
           parentExecutionId: 'coordinator',
@@ -75,7 +75,7 @@ async function main() {
     },
     execute: async ({ input }) => {
       const result = await weatherAgent.execute({
-        messages: input.input,
+        input: input.input,
         context: {
           executionId: crypto.randomUUID(),
           parentExecutionId: 'coordinator',
@@ -101,7 +101,7 @@ For complex queries involving both, break them down and ask each specialist.`,
 
   // Example: Complex query requiring multiple specialists
   const result = await coordinatorAgent.execute({
-    messages:
+    input:
       'What is the temperature in New York? If we double that temperature, what would it be?',
   });
 

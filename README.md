@@ -66,7 +66,7 @@ const agent = new Agent({
 
 // Execute the agent
 const result = await agent.execute({
-  messages: 'What is 1234 * 5678?',
+  input: 'What is 1234 * 5678?',
 });
 ```
 
@@ -205,7 +205,7 @@ const agent = new Agent({
 
 // Create an iterator for fine-grained control
 const iterator = agent.iterate({
-  messages: 'Calculate 25 divided by 5, then multiply by 3',
+  input: 'Calculate 25 divided by 5, then multiply by 3',
 });
 
 // Process the stream with custom tool handling
