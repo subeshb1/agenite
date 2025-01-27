@@ -1,5 +1,13 @@
 # @agenite/tool
 
+## 0.2.1
+
+### Patch Changes
+
+- 3c58bbe: Add keywords, github link and license to packages
+- Updated dependencies [3c58bbe]
+  - @agenite/llm@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

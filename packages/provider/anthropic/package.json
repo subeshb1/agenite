@@ -1,6 +1,6 @@
 {
   "name": "@agenite/anthropic",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Anthropic provider for Agenite",
   "private": false,
   "type": "module",

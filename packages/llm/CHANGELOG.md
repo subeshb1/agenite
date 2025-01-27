@@ -1,5 +1,11 @@
 # @agenite/llm
 
+## 0.2.1
+
+### Patch Changes
+
+- 3c58bbe: Add keywords, github link and license to packages
+
 ## 0.2.0
 
 ### Minor Changes
