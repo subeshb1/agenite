@@ -1,5 +1,11 @@
 # @agenite/agent
 
+## 0.2.2
+
+### Patch Changes
+
+- e9e92c8: Change messages to input
+
 ## 0.2.1
 
 ### Patch Changes
