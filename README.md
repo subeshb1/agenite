@@ -1,7 +1,7 @@
 <div align="center">
   
   <h1>🤖 Agenite</h1>
-  <img src="./assets/agenite.jpg" alt="Agenite Logo" width="200" height="200"/>
+  <img src="./assets/agenite.png" alt="Agenite Logo" width="200" height="200"/>
   <p><strong>A modern, modular, and type-safe framework for building AI agents using typescript</strong></p>
  
 </div>
