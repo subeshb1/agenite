@@ -248,7 +248,7 @@ This IoC pattern allows you to:
 
 ## 📚 Examples
 
-Check out our [examples](./examples) directory for more:
+Check out our [examples](./packages/agent/examples) directory for more:
 
 - Basic chat agents
 - Multi-agent systems
