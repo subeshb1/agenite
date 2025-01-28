@@ -59,7 +59,7 @@ const calculatorTool = new Tool({
 // Initialize the agent
 const agent = new Agent({
   name: 'math-buddy',
-  provider: new OpenAIProvider({ apiKey: 'your-api-key' }),
+  provider: new OllamaProvider({ model: 'llama2' }),,
   tools: [calculatorTool],
   systemPrompt: 'You are a helpful math assistant.',
 });
@@ -143,6 +143,11 @@ const coordinatorAgent = new Agent({
 Easily switch between providers or use multiple providers:
 
 ```typescript
+// Use Ollama locally
+const ollamaAgent = new Agent({
+  provider: new OllamaProvider({ model: 'llama2' }),
+});
+
 // Use OpenAI
 const openaiAgent = new Agent({
   provider: new OpenAIProvider({ apiKey: 'openai-key' }),
