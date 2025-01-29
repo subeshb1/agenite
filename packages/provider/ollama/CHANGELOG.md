@@ -1,5 +1,11 @@
 # @agenite/ollama
 
+## 0.2.3-alpha.0
+
+### Patch Changes
+
+- 18a912b: Add function call and name
+
 ## 0.2.2
 
 ### Patch Changes
