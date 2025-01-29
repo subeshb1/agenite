@@ -1,5 +1,11 @@
 # @agenite/openai
 
+## 0.2.2
+
+### Patch Changes
+
+- d48c0f4: fix: missing BaseMessage[] type support in generate and stream response
+
 ## 0.2.1
 
 ### Patch Changes
