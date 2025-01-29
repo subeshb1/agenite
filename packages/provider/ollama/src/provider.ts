@@ -96,7 +96,7 @@ export class OllamaProvider extends BaseLLMProvider {
   }
 
   async generate(
-    input: string,
+    input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
     const startTime = Date.now();

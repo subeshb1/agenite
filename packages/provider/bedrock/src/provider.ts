@@ -16,7 +16,8 @@ import {
   PartialReturn,
   convertStringToMessages,
   BaseLLMProvider,
-} from '../../../llm/src';
+  BaseMessage
+} from '@agenite/llm';
 import { BedrockConfig } from './types';
 import { mapContent, mapStopReason, convertToMessageFormat } from './utils';
 import { BedrockToolAdapter } from './tool-adapter';
@@ -42,7 +43,10 @@ export class BedrockProvider extends BaseLLMProvider {
     this.toolAdapter = new BedrockToolAdapter();
   }
 
-  private createRequestBody(input: string, options?: Partial<GenerateOptions>) {
+  private createRequestBody(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ) {
     const messageArray = convertStringToMessages(input);
     const transformedMessages = convertToMessageFormat(messageArray);
 
@@ -247,7 +251,7 @@ export class BedrockProvider extends BaseLLMProvider {
   }
 
   async *stream(
-    input: string,
+    input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
     const startTime = Date.now();
@@ -305,7 +309,7 @@ export class BedrockProvider extends BaseLLMProvider {
   }
 
   async generate(
-    input: string,
+    input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
     const startTime = Date.now();

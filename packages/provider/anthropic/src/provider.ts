@@ -1,5 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { convertStringToMessages, iterateFromMethods, BaseLLMProvider } from '@agenite/llm';
+import {
+  convertStringToMessages,
+  iterateFromMethods,
+  BaseLLMProvider,
+} from '@agenite/llm';
 import type {
   BaseMessage,
   GenerateResponse,
@@ -124,7 +128,7 @@ export class AnthropicProvider extends BaseLLMProvider {
   }
 
   async generate(
-    input: string,
+    input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
     const startTime = Date.now();
@@ -162,7 +166,7 @@ export class AnthropicProvider extends BaseLLMProvider {
   }
 
   async *stream(
-    input: string,
+    input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
     const startTime = Date.now();

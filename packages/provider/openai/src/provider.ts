@@ -93,7 +93,7 @@ export class OpenAIProvider extends BaseLLMProvider {
   }
 
   async generate(
-    input: string,
+    input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
     const startTime = Date.now();
@@ -148,7 +148,7 @@ export class OpenAIProvider extends BaseLLMProvider {
   }
 
   async *stream(
-    input: string,
+    input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
     const startTime = Date.now();
