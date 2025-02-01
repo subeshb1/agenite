@@ -139,12 +139,19 @@ export function extractImages(blocks: ContentBlock[]): string[] {
 /**
  * Creates a tool result message in Ollama's format
  */
-function createToolResultMessage(toolResult: ToolResultBlock): OllamaMessage {
+function createToolResultMessage(
+  toolResult: ToolResultBlock,
+  toolUse: ToolUseBlock
+): OllamaMessage {
   return {
     role: 'tool',
     content: JSON.stringify({
       output: toolResult.content,
       isError: toolResult.isError,
+      function_call: {
+        name: toolUse.name,
+        arguments: toolUse.input,
+      },
     }),
     name: toolResult.toolName,
   };
@@ -216,7 +223,7 @@ function processMessagePair(
   for (const toolUse of toolUses) {
     const toolResult = findToolResult(toolUse, nextMsg);
     if (toolResult) {
-      messages.push(createToolResultMessage(toolResult));
+      messages.push(createToolResultMessage(toolResult, toolUse));
     }
   }
 
