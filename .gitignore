@@ -27,6 +27,12 @@ out/
 build
 dist
 
+# Generated blog posts
+/blogs
+
+# Research directories
+/research/topics
+/research/details
 
 # Debug
 npm-debug.log*

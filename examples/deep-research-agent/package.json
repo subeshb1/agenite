@@ -1,0 +1,27 @@
+{
+  "name": "@agenite-examples/deep-research-agent",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsx src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@agenite-examples/llm-provider": "workspace:*",
+    "@agenite/agent": "workspace:*",
+    "@agenite/tool": "workspace:*",
+    "axios": "^1.6.7",
+    "puppeteer": "^24.1.1",
+    "tsx": "^4.7.1"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/tsup-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.12.0"
+  }
+}

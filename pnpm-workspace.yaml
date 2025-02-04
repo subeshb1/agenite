@@ -3,3 +3,5 @@ packages:
   - "dev-config/*"
   - "packages/*"
   - "packages/provider/*"
+  - "examples/*"
+  - "examples/shared/*"
