@@ -1,6 +1,6 @@
 {
   "name": "@agenite/agent",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Simple and maintainable agent library",
   "private": false,
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@agenite/ollama",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Ollama provider for Agenite",
   "private": false,
   "type": "module",

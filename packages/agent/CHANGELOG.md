@@ -1,5 +1,14 @@
 # @agenite/agent
 
+## 0.2.3
+
+### Patch Changes
+
+- fcb2891: Fix agent returning full message history and types
+- Updated dependencies [fcb2891]
+  - @agenite/tool@0.2.2
+  - @agenite/llm@0.2.2
+
 ## 0.2.2
 
 ### Patch Changes
