@@ -164,12 +164,12 @@ async function* executeAgentTool(
 
   const agentResponse = yield* iterator;
 
-  const lastMessages = agentResponse.messages;
+  const lastMessage = agentResponse.messages[agentResponse.messages.length - 1];
   const tokenUsage = agentResponse.tokenUsage;
 
   // Create tool result
-  const response = lastMessages
-    .map((msg) => msg.content.map(formatContentBlock).join('\n'))
+  const response = lastMessage?.content
+    ?.map((msg) => formatContentBlock(msg))
     .join('\n');
 
   const toolResult: ToolResultBlock = {

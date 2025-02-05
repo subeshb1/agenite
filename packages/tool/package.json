@@ -31,9 +31,9 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.11.19",
-    "@types/ajv": "^1.0.0",
-    "tsup": "^8.0.2",
+    "@types/ajv": "^1.0.4",
+    "@types/node": "^20.17.17",
+    "tsup": "^8.3.6",
     "typescript": "^5.3.3"
   },
   "publishConfig": {

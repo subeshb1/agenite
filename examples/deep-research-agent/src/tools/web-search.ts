@@ -1,6 +1,5 @@
 import { Tool } from '@agenite/tool';
 import puppeteer from 'puppeteer';
-
 interface WebSearchInput {
   query: string;
   limit?: number;
@@ -61,7 +60,6 @@ async function searchDuckDuckGo(
       return searchResults;
     }, limit);
 
-    console.log('Search Results:', JSON.stringify(results, null, 2));
     return results;
   } catch (error) {
     console.error('DuckDuckGo search failed:', error);

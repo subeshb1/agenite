@@ -1,7 +1,9 @@
 import { printMessage } from '@agenite-examples/llm-provider';
-import { blogOrchestratorAgent } from './orchestrator/blog-orchestrator';
+import { deepResearchAgent } from './agents/deep-research-agent';
 import fs from 'fs';
 import path from 'path';
+import chalk from 'chalk';
+import Table from 'cli-table3';
 
 interface ResearchAgentInput {
   query: string;
@@ -56,12 +58,18 @@ async function main() {
       : 'long-form',
   };
 
-  console.log('\n🔍 Starting research on:', query);
-  console.log('Style preferences:', style);
-  console.log('\nThis may take a few minutes...\n');
+  console.log(
+    '\n' + chalk.blue.bold('🔍 Starting research on:'),
+    chalk.cyan(query)
+  );
+  console.log(
+    chalk.blue('Style preferences:'),
+    chalk.cyan(JSON.stringify(style, null, 2))
+  );
+  console.log(chalk.gray('\nThis may take a few minutes...\n'));
 
   try {
-    const iterator = blogOrchestratorAgent.iterate({
+    const iterator = deepResearchAgent.iterate({
       input: `Research and write a blog post about: ${query}
 Style preferences: ${JSON.stringify(style, null, 2)}`,
       stream: true,
@@ -72,32 +80,147 @@ Style preferences: ${JSON.stringify(style, null, 2)}`,
       switch (response.value.type) {
         case 'streaming':
           if (response.value.response.type === 'text') {
-            process.stdout.write(response.value.response.text);
+            process.stdout.write(chalk.cyan(response.value.response.text));
           } else {
-            printMessage(
-              'tool',
-              [response.value.response.toolUse],
-              response.value.agentName
-            );
+            // Handle tool use
+            const toolUse = response.value.response.toolUse;
+            if (toolUse.name === 'web_search') {
+              console.log(
+                chalk.yellow(
+                  `\n🔎 Searching the web for: "${(toolUse.input as { query: string }).query}"`
+                )
+              );
+            } else {
+              console.log(chalk.yellow(`\n🛠 Using tool ${toolUse.name}`));
+            }
           }
           break;
 
         case 'toolResult':
-          printMessage(
-            'toolResult',
-            response.value.results.map((r) => r.result),
-            response.value.agentName
-          );
+          if (response.value.results && response.value.results.length > 0) {
+            const result = response.value.results[0];
+            if (
+              result?.result?.toolName === 'web_search' &&
+              result?.result?.content
+            ) {
+              console.log(
+                '\n' + chalk.green.bold('📚 Found relevant resources:')
+              );
+              const table = new Table({
+                style: { head: ['cyan'] },
+                head: ['Title', 'URL', 'Snippet'],
+                colWidths: [40, 50, 50],
+                wordWrap: true,
+              });
+
+              try {
+                const searchResults = JSON.parse(
+                  result.result.content as string
+                );
+                searchResults.results.forEach(
+                  (searchResult: {
+                    title: string;
+                    url: string;
+                    snippet: string;
+                  }) => {
+                    table.push([
+                      chalk.white(searchResult.title),
+                      chalk.gray(searchResult.url),
+                      chalk.yellow(searchResult.snippet),
+                    ]);
+                  }
+                );
+
+                console.log(table.toString());
+                console.log(
+                  chalk.gray(
+                    `\nTotal results: ${searchResults.metadata.totalResults}`
+                  )
+                );
+                console.log(
+                  chalk.gray(
+                    `Search date: ${new Date(searchResults.metadata.searchDate).toLocaleString()}`
+                  )
+                );
+              } catch {
+                console.log(chalk.red('Error parsing search results'));
+              }
+            } else {
+              // Handle file manager and other tool results
+              if (result?.result?.toolName === 'file_manager') {
+                const fileResult = JSON.parse(
+                  result.result.content as string
+                ) as {
+                  action: 'write' | 'read' | 'delete';
+                  path: string;
+                  success: boolean;
+                  message?: string;
+                };
+
+                if (fileResult.action === 'write') {
+                  console.log(
+                    chalk.green('\n💾 Saved research output:'),
+                    chalk.gray(fileResult.path)
+                  );
+                  if (fileResult.message) {
+                    console.log(chalk.gray(fileResult.message));
+                  }
+                } else if (fileResult.action === 'read') {
+                  console.log(
+                    chalk.green('\n📖 Reading from file:'),
+                    chalk.gray(fileResult.path)
+                  );
+                  if (fileResult.message) {
+                    console.log(chalk.white(fileResult.message));
+                  }
+                } else if (fileResult.action === 'delete') {
+                  console.log(
+                    chalk.yellow('\n🗑️  Deleted file:'),
+                    chalk.gray(fileResult.path)
+                  );
+                  if (fileResult.message) {
+                    console.log(chalk.gray(fileResult.message));
+                  }
+                }
+              } else {
+                // For any other tools, display a generic success message
+                console.log(
+                  chalk.green(
+                    `\n✓ Tool ${result?.result?.toolName} completed successfully`
+                  )
+                );
+              }
+            }
+          }
           break;
       }
       response = await iterator.next();
     }
 
-    console.log('\n✨ Research completed!\n');
-    console.log('📝 Final blog post:', response.value.messages);
-    console.log('\n📊 Token usage:', response.value.tokenUsage);
+    console.log('\n' + chalk.green.bold('✨ Research completed successfully!'));
+
+    console.log('\n' + chalk.magenta.bold('📝 Generated Blog Post:'));
+    console.log(chalk.white(JSON.stringify(response.value.messages, null, 2)));
+
+    const usage = response.value.tokenUsage;
+    const usageTable = new Table({
+      style: { head: ['cyan'] },
+      head: ['Metric', 'Count'],
+    });
+
+    usageTable.push(
+      ['Input Tokens', usage.total.inputTokens],
+      ['Output Tokens', usage.total.outputTokens],
+      ['Total Tokens', usage.total.inputTokens + usage.total.outputTokens]
+    );
+
+    console.log('\n' + chalk.blue.bold('📊 Token Usage:'));
+    console.log(usageTable.toString());
+    console.log(JSON.stringify(response.value.tokenUsage, null, 2));
+    process.exit(0);
   } catch (error) {
-    console.error('\n❌ Research failed:', error);
+    console.error('\n' + chalk.red.bold('❌ Research failed'));
+    console.error(chalk.red('Error details:'), error);
     process.exit(1);
   }
 }

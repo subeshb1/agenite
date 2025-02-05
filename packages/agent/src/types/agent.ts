@@ -63,6 +63,7 @@ export interface AgentOptions {
   description?: string;
   stopCondition?: StopCondition;
   logger?: Logger;
+  inputSchema?: ToolDefinition['inputSchema'];
 }
 
 export interface AgentContext {

@@ -2,6 +2,7 @@ import {
   BaseMessage,
   convertStringToMessages,
   LLMProvider,
+  ToolDefinition,
   ToolResultBlock,
   ToolUseBlock,
 } from '@agenite/llm';
@@ -56,6 +57,7 @@ export class Agent implements AgentInterface {
   public readonly description?: string;
   public readonly stopCondition: StopCondition;
   private readonly logger?: Logger;
+  public readonly inputSchema?: ToolDefinition['inputSchema'];
 
   constructor(options: AgentOptions) {
     this.name = options.name;
@@ -65,6 +67,7 @@ export class Agent implements AgentInterface {
     this.description = options.description;
     this.stopCondition = options.stopCondition ?? 'terminal';
     this.logger = options.logger;
+    this.inputSchema = options.inputSchema;
   }
 
   public async execute(

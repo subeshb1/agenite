@@ -12,10 +12,10 @@
     "cspell-check": "cspell"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.11",
-    "cspell": "^8.17.2",
+    "@changesets/cli": "^2.27.12",
+    "cspell": "^8.17.3",
     "prettier": "^3.4.2",
-    "turbo": "^2.3.3",
+    "turbo": "^2.4.0",
     "typescript": "5.5.4"
   },
   "packageManager": "pnpm@9.0.0",
