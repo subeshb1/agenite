@@ -24,9 +24,9 @@ class ContentExtractor {
   }
 
   private log(message: string) {
-    if (this.debug) {
-      console.log(`🔍 [WebScraper] ${message}`);
-    }
+    // if (this.debug) {
+    //   console.log(`🔍 [WebScraper] ${message}`);
+    // }
   }
 
   async extract(url: string): Promise<ExtractedInformation> {
@@ -35,20 +35,16 @@ class ContentExtractor {
     }
     const browserObj = await puppeteerExtra.launch({
       headless: !this.debug,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
       devtools: true,
     });
 
     this.log(`Starting extraction for ${url}`);
-
-    const browser = await puppeteer.launch({});
 
     try {
       const page = await browserObj.newPage();
       await page.setUserAgent(
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120.0.0.0 Safari/537.36'
       );
-      page.on('console', (msg) => console.log('PAGE LOG:', msg.text()));
 
       this.log('Navigating to page...');
       await page.goto(url, {
@@ -126,8 +122,6 @@ export const webScraperTool = new Tool<WebScraperInput>({
     required: ['url'],
   },
   execute: async ({ input }) => {
-    console.log('input', input);
-
     if (!input?.url) {
       return {
         success: false,

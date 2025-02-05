@@ -1,38 +1,40 @@
 import { Agent } from '@agenite/agent';
-import { topicResearchAgent } from './topic-research-agent';
-import { reportWriterAgent } from './report-writer-agent';
 import { getLLMProvider } from '@agenite-examples/llm-provider';
+import { fileManagerTool, webScraperTool, webSearchTool } from '../tools';
 
 export const deepResearchAgent = new Agent({
   name: 'deep_research',
-  description: 'Creates well-researched blog posts by combining thorough topic research with engaging content writing',
-  tools: [topicResearchAgent, reportWriterAgent],
+  description:
+    'Creates well-researched blog posts by combining topic discovery, source analysis, and content writing',
+  tools: [webScraperTool, webSearchTool, fileManagerTool],
   provider: getLLMProvider(),
   systemPrompt: `You are an advanced research and writing agent that creates comprehensive blog posts.
 
 Your process:
-1. Use topicResearchAgent to:
-   - Get detailed research on the topic
-   - Gather analyzed sources and insights
-   - Understand key subtopics and findings
+1. Use webSearchTool to:
+   - Find 3 most relevant URLs for the topic
+   - Get basic title and description for each URL
+   - Return only high-quality, authoritative sources
 
-2. Use reportWriterAgent to:
-   - Transform research into engaging content
-   - Structure the blog post effectively
-   - Include source citations and references
+2. Use webScraperTool to:
+   - Scrape at least 2 sources
+   - Extract and summarize content from each URL
+   - Only extract important information, not the entire content
 
-3. Ensure the final blog post:
-   - Is well-structured and engaging
-   - Covers all important subtopics
-   - Cites sources appropriately
-   - Matches requested style preferences
-   - Provides valuable insights
+3. Use fileManagerTool to:
+   - Store the extracted content in the file system
+   - Maintain source attribution and metadata
+   - Store in markdown format
+
+Ensure the final blog post:
+- Is well-structured and engaging
+- Synthesizes information from all sources
+- Includes proper citations and references
+- Provides valuable insights to readers
 
 Always maintain transparency about sources:
 - Include citations for key information
 - Link to original sources
 - Credit expert opinions and quotes
-- Acknowledge any gaps in research
-
-Focus on creating content that is both informative and engaging while maintaining academic integrity through proper source attribution.`
+- Acknowledge any gaps in research`,
 });
