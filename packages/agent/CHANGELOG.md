@@ -1,5 +1,11 @@
 # @agenite/agent
 
+## 0.2.4
+
+### Patch Changes
+
+- aae4226: fix: context not being passed to tools
+
 ## 0.2.3
 
 ### Patch Changes

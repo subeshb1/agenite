@@ -1,5 +1,12 @@
 # @agenite-examples/deep-research-agent
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [aae4226]
+  - @agenite/agent@0.2.4
+
 ## 1.0.1
 
 ### Patch Changes
