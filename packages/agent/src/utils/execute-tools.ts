@@ -67,7 +67,7 @@ async function executeRegularTool(
       input: block.tool.input,
       context: context
         ? {
-            executionId: context.executionId,
+            ...context,
           }
         : undefined,
     });
