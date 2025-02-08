@@ -1,5 +1,11 @@
 # @agenite/tool
 
+## 0.2.3
+
+### Patch Changes
+
+- 45b37e9: fix: add missing context properties
+
 ## 0.2.2
 
 ### Patch Changes
