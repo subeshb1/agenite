@@ -39,6 +39,7 @@ export interface ToolContext {
   executionId?: string;
   parentToolExecutionId?: string;
   extraContext?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export type ToolResponseData = string | Array<ToolResponseBlock>;
