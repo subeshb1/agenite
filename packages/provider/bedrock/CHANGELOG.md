@@ -1,5 +1,11 @@
 # @agenite/bedrock
 
+## 0.3.1
+
+### Patch Changes
+
+- 5523291: add shorthand props
+
 ## 0.3.0
 
 ### Minor Changes
