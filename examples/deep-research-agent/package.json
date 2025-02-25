@@ -17,15 +17,15 @@
     "axios": "^1.6.7",
     "chalk": "^4.1.2",
     "cli-table3": "^0.6.5",
-    "puppeteer": "^24.1.1",
+    "puppeteer": "^24.3.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "tsx": "^4.7.1"
+    "tsx": "^4.19.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.13.1"
+    "@types/node": "^22.13.5"
   }
 }

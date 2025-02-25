@@ -53,7 +53,15 @@ async function main() {
     while (!response.done) {
       switch (response.value.type) {
         case 'streaming':
-          if (response.value.response.type === 'toolUse') {
+          if (response.value.response.type === 'reasoning') {
+            if (response.value.response.isStart) {
+              console.log('<Reasoning>');
+            }
+            process.stdout.write(response.value.response.reasoning);
+            if (response.value.response.isEnd) {
+              console.log('</Reasoning>');
+            }
+          } else if (response.value.response.type === 'toolUse') {
             // Handle tool use
             const toolUse = response.value.response.toolUse;
             switch (toolUse.name) {

@@ -49,11 +49,11 @@ for await (const chunk of generator) {
 
 ```typescript
 interface BedrockProviderOptions {
-  model: string;           // Bedrock model ID
-  region: string;         // AWS region
-  temperature?: number;   // Temperature for response generation
-  maxTokens?: number;    // Maximum tokens in response
-  topP?: number;         // Top P sampling parameter
+  model: string; // Bedrock model ID
+  region: string; // AWS region
+  temperature?: number; // Temperature for response generation
+  maxTokens?: number; // Maximum tokens in response
+  topP?: number; // Top P sampling parameter
 }
 ```
 
@@ -63,12 +63,31 @@ interface BedrockProviderOptions {
   - `anthropic.claude-3-5-haiku-20241022-v1:0`
   - `anthropic.claude-3-sonnet-20240229-v1:0`
   - `anthropic.claude-instant-v1`
-  
 - Amazon Titan Models:
   - `amazon.titan-text-express-v1`
   - `amazon.titan-text-lite-v1`
 
 ## Advanced Usage
+
+### Usage with Claude 3.7 thinking
+
+```typescript
+const provider = new BedrockProvider({
+  model: `us.anthropic.claude-3-7-sonnet-20250219-v1:0`,
+  region: 'us-east-2',
+  converseCommandConfig: {
+    additionalModelRequestFields: {
+      reasoning_config: {
+        type: 'enabled',
+        budget_tokens: 1024,
+      },
+    },
+    inferenceConfig: {
+      temperature: 1,
+    },
+  },
+});
+```
 
 ### Tool Integration
 
@@ -111,7 +130,8 @@ const messages = [
 const generator = provider.iterate(messages, {
   tools: [calculatorTool],
   stream: true,
-  systemPrompt: 'You are a helpful AI assistant with access to a calculator tool.',
+  systemPrompt:
+    'You are a helpful AI assistant with access to a calculator tool.',
 });
 
 // Process streaming response with tool usage
@@ -145,17 +165,17 @@ messages.push(
 ```typescript
 class BedrockProvider implements LLMProvider {
   constructor(options: BedrockProviderOptions);
-  
+
   generate(
     messages: string | BaseMessage[],
     options?: GenerateOptions
   ): Promise<BaseMessage>;
-  
+
   stream(
     messages: string | BaseMessage[],
     options?: StreamOptions
   ): AsyncGenerator<StreamChunk>;
-  
+
   iterate(
     messages: string | BaseMessage[],
     options?: StreamOptions
@@ -184,6 +204,7 @@ Check out the [examples](./examples) directory for more:
 ## AWS Setup
 
 1. Install AWS CLI and configure credentials:
+
 ```bash
 aws configure
 ```
@@ -191,6 +212,7 @@ aws configure
 2. Ensure your AWS account has access to Bedrock and the required models.
 
 3. Set up IAM permissions for Bedrock access:
+
 ```json
 {
   "Version": "2012-10-17",

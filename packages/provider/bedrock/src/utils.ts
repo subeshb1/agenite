@@ -73,6 +73,14 @@ export const mapContent = (
       };
     }
 
+    if (block.reasoningContent) {
+      return {
+        type: 'reasoning',
+        reasoning: block.reasoningContent.reasoningText?.text || '',
+        signature: block.reasoningContent.reasoningText?.signature || '',
+      };
+    }
+
     throw new Error(`Unsupported content block type`);
   });
 };
@@ -135,6 +143,16 @@ export const convertToMessageFormat = (messages: BaseMessage[]): Message[] => {
               },
               $unknown: undefined,
             };
+          case 'reasoning':
+            return {
+              reasoningContent: {
+                reasoningText: {
+                  text: block.reasoning,
+                  signature: block.signature as string,
+                },
+              },
+            };
+
           default:
             throw new Error(
               `Unsupported content block type: ${JSON.stringify(block, null, 2)}`

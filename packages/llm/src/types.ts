@@ -5,7 +5,14 @@ export type ContentBlock =
   | TextBlock
   | ImageBlock
   | ToolUseBlock
-  | ToolResultBlock;
+  | ToolResultBlock
+  | ReasoningBlock;
+
+export interface ReasoningBlock {
+  type: 'reasoning';
+  reasoning: string;
+  [key: string]: unknown;
+}
 
 export interface TextBlock {
   type: 'text';
@@ -84,8 +91,14 @@ export interface BaseLLMConfig {
 }
 
 export type PartialReturn =
-  | { type: 'text'; text: string }
-  | { type: 'toolUse'; toolUse: ToolUseBlock };
+  | { type: 'text'; text: string; isStart?: boolean; isEnd?: boolean }
+  | { type: 'reasoning'; reasoning: string; isStart?: boolean; isEnd?: boolean }
+  | {
+      type: 'toolUse';
+      toolUse: ToolUseBlock;
+      isStart?: boolean;
+      isEnd?: boolean;
+    };
 
 /**
  * Options for generation

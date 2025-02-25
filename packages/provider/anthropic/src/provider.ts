@@ -104,6 +104,8 @@ function convertMessages(messages: BaseMessage[]): Anthropic.MessageParam[] {
               is_error: block.isError,
             };
           default:
+            console.log('block', block);
+
             throw new Error(
               `Unsupported content block type: ${JSON.stringify(block, null, 2)}`
             );

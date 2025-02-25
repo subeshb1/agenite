@@ -8,7 +8,9 @@ import {
   ContentBlockDeltaEvent,
   ContentBlockStopEvent,
   ConverseStreamOutput,
+  ReasoningContentBlockDelta,
 } from '@aws-sdk/client-bedrock-runtime';
+
 import {
   GenerateResponse,
   ToolUseBlock,
@@ -16,7 +18,7 @@ import {
   PartialReturn,
   convertStringToMessages,
   BaseLLMProvider,
-  BaseMessage
+  BaseMessage,
 } from '@agenite/llm';
 import { BedrockConfig } from './types';
 import { mapContent, mapStopReason, convertToMessageFormat } from './utils';
@@ -24,7 +26,6 @@ import { BedrockToolAdapter } from './tool-adapter';
 
 const DEFAULT_MODEL = 'anthropic.claude-3-sonnet-20240229-v1:0';
 const DEFAULT_MAX_TOKENS = 4096;
-const DEFAULT_REGION = 'us-west-2';
 
 export class BedrockProvider extends BaseLLMProvider {
   private client: BedrockRuntimeClient;
@@ -37,8 +38,9 @@ export class BedrockProvider extends BaseLLMProvider {
     super();
     this.config = config;
     this.client = new BedrockRuntimeClient({
-      region: config.region || DEFAULT_REGION,
+      region: config.region,
       credentials: config.credentials,
+      ...config.bedrockClientConfig,
     });
     this.toolAdapter = new BedrockToolAdapter();
   }
@@ -160,6 +162,14 @@ export class BedrockProvider extends BaseLLMProvider {
   ) {
     if (!delta) return null;
 
+    if (delta.reasoningContent) {
+      return this.handleReasoningDelta(
+        delta.reasoningContent,
+        contentBlockIndex,
+        state
+      );
+    }
+
     if (delta.text) {
       return this.handleTextDelta(delta.text, contentBlockIndex, state);
     } else if (delta.toolUse) {
@@ -180,12 +190,12 @@ export class BedrockProvider extends BaseLLMProvider {
       contentBlocks: BedrockContentBlock[];
     }
   ) {
-    state.buffer += text;
+    state.buffer += text || '';
 
     // Accumulate text in contentBlocks
     state.contentBlocks[contentBlockIndex] = {
       ...state.contentBlocks[contentBlockIndex],
-      text: (state.contentBlocks[contentBlockIndex]?.text || '') + text,
+      text: (state.contentBlocks[contentBlockIndex]?.text || '') + text || '',
     } as BedrockContentBlock;
 
     if (state.buffer.length > 10) {
@@ -196,6 +206,42 @@ export class BedrockProvider extends BaseLLMProvider {
       state.buffer = '';
       return result;
     }
+    return null;
+  }
+
+  private handleReasoningDelta(
+    reasoningContent: ReasoningContentBlockDelta,
+    contentBlockIndex: number,
+    state: {
+      buffer: string;
+      contentBlocks: BedrockContentBlock[];
+    }
+  ) {
+    state.buffer += reasoningContent.text || '';
+
+    // Accumulate reasoning content in contentBlocks
+    state.contentBlocks[contentBlockIndex] = {
+      ...state.contentBlocks[contentBlockIndex],
+      reasoningContent: {
+        ...state.contentBlocks[contentBlockIndex]?.reasoningContent,
+        reasoningText: {
+          text:
+            (state.contentBlocks[contentBlockIndex]?.reasoningContent
+              ?.reasoningText?.text || '') + (reasoningContent.text || ''),
+          signature: reasoningContent.signature,
+        },
+      },
+    } as BedrockContentBlock;
+
+    if (state.buffer.length > 10) {
+      const result = {
+        type: 'reasoning' as const,
+        reasoning: state.buffer,
+      };
+      state.buffer = '';
+      return result;
+    }
+
     return null;
   }
 
@@ -220,7 +266,7 @@ export class BedrockProvider extends BaseLLMProvider {
       buffer: string;
       contentBlocks: BedrockContentBlock[];
     }
-  ) {
+  ): PartialReturn | null {
     if (
       event.contentBlockStop &&
       event.contentBlockStop.contentBlockIndex !== undefined
@@ -233,21 +279,65 @@ export class BedrockProvider extends BaseLLMProvider {
         const toolUseResult = {
           type: 'toolUse' as const,
           toolUse: mapContent([block])[0] as ToolUseBlock,
+          isEnd: true,
         };
 
-        if (state.buffer.length > 10) {
-          return {
-            toolUse: toolUseResult,
-            bufferedText: {
-              type: 'text' as const,
-              text: state.buffer,
-            },
-          };
-        }
-        return { toolUse: toolUseResult };
+        return toolUseResult;
+      }
+
+      const finalBuffer = state.buffer;
+      state.buffer = '';
+      if (block?.text) {
+        return {
+          type: 'text' as const,
+          text: finalBuffer,
+          isEnd: true,
+        } as const;
+      }
+
+      if (block?.reasoningContent) {
+        return {
+          type: 'reasoning' as const,
+          reasoning: finalBuffer,
+          isEnd: true,
+        } as const;
       }
     }
     return null;
+  }
+
+  private handleTextBlockStart(
+    event: { contentBlockDelta?: ContentBlockDeltaEvent },
+    state: {
+      buffer: string;
+      contentBlocks: BedrockContentBlock[];
+    }
+  ) {
+    const contentBlockIndex = event.contentBlockDelta?.contentBlockIndex;
+
+    const hasExistingBlock =
+      contentBlockIndex !== undefined &&
+      state.contentBlocks[contentBlockIndex] !== undefined;
+
+    if (hasExistingBlock) {
+      return null;
+    }
+
+    if (event.contentBlockDelta?.delta?.text) {
+      return {
+        type: 'text' as const,
+        text: '',
+        isStart: true,
+      };
+    }
+
+    if (event.contentBlockDelta?.delta?.reasoningContent) {
+      return {
+        type: 'reasoning' as const,
+        reasoning: '',
+        isStart: true,
+      };
+    }
   }
 
   async *stream(
@@ -258,7 +348,10 @@ export class BedrockProvider extends BaseLLMProvider {
     try {
       const requestBody = this.createRequestBody(input, options);
       const response = await this.client.send(
-        new ConverseStreamCommand(requestBody)
+        new ConverseStreamCommand({
+          ...requestBody,
+          ...this.config.converseCommandConfig,
+        })
       );
 
       if (!response.stream) {
@@ -280,16 +373,18 @@ export class BedrockProvider extends BaseLLMProvider {
           continue;
         }
 
+        const startBlock = this.handleTextBlockStart(event, state);
+
+        if (startBlock) {
+          yield startBlock;
+        }
+
         // Handle content block stop
         const stopResult = this.handleContentBlockStop(event, state);
 
         if (stopResult) {
-          if (stopResult.toolUse) yield stopResult.toolUse;
-          if (stopResult.bufferedText) yield stopResult.bufferedText;
-          state.buffer = '';
-          continue;
+          yield stopResult;
         }
-
         // Handle other events
         const result = this.handleStreamEvent(event, state);
 
@@ -315,7 +410,12 @@ export class BedrockProvider extends BaseLLMProvider {
     const startTime = Date.now();
     try {
       const requestBody = this.createRequestBody(input, options);
-      const response = await this.client.send(new ConverseCommand(requestBody));
+      const response = await this.client.send(
+        new ConverseCommand({
+          ...requestBody,
+          ...this.config.converseCommandConfig,
+        })
+      );
 
       return this.createGenerateResponse(
         mapContent(response.output?.message?.content || []),

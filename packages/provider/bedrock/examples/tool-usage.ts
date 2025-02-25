@@ -52,9 +52,21 @@ function calculate(operation: string, a: number, b: number): number {
 async function main() {
   // Initialize the provider
   const provider = new BedrockProvider({
-    model: 'anthropic.claude-3-5-haiku-20241022-v1:0',
-    region: 'us-west-2',
+    model: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
+    region: 'us-east-2',
+    converseCommandConfig: {
+      additionalModelRequestFields: {
+        reasoning_config: {
+          type: 'enabled',
+          budget_tokens: 1024,
+        },
+      },
+      inferenceConfig: {
+        temperature: 1,
+      },
+    },
   });
+
   // Process the conversation
   let currentMessages: BaseMessage[] = [
     {
@@ -78,8 +90,22 @@ async function main() {
 
     let response = await generator.next();
     while (!response.done) {
-      if (response.value.type === 'text') {
+      if (response.value.type === 'reasoning') {
+        if (response.value.isStart) {
+          process.stdout.write('<thinking>');
+        }
+        process.stdout.write(response.value.reasoning);
+        if (response.value.isEnd) {
+          process.stdout.write('</thinking>');
+        }
+      } else if (response.value.type === 'text') {
+        if (response.value.isStart) {
+          process.stdout.write('<assistant>');
+        }
         process.stdout.write(response.value.text);
+        if (response.value.isEnd) {
+          process.stdout.write('</assistant>');
+        }
       } else if (response.value.type === 'toolUse') {
         console.log('\n');
         console.log('toolUse', JSON.stringify(response.value, null));
@@ -90,6 +116,7 @@ async function main() {
 
     const result = response.value;
 
+    console.log('result', JSON.stringify(result, null, 2));
     // Check if the model wants to use a tool
     const toolUses = result.content.filter(
       (block): block is ToolUseBlock => block.type === 'toolUse'

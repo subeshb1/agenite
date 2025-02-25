@@ -22,13 +22,13 @@
   },
   "dependencies": {
     "@agenite/llm": "workspace:*",
-    "@aws-sdk/client-bedrock-runtime": "^3.741.0"
+    "@aws-sdk/client-bedrock-runtime": "^3.755.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.17.17",
+    "@types/node": "^20.17.19",
     "tsup": "^8.3.6",
     "typescript": "^5.7.3"
   },

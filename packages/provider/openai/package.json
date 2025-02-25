@@ -21,13 +21,13 @@
   },
   "dependencies": {
     "@agenite/llm": "workspace:*",
-    "openai": "^4.82.0"
+    "openai": "^4.85.4"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.17.17",
+    "@types/node": "^20.17.19",
     "tsup": "^8.3.6",
     "typescript": "^5.7.3"
   },

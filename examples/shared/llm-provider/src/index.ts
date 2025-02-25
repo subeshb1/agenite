@@ -16,7 +16,18 @@ export const getLLMProvider = () => {
       modelId = modelId || 'anthropic.claude-3-5-haiku-20241022-v1:0';
       return new BedrockProvider({
         model: modelId,
-        region: 'us-west-2',
+        region: 'us-east-2',
+        converseCommandConfig: {
+          additionalModelRequestFields: {
+            reasoning_config: {
+              type: 'enabled',
+              budget_tokens: 1024,
+            },
+          },
+          inferenceConfig: {
+            temperature: 1,
+          },
+        },
       });
 
     case 'ollama':

@@ -36,5 +36,9 @@ Always maintain transparency about sources:
 - Include citations for key information
 - Link to original sources
 - Credit expert opinions and quotes
-- Acknowledge any gaps in research`,
+- Acknowledge any gaps in research
+
+Context:
+The datetime is ${new Date().toISOString()}
+`,
 });

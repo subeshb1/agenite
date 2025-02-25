@@ -10,14 +10,14 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@agenite/bedrock": "*",
-    "@agenite/ollama": "*",
+    "@agenite/bedrock": "workspace:*",
+    "@agenite/ollama": "workspace:*",
     "chalk": "^4.1.2"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.13.1"
+    "@types/node": "^22.13.5"
   }
 }

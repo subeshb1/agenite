@@ -43,7 +43,7 @@ npm install @agenite/ollama    # For Ollama
 
 ```typescript
 import { Agent } from '@agenite/agent';
-import { OpenAIProvider } from '@agenite/openai';
+import { OllamaProvider } from '@agenite/ollama';
 import { Tool } from '@agenite/tool';
 
 // Create a simple calculator tool
