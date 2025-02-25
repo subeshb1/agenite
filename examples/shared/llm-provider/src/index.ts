@@ -17,17 +17,21 @@ export const getLLMProvider = () => {
       return new BedrockProvider({
         model: modelId,
         region: 'us-east-2',
-        converseCommandConfig: {
-          additionalModelRequestFields: {
-            reasoning_config: {
-              type: 'enabled',
-              budget_tokens: 1024,
-            },
-          },
-          inferenceConfig: {
-            temperature: 1,
-          },
-        },
+        ...(modelId === 'us.anthropic.claude-3-7-sonnet-20250219-v1:0'
+          ? {
+              converseCommandConfig: {
+                additionalModelRequestFields: {
+                  reasoning_config: {
+                    type: 'enabled',
+                    budget_tokens: 1024,
+                  },
+                },
+                inferenceConfig: {
+                  temperature: 1,
+                },
+              },
+            }
+          : {}),
       });
 
     case 'ollama':

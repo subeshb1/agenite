@@ -56,6 +56,11 @@ export class BedrockProvider extends BaseLLMProvider {
       this.toolAdapter.convertToProviderTool(tool)
     );
 
+    // When reasoning is enabled, we set temperature to 1 as it's the only way to get reasoning
+    const temperature = this.config.enableReasoning
+      ? 1
+      : (options?.temperature ?? this.config.temperature ?? 0.7);
+
     return {
       modelId: this.config.model || DEFAULT_MODEL,
       system: options?.systemPrompt
@@ -64,13 +69,21 @@ export class BedrockProvider extends BaseLLMProvider {
       messages: transformedMessages,
       inferenceConfig: {
         maxTokens: options?.maxTokens ?? DEFAULT_MAX_TOKENS,
-        temperature: options?.temperature ?? this.config.temperature ?? 0.7,
+        temperature,
         stopSequences: options?.stopSequences,
       },
       toolConfig: providerTools?.length
         ? {
             tools: providerTools,
             toolChoice: { auto: {} },
+          }
+        : undefined,
+      additionalModelRequestFields: this.config.enableReasoning
+        ? {
+            reasoning_config: {
+              type: 'enabled',
+              budget_tokens: this.config.reasoningBudgetTokens || 1024,
+            },
           }
         : undefined,
     };

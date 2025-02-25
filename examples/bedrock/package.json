@@ -1,5 +1,5 @@
 {
-  "name": "@agenite-examples/llm-provider",
+  "name": "@agenite-examples/bedrock",
   "version": "1.0.2",
   "main": "src/index.ts",
   "type": "module",
@@ -11,14 +11,17 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@agenite/agent": "workspace:*",
     "@agenite/bedrock": "workspace:*",
     "@agenite/ollama": "workspace:*",
-    "chalk": "^4.1.2"
+    "chalk": "^4.1.2",
+    "@agenite-examples/llm-provider": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.13.5"
+    "@types/node": "^22.13.5",
+    "tsx": "^4.19.3"
   }
 }

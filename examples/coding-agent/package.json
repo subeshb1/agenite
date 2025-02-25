@@ -1,0 +1,29 @@
+{
+  "name": "coding-agent",
+  "version": "1.0.0",
+  "description": "An AI coding agent using @agenite framework",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "coding",
+    "agenite"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@agenite-examples/llm-provider": "workspace:*",
+    "@agenite/agent": "workspace:*",
+    "@agenite/tool": "workspace:*",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.0.0"
+  }
+}
