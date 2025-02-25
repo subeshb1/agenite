@@ -1,5 +1,17 @@
 # @agenite/agent
 
+## 0.3.0
+
+### Minor Changes
+
+- e2077e2: add reasoning support
+
+### Patch Changes
+
+- Updated dependencies [e2077e2]
+  - @agenite/llm@0.3.0
+  - @agenite/tool@0.2.4
+
 ## 0.2.5
 
 ### Patch Changes

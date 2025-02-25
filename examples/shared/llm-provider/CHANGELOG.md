@@ -1,5 +1,14 @@
 # @agenite-examples/llm-provider
 
+## 1.0.2
+
+### Patch Changes
+
+- e2077e2: add reasoning support
+- Updated dependencies [e2077e2]
+  - @agenite/bedrock@0.3.0
+  - @agenite/ollama@0.3.0
+
 ## 1.0.1
 
 ### Patch Changes

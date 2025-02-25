@@ -1,5 +1,11 @@
 # @repo/eslint-config
 
+## 0.0.4
+
+### Patch Changes
+
+- e2077e2: add reasoning support
+
 ## 0.0.3
 
 ### Patch Changes

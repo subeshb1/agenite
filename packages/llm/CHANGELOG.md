@@ -1,5 +1,11 @@
 # @agenite/llm
 
+## 0.3.0
+
+### Minor Changes
+
+- e2077e2: add reasoning support
+
 ## 0.2.2
 
 ### Patch Changes

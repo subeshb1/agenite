@@ -1,5 +1,16 @@
 # @agenite/ollama
 
+## 0.3.0
+
+### Minor Changes
+
+- e2077e2: add reasoning support
+
+### Patch Changes
+
+- Updated dependencies [e2077e2]
+  - @agenite/llm@0.3.0
+
 ## 0.2.4
 
 ### Patch Changes

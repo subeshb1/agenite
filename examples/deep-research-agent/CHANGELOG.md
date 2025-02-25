@@ -1,5 +1,15 @@
 # @agenite-examples/deep-research-agent
 
+## 1.0.4
+
+### Patch Changes
+
+- e2077e2: add reasoning support
+- Updated dependencies [e2077e2]
+  - @agenite/agent@0.3.0
+  - @agenite-examples/llm-provider@1.0.2
+  - @agenite/tool@0.2.4
+
 ## 1.0.3
 
 ### Patch Changes
