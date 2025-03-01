@@ -20,7 +20,7 @@ Always explain your thought process before taking actions.
   const agent = new Agent({
     name: 'CodingAgent',
     description: 'An AI agent specialized in coding tasks',
-    provider, 
+    provider,
     systemPrompt,
     tools: [createFileSystemTool(), createCommandRunnerTool()],
   });
@@ -75,7 +75,9 @@ Always explain your thought process before taking actions.
   }
 
   console.log(chalk.green.bold('\n✅ Process Complete!'));
-  // printMessage('assistant', JSON.stringify(response, null, 2));
+  const tokens = response.value.tokenUsage;
 
-  console.log(JSON.stringify(response.value, null, 2));
+  // Pretty print the token usage
+  console.log(chalk.magenta.bold('\n📈 Token Usage:'));
+  console.log(chalk.magenta(JSON.stringify(tokens, null, 2)));
 }

@@ -52,9 +52,15 @@ export class BedrockProvider extends BaseLLMProvider {
     const messageArray = convertStringToMessages(input);
     const transformedMessages = convertToMessageFormat(messageArray);
 
-    const providerTools = options?.tools?.map((tool) =>
-      this.toolAdapter.convertToProviderTool(tool)
-    );
+    const providerTools = options?.tools
+      ?.map((tool) => this.toolAdapter.convertToProviderTool(tool))
+      .concat([
+        {
+          cachePoint: {
+            type: 'default',
+          },
+        } as any,
+      ]);
 
     // When reasoning is enabled, we set temperature to 1 as it's the only way to get reasoning
     const temperature = this.config.enableReasoning
@@ -64,7 +70,14 @@ export class BedrockProvider extends BaseLLMProvider {
     return {
       modelId: this.config.model || DEFAULT_MODEL,
       system: options?.systemPrompt
-        ? [{ text: options.systemPrompt }]
+        ? ([
+            { text: options.systemPrompt },
+            {
+              cachePoint: {
+                type: 'default',
+              },
+            },
+          ] as any)
         : undefined,
       messages: transformedMessages,
       inferenceConfig: {

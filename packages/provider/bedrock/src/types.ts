@@ -109,6 +109,7 @@ export interface BedrockConfig extends BaseLLMConfig {
   converseCommandConfig?: Partial<ConverseCommandInput> | Partial<ConverseStreamCommandInput>[];
   enableReasoning?: boolean;
   reasoningBudgetTokens?: number;
+  enabledPromptCaching?: boolean;
 }
 
 export type BedrockStopReason =
