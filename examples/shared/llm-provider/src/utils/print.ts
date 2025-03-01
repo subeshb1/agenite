@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BaseMessage, ContentBlock } from '@agenite/llm';
+import { ContentBlock } from '@agenite/llm';
 
 const icons = {
   user: '👤',
@@ -9,16 +9,20 @@ const icons = {
   system: '⚙️',
 } as const;
 
-export function printMessage(role: string, content: string | ContentBlock[], agentName?: string) {
+export function printMessage(
+  role: string,
+  content: string | ContentBlock[],
+  agentName?: string
+) {
   const icon = icons[role as keyof typeof icons] || '❓';
-  
-  const header = agentName 
+
+  const header = agentName
     ? `\n${icon} ${chalk.bold(role.toUpperCase())} (${chalk.cyan(agentName)})`
     : `\n${icon} ${chalk.bold(role.toUpperCase())}`;
-  
+
   console.log(header);
   console.log('───────────────────');
-  
+
   if (typeof content === 'string') {
     console.log(chalk.white(content));
   } else {
@@ -45,4 +49,4 @@ export function printSystemInfo(message: string) {
 
 export function printSeparator() {
   console.log('\n' + chalk.gray('─'.repeat(50)) + '\n');
-} 
+}

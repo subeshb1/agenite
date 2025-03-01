@@ -248,8 +248,8 @@ export class BedrockProvider extends BaseLLMProvider {
 
     if (state.buffer.length > 10) {
       const result = {
-        type: 'reasoning' as const,
-        reasoning: state.buffer,
+        type: 'thinking' as const,
+        thinking: state.buffer,
       };
       state.buffer = '';
       return result;
@@ -310,8 +310,8 @@ export class BedrockProvider extends BaseLLMProvider {
 
       if (block?.reasoningContent) {
         return {
-          type: 'reasoning' as const,
-          reasoning: finalBuffer,
+          type: 'thinking' as const,
+          thinking: finalBuffer,
           isEnd: true,
         } as const;
       }
@@ -346,8 +346,8 @@ export class BedrockProvider extends BaseLLMProvider {
 
     if (event.contentBlockDelta?.delta?.reasoningContent) {
       return {
-        type: 'reasoning' as const,
-        reasoning: '',
+        type: 'thinking' as const,
+        thinking: '',
         isStart: true,
       };
     }

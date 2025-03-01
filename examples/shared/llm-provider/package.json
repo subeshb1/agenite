@@ -13,12 +13,13 @@
   "dependencies": {
     "@agenite/bedrock": "workspace:*",
     "@agenite/ollama": "workspace:*",
+    "@agenite/llm": "workspace:*",
     "chalk": "^4.1.2"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.13.5"
+    "@types/node": "^22.13.8"
   }
 }

@@ -32,9 +32,9 @@
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/ajv": "^1.0.4",
-    "@types/node": "^20.17.19",
-    "tsup": "^8.3.6",
-    "typescript": "^5.3.3"
+    "@types/node": "^20.17.22",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2"
   },
   "publishConfig": {
     "access": "public",

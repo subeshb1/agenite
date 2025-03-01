@@ -16,7 +16,7 @@ export const getLLMProvider = () => {
       modelId = modelId || 'anthropic.claude-3-5-haiku-20241022-v1:0';
       return new BedrockProvider({
         model: modelId,
-        region: 'us-east-2',
+        region: process.env.AWS_REGION || 'us-east-2',
         ...(modelId === 'us.anthropic.claude-3-7-sonnet-20250219-v1:0'
           ? {
               converseCommandConfig: {

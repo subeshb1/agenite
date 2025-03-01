@@ -6,26 +6,50 @@ export type ContentBlock =
   | ImageBlock
   | ToolUseBlock
   | ToolResultBlock
-  | ReasoningBlock;
+  | DocumentBlock
+  | ThinkingBlock
+  | RedactedThinkingBlock;
 
-export interface ReasoningBlock {
-  type: 'reasoning';
-  reasoning: string;
+export interface ThinkingBlock {
+  type: 'thinking';
+  thinking: string;
+  [key: string]: unknown;
+  
+}
+
+
+export interface RedactedThinkingBlock {
+  type: 'redactedThinking';
+  redactedThinking: string;
+  [key: string]: unknown;
+}
+
+export interface DocumentBlock {
+  source: {
+    [key: string]: unknown;
+  };
+
+  type: 'document';
+
   [key: string]: unknown;
 }
 
 export interface TextBlock {
   type: 'text';
   text: string;
+  [key: string]: unknown;
 }
 
 export interface ImageBlock {
   type: 'image';
-  source: {
-    type: 'base64';
-    media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
-    data: string;
-  };
+  source:
+    | {
+        type: 'base64';
+        media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
+        data: string;
+      }
+    | { type: 'url'; url: string };
+  [key: string]: unknown;
 }
 
 export interface ToolUseBlock {
@@ -33,6 +57,7 @@ export interface ToolUseBlock {
   id: string;
   name: string;
   input: unknown;
+  [key: string]: unknown;
 }
 
 export interface ToolResultBlock {
@@ -92,7 +117,7 @@ export interface BaseLLMConfig {
 
 export type PartialReturn =
   | { type: 'text'; text: string; isStart?: boolean; isEnd?: boolean }
-  | { type: 'reasoning'; reasoning: string; isStart?: boolean; isEnd?: boolean }
+  | { type: 'thinking'; thinking: string; isStart?: boolean; isEnd?: boolean }
   | {
       type: 'toolUse';
       toolUse: ToolUseBlock;

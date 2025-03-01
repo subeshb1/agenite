@@ -27,12 +27,12 @@ console.log(chalk.blueBright(userInput));
 while (!response.done) {
   switch (response.value.type) {
     case 'streaming':
-      if (response.value.response.type === 'reasoning') {
+      if (response.value.response.type === 'thinking') {
         if (response.value.response.isStart) {
-          console.log(chalk.yellow.bold('\n🧠 Reasoning:'));
+          console.log(chalk.yellow.bold('\n🧠 Thinking:'));
           console.log(chalk.yellow('┌' + '─'.repeat(70) + '┐'));
         }
-        process.stdout.write(chalk.yellow(response.value.response.reasoning));
+        process.stdout.write(chalk.yellow(response.value.response.thinking));
         if (response.value.response.isEnd) {
           console.log(chalk.yellow('\n└' + '─'.repeat(70) + '┘'));
         }

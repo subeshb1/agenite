@@ -20,9 +20,8 @@ Always explain your thought process before taking actions.
   const agent = new Agent({
     name: 'CodingAgent',
     description: 'An AI agent specialized in coding tasks',
-    provider,
+    provider, 
     systemPrompt,
-
     tools: [createFileSystemTool(), createCommandRunnerTool()],
   });
 
@@ -39,12 +38,12 @@ Always explain your thought process before taking actions.
   while (!response.done) {
     switch (response.value.type) {
       case 'streaming':
-        if (response.value.response.type === 'reasoning') {
+        if (response.value.response.type === 'thinking') {
           if (response.value.response.isStart) {
-            console.log(chalk.yellow.bold('\n🧠 Reasoning:'));
+            console.log(chalk.yellow.bold('\n🧠 Thinking:'));
             console.log(chalk.yellow('┌' + '─'.repeat(150) + '┐'));
           }
-          process.stdout.write(chalk.yellow(response.value.response.reasoning));
+          process.stdout.write(chalk.yellow(response.value.response.thinking));
           if (response.value.response.isEnd) {
             console.log(chalk.yellow('\n└' + '─'.repeat(150) + '┘'));
           }
@@ -77,4 +76,6 @@ Always explain your thought process before taking actions.
 
   console.log(chalk.green.bold('\n✅ Process Complete!'));
   // printMessage('assistant', JSON.stringify(response, null, 2));
+
+  console.log(JSON.stringify(response.value, null, 2));
 }

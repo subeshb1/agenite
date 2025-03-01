@@ -42,11 +42,7 @@ function mapContent(content: Anthropic.ContentBlockParam[]): ContentBlock[] {
       case 'image':
         return {
           type: 'image',
-          source: {
-            type: 'base64',
-            media_type: block.source.media_type,
-            data: block.source.data,
-          },
+          source: block.source,
         };
       case 'tool_use':
         return {
@@ -63,6 +59,67 @@ function mapContent(content: Anthropic.ContentBlockParam[]): ContentBlock[] {
   });
 }
 
+function convertContentBlock(
+  block?: ContentBlock | string
+): Anthropic.ContentBlockParam | string {
+  if (!block) {
+    return '';
+  }
+
+  if (typeof block === 'string') {
+    return block;
+  }
+
+  switch (block.type) {
+    case 'text':
+      return { type: 'text', text: block.text };
+    case 'image':
+      return {
+        type: 'image',
+        source:
+          block.source.type === 'base64'
+            ? {
+                type: 'base64',
+                data: block.source.data,
+                media_type: block.source.media_type as
+                  | 'image/jpeg'
+                  | 'image/png'
+                  | 'image/gif'
+                  | 'image/webp',
+              }
+            : {
+                type: 'url',
+                url: block.source.url,
+              },
+      };
+    case 'toolUse':
+      return {
+        type: 'tool_use',
+        id: block.id,
+        name: block.name,
+        input: block.input,
+      };
+    case 'toolResult':
+      return {
+        type: 'tool_result',
+        tool_use_id: block.toolUseId,
+        content:
+          typeof block.content === 'string'
+            ? block.content
+            : block.content?.map(
+                (block) => convertContentBlock(block) as Anthropic.TextBlock
+              ) || '',
+        is_error: block.isError,
+      };
+    default:
+      console.log('block', block);
+
+      throw new Error(
+        `Unsupported content block type: ${JSON.stringify(block, null, 2)}`
+      );
+  }
+}
+
 /**
  * Converts our message format to Anthropic's format
  */
@@ -77,39 +134,7 @@ function convertMessages(messages: BaseMessage[]): Anthropic.MessageParam[] {
     .map((msg) => ({
       role: msg.role,
       content: msg.content.map((block): Anthropic.ContentBlockParam => {
-        switch (block.type) {
-          case 'text':
-            return { type: 'text', text: block.text };
-          case 'image':
-            return {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: block.source.media_type,
-                data: block.source.data,
-              },
-            };
-          case 'toolUse':
-            return {
-              type: 'tool_use',
-              id: block.id,
-              name: block.name,
-              input: block.input,
-            };
-          case 'toolResult':
-            return {
-              type: 'tool_result',
-              tool_use_id: block.toolUseId,
-              content: block.content,
-              is_error: block.isError,
-            };
-          default:
-            console.log('block', block);
-
-            throw new Error(
-              `Unsupported content block type: ${JSON.stringify(block, null, 2)}`
-            );
-        }
+        return convertContentBlock(block) as Anthropic.ContentBlockParam;
       }),
     }));
 }

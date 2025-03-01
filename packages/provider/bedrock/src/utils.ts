@@ -2,7 +2,7 @@ import {
   BaseMessage,
   ContentBlock,
   StopReason as AgentStopReason,
-} from '../../../llm/src';
+} from '@agenite/llm';
 import {
   ContentBlock as BedrockContentBlock,
   ImageFormat,
@@ -36,53 +36,62 @@ export const mapStopReason = (
 export const mapContent = (
   bedrockContent: BedrockContentBlock[]
 ): ContentBlock[] => {
-  return bedrockContent.map((block) => {
-    if (block.text) {
-      return {
-        type: 'text',
-        text: block.text,
-      };
-    }
+  return bedrockContent
+    .map((block) => {
+      if (block.text) {
+        // Check if the text only has whitespace including newlines
+        if (/^\s*$/.test(block.text)) {
+          return null;
+        }
 
-    if (block.toolUse) {
-      const toolUseId = block.toolUse.toolUseId;
-      if (!toolUseId) {
-        throw new Error('Tool use ID is required');
+        return {
+          type: 'text',
+          text: block.text,
+        };
       }
-      return {
-        type: 'toolUse',
-        toolName: block.toolUse.name,
-        input: block.toolUse.input || {},
-        id: toolUseId,
-        name: block.toolUse.name || 'unknown',
-      };
-    }
 
-    if (block.image) {
-      const format = block.image.format || 'webp';
-      const validFormat = ['jpeg', 'png', 'gif', 'webp'].includes(format)
-        ? format
-        : 'webp';
-      return {
-        type: 'image',
-        source: {
-          type: 'base64',
-          data: block.image.source?.$unknown?.[1] || '',
-          media_type: `image/${validFormat as 'jpeg' | 'png' | 'gif' | 'webp'}`,
-        },
-      };
-    }
+      if (block.toolUse) {
+        const toolUseId = block.toolUse.toolUseId;
+        if (!toolUseId) {
+          throw new Error('Tool use ID is required');
+        }
+        return {
+          type: 'toolUse',
+          toolName: block.toolUse.name,
+          input: block.toolUse.input || {},
+          id: toolUseId,
+          name: block.toolUse.name || 'unknown',
+        };
+      }
 
-    if (block.reasoningContent) {
-      return {
-        type: 'reasoning',
-        reasoning: block.reasoningContent.reasoningText?.text || '',
-        signature: block.reasoningContent.reasoningText?.signature || '',
-      };
-    }
+      if (block.image) {
+        const format = block.image.format || 'webp';
+        const validFormat = ['jpeg', 'png', 'gif', 'webp'].includes(format)
+          ? format
+          : 'webp';
+        return {
+          type: 'image',
+          source: {
+            type: 'base64',
+            data: block.image.source?.$unknown?.[1] || '',
+            media_type: `image/${validFormat as 'jpeg' | 'png' | 'gif' | 'webp'}`,
+          },
+        };
+      }
 
-    throw new Error(`Unsupported content block type`);
-  });
+      if (block.reasoningContent) {
+        return {
+          type: 'reasoning',
+          reasoning: block.reasoningContent.reasoningText?.text || '',
+          signature: block.reasoningContent.reasoningText?.signature || '',
+        };
+      }
+
+      throw new Error(
+        `Unsupported content block type: ${JSON.stringify(block, null, 2)}`
+      );
+    })
+    .filter((block) => block !== null) as ContentBlock[];
 };
 
 /**
@@ -135,24 +144,34 @@ export const convertToMessageFormat = (messages: BaseMessage[]): Message[] => {
             return {
               image: {
                 source: {
-                  $unknown: ['base64', block.source.data],
+                  $unknown: ['source', block.source],
                 },
-                format:
-                  (block.source.media_type.split('/')[1] as ImageFormat) ||
-                  'webp',
+                format: (block.source.type === 'url'
+                  ? 'url'
+                  : (block.source.media_type.split('/')[1] as ImageFormat) ||
+                    'webp') as ImageFormat,
               },
               $unknown: undefined,
             };
-          case 'reasoning':
+          case 'thinking':
             return {
               reasoningContent: {
                 reasoningText: {
-                  text: block.reasoning,
+                  text: block.thinking,
                   signature: block.signature as string,
                 },
               },
             };
-
+          case 'document':
+            return {
+              document: {
+                format: block.source?.type === 'url' ? 'pdf' : 'txt',
+                name: String(block.name || block.title),
+                source: {
+                  $unknown: ['url', block.source],
+                },
+              },
+            };
           default:
             throw new Error(
               `Unsupported content block type: ${JSON.stringify(block, null, 2)}`

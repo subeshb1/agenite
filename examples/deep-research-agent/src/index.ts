@@ -53,11 +53,11 @@ async function main() {
     while (!response.done) {
       switch (response.value.type) {
         case 'streaming':
-          if (response.value.response.type === 'reasoning') {
+          if (response.value.response.type === 'thinking') {
             if (response.value.response.isStart) {
               console.log('<Reasoning>');
             }
-            process.stdout.write(response.value.response.reasoning);
+            process.stdout.write(response.value.response.thinking);
             if (response.value.response.isEnd) {
               console.log('</Reasoning>');
             }
