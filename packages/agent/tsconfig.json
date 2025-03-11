@@ -1,8 +1,8 @@
 {
   "extends": "@repo/typescript-config/agenite.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist"
   },
-  "include": ["src", "examples"],
+  "include": ["src", "examples", "src-v2"],
   "exclude": ["node_modules", "dist"]
 }

@@ -38,7 +38,7 @@ function formatContentBlock(block: ContentBlock): string {
   if ('toolUse' in block && block.type === 'toolUse') {
     return `[Tool Use: ${block.name}]`;
   }
-  if ('toolResult' in block && block.type === 'toolResult') {
+  if (block.type === 'toolResult') {
     if (typeof block.content === 'string') {
       return block.content;
     }
