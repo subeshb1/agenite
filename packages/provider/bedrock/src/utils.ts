@@ -47,7 +47,7 @@ export const mapContent = (
         return {
           type: 'text',
           text: block.text,
-        };
+        } as const;
       }
 
       if (block.toolUse) {
@@ -61,7 +61,7 @@ export const mapContent = (
           input: block.toolUse.input || {},
           id: toolUseId,
           name: block.toolUse.name || 'unknown',
-        };
+        } as const;
       }
 
       if (block.image) {
@@ -76,22 +76,22 @@ export const mapContent = (
             data: block.image.source?.$unknown?.[1] || '',
             media_type: `image/${validFormat as 'jpeg' | 'png' | 'gif' | 'webp'}`,
           },
-        };
+        } as const;
       }
 
       if (block.reasoningContent) {
         return {
-          type: 'reasoning',
-          reasoning: block.reasoningContent.reasoningText?.text || '',
+          type: 'thinking',
+          thinking: block.reasoningContent.reasoningText?.text || '',
           signature: block.reasoningContent.reasoningText?.signature || '',
-        };
+        } as const;
       }
 
       throw new Error(
         `Unsupported content block type: ${JSON.stringify(block, null, 2)}`
       );
     })
-    .filter((block) => block !== null) as ContentBlock[];
+    .filter((block) => block !== null);
 };
 
 /**
