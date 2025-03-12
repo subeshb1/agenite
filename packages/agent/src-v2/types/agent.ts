@@ -1,7 +1,7 @@
 import { BaseMessage, LLMProvider } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
 
-export interface Agent<T extends Record<string, unknown>> {
+export interface AgentConfig<T extends Record<string, unknown>> {
   /**
    * The name of the agent
    */
@@ -17,7 +17,7 @@ export interface Agent<T extends Record<string, unknown>> {
   /**
    * The system prompt of the agent
    */
-  systemPrompt?: string;
+  instructions?: string;
   /**
    * The description of the agent. This is used to describe the agent to the other agents.
    */
@@ -25,7 +25,7 @@ export interface Agent<T extends Record<string, unknown>> {
   /**
    * The other agents that this agent can call
    */
-  agents?: Agent<Record<string, unknown>>[];
+  agents?: AgentConfig<Record<string, unknown>>[];
 
   /**
    * The state of the agent
