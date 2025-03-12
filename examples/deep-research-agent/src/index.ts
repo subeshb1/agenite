@@ -46,7 +46,7 @@ async function main() {
   try {
     const iterator = deepResearchAgent.iterate({
       input: `Research and write a blog post about: ${query}`,
-      stream: true,
+      stream: false,
     });
 
     let response = await iterator.next();
