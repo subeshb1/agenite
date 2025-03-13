@@ -1,7 +1,7 @@
 import { BaseMessage, LLMProvider } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
 import { StateReducer } from '../state/state-reducer';
-import { Action, DefaultActionType } from './action';
+import { Step, DefaultStepType } from './step';
 
 export interface AgentConfig<
   CustomStateReducer extends StateReducer<Record<string, any>>,
@@ -42,8 +42,8 @@ export interface AgentConfig<
   /**
    *
    */
-  actions?: {
-    [key in DefaultActionType | (string & {})]?: Action<any, any, any, any>;
+  steps?: {
+    [key in DefaultStepType | (string & {})]?: Step<any, any, any, any>;
   };
 }
 

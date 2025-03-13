@@ -1,6 +1,6 @@
-import { Action } from '../types/action';
+import { Step } from '../types/step';
 
-export const AgentAction: Action<any, any, any, any> = {
+export const AgentStep: Step<any, any, any, any> = {
   name: 'agenite.agent-call',
   beforeExecute: async (params: unknown) => {
     return params;

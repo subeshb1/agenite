@@ -1,8 +1,8 @@
-import { Action } from '../types/action';
+import { Step } from '../types/step';
 
 import { BaseMessage } from '@agenite/llm';
 
-export const ToolAction: Action<any, any, any, any> = {
+export const ToolStep: Step<any, any, any, any> = {
   name: 'agenite.tool-call',
   beforeExecute: async (params: unknown) => {
     return params;

@@ -1,14 +1,14 @@
 import { BaseMessage, PartialReturn } from '@agenite/llm';
 import { AgentConfig } from './types/agent';
-import { ActionContext, Action, DefaultActionType } from './types/action';
+import { StepContext, Step, DefaultStepType } from './types/step';
 import {
   defaultStateReducer,
   StateFromReducer,
   StateReducer,
 } from './state/state-reducer';
 import { stateApplicator } from './state/state-applicator';
-import { BaseReturnValues, defaultActionConfig } from './actions';
-import { runAction } from './actions';
+import { BaseReturnValues, defaultStepConfig } from './steps';
+import { executeAgentStep } from './steps';
 
 export class Agent<
   Reducer extends StateReducer<
@@ -23,7 +23,7 @@ export class Agent<
       stream?: boolean;
     },
     // TODO: Add other properties
-    isChildAction = false
+    isChildStep = false
   ): AsyncGenerator<
     {
       type: 'agenite.llm-call.streaming';
@@ -32,9 +32,9 @@ export class Agent<
     StateFromReducer<Reducer>,
     unknown
   > {
-    let next: DefaultActionType = 'agenite.llm-call';
+    let next: DefaultStepType = 'agenite.llm-call';
 
-    const executionContext: ActionContext<Reducer> = {
+    const executionContext: StepContext<Reducer> = {
       state: {
         // Other fields user can add to update state
         //
@@ -52,26 +52,29 @@ export class Agent<
       },
       currentAgent: this.agent,
       parentAgent: null,
-      isChildAction,
+      isChildStep,
       provider: this.agent.provider,
       instructions: this.agent.instructions || 'You are a helpful assistant.',
       stream: options?.stream || true,
     };
 
-    const actions = this.agent.actions || defaultActionConfig;
+    const actions = this.agent.steps || defaultStepConfig;
     while (true) {
       if (next === 'agenite.end') {
         break;
       }
 
-      const task: Action<BaseReturnValues, any, unknown, unknown> | undefined =
+      const task: Step<BaseReturnValues, any, unknown, unknown> | undefined =
         actions[next];
 
       if (!task) {
-        throw new Error(`Action ${next} not found`);
+        throw new Error(`Step ${next} not found`);
       }
 
-      const result: BaseReturnValues = yield* runAction(task, executionContext);
+      const result: BaseReturnValues = yield* executeAgentStep(
+        task,
+        executionContext
+      );
 
       // Apply state changes after executor completes
       if (result.state) {
