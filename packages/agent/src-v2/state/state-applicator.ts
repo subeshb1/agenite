@@ -20,7 +20,11 @@ export const stateApplicator = <
       if (reducer) {
         updatedState[key] =
           reducer(newState[key], previousState[key]) || previousState[key];
-      } else if (newState[key] !== undefined) {
+      } else if (key === 'messages') {
+        if (newState[key]) {
+          updatedState['messages'] = newState[key];
+        }
+      } else if (newState[key]) {
         updatedState[key] = newState[key];
       }
     }

@@ -1,11 +1,6 @@
 import { BaseMessage, ToolUseBlock, ToolResultBlock } from '@agenite/llm';
 import { Action } from '../types/action';
-import {
-  Tool,
-  ToolResponse,
-  ToolResponseBlock,
-  ToolResponseData,
-} from '@agenite/tool';
+import { Tool, ToolResponseData } from '@agenite/tool';
 
 export const ToolResultAction: Action<any, any, any, any> = {
   name: 'agenite.tool-result',

@@ -19,7 +19,7 @@ const agent = new Agent({
     'agenite.llm-call': {
       ...LLMAction,
       afterExecute: async (params: any) => {
-        return { ...params, next: 'agenite.end' };
+        return { state: { ...params.state, next: 'agenite.end' } };
       },
     },
   },
