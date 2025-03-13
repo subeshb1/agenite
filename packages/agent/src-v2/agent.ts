@@ -1,81 +1,21 @@
 import { BaseMessage, PartialReturn } from '@agenite/llm';
 import { AgentConfig } from './types/agent';
-import { ExecutionContext, Executor, ExecutionType } from './types/executor';
-import { AgentExecutor } from './executors/agent';
-import { ToolResultExecutor } from './executors/tool-result';
-import { ToolExecutor } from './executors/tool';
-import { LLMExecutor } from './executors/llm';
+import { ActionContext, Action, DefaultActionType } from './types/action';
+import {
+  defaultStateReducer,
+  StateFromReducer,
+  StateReducer,
+} from './state/state-reducer';
+import { stateApplicator } from './state/state-applicator';
+import { BaseReturnValues, defaultActionConfig } from './actions';
+import { runAction } from './actions';
 
-const executionConfig: Record<ExecutionType, Executor<any, any, any, any>> = {
-  'agenite.llm-call': LLMExecutor,
-  'agenite.tool-call': ToolExecutor,
-  'agenite.agent-call': AgentExecutor,
-  'agenite.tool-result': ToolResultExecutor,
-};
-
-interface BaseReturnValues {
-  next: ExecutionType;
-  state: {
-    messages: BaseMessage[];
-  };
-}
-
-const executorExecutor = async function* (
-  executor: Executor<BaseReturnValues, any, unknown, unknown>,
-  executionContext: ExecutionContext
-) {
-  const beforeResult = await executor.beforeExecute(executionContext);
-  const result = yield* executor.execute(beforeResult);
-  const afterResult = await executor.afterExecute(result);
-  return afterResult;
-};
-
-const stateReducer = {
-  messages: (newValue?: BaseMessage[], previousValue?: BaseMessage[]) => {
-    if (!newValue) {
-      return previousValue;
-    }
-
-    return [...(previousValue || []), ...newValue];
-  },
-};
-
-type AgentState = {
-  messages: BaseMessage[];
-  [key: string]: unknown;
-};
-
-const stateApplicator = (
-  previousState: AgentState,
-  newState: Partial<AgentState>
-) => {
-  // Start with a copy of previous state to ensure required fields are preserved
-  const updatedState: AgentState = {
-    ...previousState,
-    messages: previousState.messages || [], // Ensure messages is always present
-  };
-
-  // Iterate through all keys in newState
-  for (const key in newState) {
-    // If there's a reducer for this key, use it
-    if (key in stateReducer) {
-      updatedState[key] = stateReducer[key as keyof typeof stateReducer](
-        newState[key] as any,
-        previousState[key] as any
-      );
-    } else {
-      // If no reducer, only override if new value exists
-      if (newState[key] !== undefined) {
-        updatedState[key] = newState[key];
-      }
-    }
-  }
-
-  return updatedState;
-};
-
-export class Agent {
-  constructor(private readonly agent: AgentConfig<Record<string, unknown>>) {}
+export class Agent<
+  Reducer extends StateReducer<
+    Record<string, any>
+  > = typeof defaultStateReducer,
+> {
+  constructor(private readonly agent: AgentConfig<Reducer>) {}
 
   async *iterate(
     input: string | BaseMessage[],
@@ -83,35 +23,36 @@ export class Agent {
       stream?: boolean;
     },
     // TODO: Add other properties
-    isChildExecution = false
+    isChildAction = false
   ): AsyncGenerator<
     {
       type: 'agenite.llm-call.streaming';
       content: PartialReturn;
     },
-    unknown,
+    StateFromReducer<Reducer>,
     unknown
   > {
-    let next: ExecutionType = 'agenite.llm-call';
+    let next: DefaultActionType = 'agenite.llm-call';
 
-    const executionContext: ExecutionContext = {
+    const executionContext: ActionContext<Reducer> = {
       state: {
         // Other fields user can add to update state
         //
         // Messages is always going to be there. User always starts with this
+        ...this.agent.initialState,
         messages: [
           {
             role: 'user',
             content: [{ type: 'text', text: input }],
           },
-        ],
-      },
+        ] as BaseMessage[],
+      } as StateFromReducer<Reducer>,
       context: {
         // context passed in the current execution
       },
       currentAgent: this.agent,
       parentAgent: null,
-      isChildExecution,
+      isChildAction,
       provider: this.agent.provider,
       instructions: this.agent.instructions || 'You are a helpful assistant.',
       stream: options?.stream || true,
@@ -122,15 +63,27 @@ export class Agent {
         break;
       }
 
-      const executor: Executor<any, any, unknown, unknown> =
-        executionConfig[next];
+      const task: Action<BaseReturnValues, any, unknown, unknown> | null =
+        defaultActionConfig[next];
 
-      const result = yield* executorExecutor(executor, executionContext);
+      if (!task) {
+        throw new Error(`Action ${next} not found`);
+      }
+
+      const result: BaseReturnValues = yield* runAction(task, executionContext);
 
       // Apply state changes after executor completes
       if (result.state) {
-        const newState = stateApplicator(executionContext.state, result.state);
-        executionContext.state = newState;
+        const newState = stateApplicator(
+          this.agent.stateReducer || defaultStateReducer,
+          executionContext.state,
+          result.state
+        );
+
+        executionContext.state = {
+          ...executionContext.state,
+          ...newState,
+        };
       }
 
       next = result.next;
@@ -139,5 +92,15 @@ export class Agent {
     return {
       ...executionContext.state,
     };
+  }
+
+  async execute(input: string | BaseMessage[], options?: { stream?: boolean }) {
+    const iterator = this.iterate(input, options);
+    let result = await iterator.next();
+    while (!result.done) {
+      result = await iterator.next();
+    }
+
+    return result.value;
   }
 }

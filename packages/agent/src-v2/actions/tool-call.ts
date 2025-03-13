@@ -1,8 +1,8 @@
-import { Executor } from '../types/executor';
+import { Action } from '../types/action';
 
 import { BaseMessage } from '@agenite/llm';
 
-export const ToolExecutor: Executor<any, any, any, any> = {
+export const ToolAction: Action<any, any, any, any> = {
   name: 'agenite.tool-call',
   beforeExecute: async (params: unknown) => {
     return params;

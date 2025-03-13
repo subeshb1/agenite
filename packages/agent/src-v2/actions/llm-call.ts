@@ -4,7 +4,7 @@ import {
   PartialReturn,
   ToolDefinition,
 } from '@agenite/llm';
-import { Executor } from '../types/executor';
+import { Action } from '../types/action';
 import { AgentTool } from '../../src/types/agent';
 
 export function transformToToolDefinitions(
@@ -26,7 +26,7 @@ export function transformToToolDefinitions(
   }));
 }
 
-export const LLMExecutor: Executor<any, any, any, any> = {
+export const LLMAction: Action<any, any, any, any> = {
   name: 'agenite.llm-call',
   beforeExecute: async (params) => {
     return {

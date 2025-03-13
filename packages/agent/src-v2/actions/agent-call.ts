@@ -1,6 +1,6 @@
-import { Executor } from '../types/executor';
+import { Action } from '../types/action';
 
-export const AgentExecutor: Executor<any, any, any, any> = {
+export const AgentAction: Action<any, any, any, any> = {
   name: 'agenite.agent-call',
   beforeExecute: async (params: unknown) => {
     return params;

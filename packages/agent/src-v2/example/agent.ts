@@ -1,21 +1,21 @@
 import { createWeatherTool } from '../../examples/shared/tools';
 import { Agent } from '../agent';
-import { OllamaProvider } from '@agenite/ollama';
+import { BedrockProvider } from '@agenite/bedrock';
+const bedrockProvider = new BedrockProvider({
+  model: 'anthropic.claude-3-5-haiku-20241022-v1:0',
+  region: 'us-west-2',
+});
 
 const agent = new Agent({
   name: 'test',
   description: 'test',
-  state: {
-    messages: [],
-  },
-  provider: new OllamaProvider({
-    model: 'qwen2.5:7b',
-  }),
+  provider: bedrockProvider,
   tools: [createWeatherTool('dummy-key')],
-  agents: [],
 });
 
-const iterator = agent.iterate('What is the weather in Tokyo? And tell me about aws s3 security');
+const iterator = agent.iterate(
+  'What is the weather in Tokyo? And tell me about aws s3 security'
+);
 
 let result = await iterator.next();
 
@@ -39,4 +39,10 @@ while (!result.done) {
   result = await iterator.next();
 }
 
-console.log(result);
+console.log(result.value);
+
+let data = await agent.execute(
+  'Hi'
+);
+
+console.log(data.messages);

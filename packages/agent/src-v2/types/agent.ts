@@ -1,7 +1,10 @@
 import { BaseMessage, LLMProvider } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
+import { StateReducer, defaultStateReducer } from '../state/state-reducer';
 
-export interface AgentConfig<T extends Record<string, unknown>> {
+export interface AgentConfig<
+  CustomStateReducer extends StateReducer<Record<string, any>>,
+> {
   /**
    * The name of the agent
    */
@@ -25,14 +28,16 @@ export interface AgentConfig<T extends Record<string, unknown>> {
   /**
    * The other agents that this agent can call
    */
-  agents?: AgentConfig<Record<string, unknown>>[];
+  agents?: unknown[];
+
+  stateReducer?: CustomStateReducer;
 
   /**
    * The state of the agent
    */
-  state: {
-    messages: BaseMessage[];
-  } & T;
+  initialState?: {
+    [K in keyof CustomStateReducer]: ReturnType<CustomStateReducer[K]>;
+  };
 }
 
 export interface AgentMethods {

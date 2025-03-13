@@ -1,5 +1,5 @@
 import { BaseMessage, ToolUseBlock, ToolResultBlock } from '@agenite/llm';
-import { Executor } from '../types/executor';
+import { Action } from '../types/action';
 import {
   Tool,
   ToolResponse,
@@ -7,7 +7,7 @@ import {
   ToolResponseData,
 } from '@agenite/tool';
 
-export const ToolResultExecutor: Executor<any, any, any, any> = {
+export const ToolResultAction: Action<any, any, any, any> = {
   name: 'agenite.tool-result',
   beforeExecute: async (params) => {
     const lastMessage = params.state.messages[params.state.messages.length - 1];
