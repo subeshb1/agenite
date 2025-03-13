@@ -49,6 +49,6 @@ export const customStateReducer: StateReducer<{
     return [...(previousValue || []), ...newValue];
   },
   a: (newValue?: number, previousValue?: number) => {
-    return newValue || previousValue || 0;
+    return (newValue || 0) + 1000;
   },
 };

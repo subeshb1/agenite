@@ -2,7 +2,12 @@ import { Step } from '../types/step';
 
 import { BaseMessage } from '@agenite/llm';
 
-export const ToolStep: Step<any, any, any, any> = {
+type ToolCallYieldValues = {
+  type: 'agenite.tool-call.params';
+  output: string;
+};
+
+export const ToolStep: Step<any, ToolCallYieldValues, any, any> = {
   name: 'agenite.tool-call',
   beforeExecute: async (params: unknown) => {
     return params;

@@ -1,8 +1,6 @@
 import { createWeatherTool } from '../../examples/shared/tools';
 import { Agent } from '../agent';
 import { BedrockProvider } from '@agenite/bedrock';
-import { LLMStep } from '../steps/llm-call';
-import { customStateReducer } from '../state/state-reducer';
 
 const bedrockProvider = new BedrockProvider({
   model: 'anthropic.claude-3-5-haiku-20241022-v1:0',
@@ -14,15 +12,6 @@ const agent = new Agent({
   description: 'test',
   provider: bedrockProvider,
   tools: [createWeatherTool('dummy-key')],
-  stateReducer: customStateReducer,
-  steps: {
-    'agenite.llm-call': {
-      ...LLMStep,
-      afterExecute: async (params: any) => {
-        return { state: { ...params.state, next: 'agenite.end' } };
-      },
-    },
-  },
 });
 
 const iterator = agent.iterate(
@@ -55,4 +44,4 @@ console.log(result.value);
 
 let data = await agent.execute('Hi');
 
-console.log(data.a);
+console.log(data.messages);

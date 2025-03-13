@@ -26,14 +26,19 @@ export function transformToToolDefinitions(
   }));
 }
 
-export const LLMStep: Step<any, any, any, any> = {
+type LLMCallYieldValues = {
+  type: 'agenite.llm-call.streaming';
+  content: PartialReturn;
+};
+
+export const LLMStep: Step<any, LLMCallYieldValues, any, any> = {
   name: 'agenite.llm-call',
   beforeExecute: async (params) => {
     return {
       provider: params.provider,
       messages: params.state.messages,
       instructions: params.instructions,
-      tools: params.currentAgent.tools,
+      tools: params.currentAgent.agent.tools,
       stream: params.stream,
     };
   },
@@ -44,19 +49,7 @@ export const LLMStep: Step<any, any, any, any> = {
     instructions: string;
     tools?: AgentTool[];
     stream?: boolean;
-  }): AsyncGenerator<
-    {
-      type: 'agenite.llm-call.streaming';
-      content: PartialReturn;
-    },
-    {
-      next: 'agenite.tool-result' | 'agenite.tool-call' | 'agenite.end';
-      state: {
-        messages: BaseMessage[];
-      };
-    },
-    unknown
-  > {
+  }): AsyncGenerator<LLMCallYieldValues, any, any> {
     const { provider, messages, instructions, tools, stream } = params;
 
     const generator = provider.iterate(messages, {

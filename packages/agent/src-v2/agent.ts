@@ -7,15 +7,22 @@ import {
   StateReducer,
 } from './state/state-reducer';
 import { stateApplicator } from './state/state-applicator';
-import { BaseReturnValues, defaultStepConfig } from './steps';
+import {
+  AllStepsYieldValues,
+  BaseReturnValues,
+  defaultStepConfig,
+} from './steps';
 import { executeAgentStep } from './steps';
 
 export class Agent<
   Reducer extends StateReducer<
     Record<string, any>
   > = typeof defaultStateReducer,
+  Steps extends {
+    [key: string]: Step<any, any, any, any>;
+  } = typeof defaultStepConfig,
 > {
-  constructor(private readonly agent: AgentConfig<Reducer>) {}
+  constructor(public readonly agent: AgentConfig<Reducer, Steps>) {}
 
   async *iterate(
     input: string | BaseMessage[],
@@ -25,10 +32,7 @@ export class Agent<
     // TODO: Add other properties
     isChildStep = false
   ): AsyncGenerator<
-    {
-      type: 'agenite.llm-call.streaming';
-      content: PartialReturn;
-    },
+    AllStepsYieldValues<Steps>,
     StateFromReducer<Reducer>,
     unknown
   > {
@@ -50,8 +54,7 @@ export class Agent<
       context: {
         // context passed in the current execution
       },
-      currentAgent: this.agent,
-      parentAgent: null,
+      currentAgent: this,
       isChildStep,
       provider: this.agent.provider,
       instructions: this.agent.instructions || 'You are a helpful assistant.',

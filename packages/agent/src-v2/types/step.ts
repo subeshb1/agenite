@@ -1,14 +1,14 @@
 import { BaseMessage, LLMProvider } from '@agenite/llm';
-import { AgentConfig } from './agent';
 import { StateFromReducer, StateReducer } from '../state/state-reducer';
+import { Agent } from '../agent';
 
 export interface StepContext<
   Reducer extends StateReducer<Record<string, unknown>>,
 > {
   state: StateFromReducer<Reducer>;
   context: Record<string, unknown>;
-  currentAgent: AgentConfig<Reducer>;
-  parentAgent: AgentConfig<Reducer> | null;
+  currentAgent: Agent<any, any>;
+  parentAgent?: Agent<any, any>;
   isChildStep: boolean;
   provider: LLMProvider;
   instructions: string;

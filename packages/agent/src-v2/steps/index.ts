@@ -14,9 +14,16 @@ export interface BaseReturnValues {
   };
 }
 
-export const defaultStepConfig: {
-  [key in DefaultStepType | (string & {})]?: Step<any, any, any, any>;
-} = {
+export type GeneratorYieldType<T extends AsyncGenerator> =
+  T extends AsyncGenerator<infer Y, unknown, unknown> ? Y : never;
+
+export type AllStepsYieldValues<
+  Steps extends {
+    [key: string]: Step<any, unknown, unknown, unknown>;
+  },
+> = GeneratorYieldType<ReturnType<Steps[keyof Steps]['execute']>>;
+
+export const defaultStepConfig = {
   'agenite.llm-call': LLMStep,
   'agenite.tool-call': ToolStep,
   'agenite.agent-call': AgentStep,

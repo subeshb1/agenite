@@ -5,6 +5,9 @@ import { Step, DefaultStepType } from './step';
 
 export interface AgentConfig<
   CustomStateReducer extends StateReducer<Record<string, any>>,
+  Steps extends {
+    [key: string]: Step<any, any, any, any>;
+  },
 > {
   /**
    * The name of the agent
@@ -42,9 +45,7 @@ export interface AgentConfig<
   /**
    *
    */
-  steps?: {
-    [key in DefaultStepType | (string & {})]?: Step<any, any, any, any>;
-  };
+  steps?: Steps;
 }
 
 export interface AgentMethods {
