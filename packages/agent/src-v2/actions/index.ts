@@ -14,15 +14,13 @@ export interface BaseReturnValues {
   };
 }
 
-export const defaultActionConfig: Record<
-  DefaultActionType,
-  Action<any, any, any, any> | null
-> = {
+export const defaultActionConfig: {
+  [key in DefaultActionType | (string & {})]?: Action<any, any, any, any>;
+} = {
   'agenite.llm-call': LLMAction,
   'agenite.tool-call': ToolAction,
   'agenite.agent-call': AgentAction,
   'agenite.tool-result': ToolResultAction,
-  'agenite.end': null,
 };
 
 export const runAction = async function* (

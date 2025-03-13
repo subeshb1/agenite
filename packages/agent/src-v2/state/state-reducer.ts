@@ -1,12 +1,16 @@
 import { BaseMessage } from '@agenite/llm';
 
 export type StateFromReducer<
-  Reducer extends StateReducer<Record<string, unknown>>,
+  Reducer extends StateReducer<Record<string, any>>,
 > = {
   [K in keyof Reducer]: ReturnType<Reducer[K]>;
+} & {
+  messages: BaseMessage[];
 };
 
-export type StateReducer<T extends Record<string, unknown>> = {
+export type StateReducer<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> = {
   [K in keyof T]: (newValue?: T[K], previousValue?: T[K]) => T[K];
 } & {
   messages: (
@@ -27,7 +31,6 @@ export const defaultStateReducer: StateReducer<{
 };
 
 export const customStateReducer: StateReducer<{
-  messages: BaseMessage[];
   /** Magic number */
   a?: number;
 }> = {
@@ -36,11 +39,5 @@ export const customStateReducer: StateReducer<{
       return previousValue || [];
     }
     return [...(previousValue || []), ...newValue];
-  },
-  a: (newValue?: number, previousValue?: number) => {
-    if (!newValue) {
-      return previousValue || 0;
-    }
-    return previousValue || 0 + newValue;
   },
 };

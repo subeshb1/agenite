@@ -45,7 +45,7 @@ export class Agent<
             role: 'user',
             content: [{ type: 'text', text: input }],
           },
-        ] as BaseMessage[],
+        ],
       } as StateFromReducer<Reducer>,
       context: {
         // context passed in the current execution
@@ -58,13 +58,14 @@ export class Agent<
       stream: options?.stream || true,
     };
 
+    const actions = this.agent.actions || defaultActionConfig;
     while (true) {
       if (next === 'agenite.end') {
         break;
       }
 
-      const task: Action<BaseReturnValues, any, unknown, unknown> | null =
-        defaultActionConfig[next];
+      const task: Action<BaseReturnValues, any, unknown, unknown> | undefined =
+        actions[next];
 
       if (!task) {
         throw new Error(`Action ${next} not found`);
