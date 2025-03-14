@@ -1,4 +1,4 @@
-import { BaseMessage, LLMProvider } from '@agenite/llm';
+import { LLMProvider } from '@agenite/llm';
 import { StateFromReducer, StateReducer } from '../state/state-reducer';
 import { Agent } from '../agent';
 
@@ -7,8 +7,8 @@ export interface StepContext<
 > {
   state: StateFromReducer<Reducer>;
   context: Record<string, unknown>;
-  currentAgent: Agent<any, any>;
-  parentAgent?: Agent<any, any>;
+  currentAgent: Agent<Reducer, any>;
+  parentAgent?: Agent<Reducer, any>;
   isChildStep: boolean;
   provider: LLMProvider;
   instructions: string;
@@ -25,9 +25,7 @@ export type DefaultStepType =
 export interface Step<
   ReturnValues extends {
     next: DefaultStepType;
-    state: {
-      messages: BaseMessage[];
-    };
+    state: Record<string, unknown>;
   },
   YieldValues,
   StepParams,
@@ -41,7 +39,7 @@ export interface Step<
    * The beforeExecute function. Used to prepare the state for the Step.
    */
   beforeExecute: (
-    params: StepContext<StateReducer<Record<string, any>>>
+    params: StepContext<StateReducer<Record<string, unknown>>>
   ) => Promise<StepParams>;
   // TODO: Add type for params
   execute: (

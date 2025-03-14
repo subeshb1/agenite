@@ -7,11 +7,9 @@ import { LLMStep } from './llm-call';
 import { ToolStep } from './tool-call';
 import { ToolResultStep } from './tool-result';
 
-export interface BaseReturnValues {
+export interface BaseReturnValues<T extends Record<string, unknown>> {
   next: DefaultStepType;
-  state: {
-    messages: BaseMessage[];
-  };
+  state: T;
 }
 
 export type GeneratorYieldType<T extends AsyncGenerator> =
@@ -31,7 +29,7 @@ export const defaultStepConfig = {
 };
 
 export const executeAgentStep = async function* (
-  task: Step<BaseReturnValues, any, unknown, unknown>,
+  task: Step<BaseReturnValues<any>, any, unknown, unknown>,
   executionContext: StepContext<any>
 ) {
   const beforeResult = await task.beforeExecute(executionContext);

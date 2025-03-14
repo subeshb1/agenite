@@ -24,7 +24,7 @@ export const ToolResultStep: Step<any, ToolResultYieldValues, any, any> = {
     }
     return {
       toolUseBlocks: toolUseBlocks,
-      tools: params.currentAgent.agent.tools,
+      tools: params.currentAgent.agentConfig.tools,
     };
   },
 

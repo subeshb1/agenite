@@ -1,3 +1,4 @@
+import { userTextMessage } from '@agenite/llm';
 import { createWeatherTool } from '../../examples/shared/tools';
 import { Agent } from '../agent';
 import { BedrockProvider } from '@agenite/bedrock';
@@ -14,9 +15,13 @@ const agent = new Agent({
   tools: [createWeatherTool('dummy-key')],
 });
 
-const iterator = agent.iterate(
-  'What is the weather in Tokyo? And tell me about aws s3 security'
-);
+const iterator = agent.iterate({
+  messages: [
+    userTextMessage(
+      'What is the weather in Tokyo? And tell me about aws s3 security'
+    ),
+  ],
+});
 
 let result = await iterator.next();
 
@@ -42,6 +47,8 @@ while (!result.done) {
 
 console.log(result.value);
 
-let data = await agent.execute('Hi');
+let data = await agent.execute({
+  messages: [userTextMessage('hi')],
+});
 
 console.log(data.messages);

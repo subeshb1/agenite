@@ -1,7 +1,12 @@
 import { BaseMessage, LLMProvider } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
-import { StateReducer } from '../state/state-reducer';
-import { Step, DefaultStepType } from './step';
+import { StateFromReducer, StateReducer } from '../state/state-reducer';
+import { Step } from './step';
+
+export type AsyncGeneratorMiddleware<Yield, Return, Next> = (
+  generator: AsyncGenerator<Yield, Return, Next>,
+  context: unknown
+) => AsyncGenerator<Yield, Return, Next>;
 
 export interface AgentConfig<
   CustomStateReducer extends StateReducer<Record<string, any>>,
@@ -39,13 +44,13 @@ export interface AgentConfig<
   /**
    * The state of the agent
    */
-  initialState?: {
-    [K in keyof CustomStateReducer]: ReturnType<CustomStateReducer[K]>;
-  };
+  initialState?: Partial<StateFromReducer<CustomStateReducer>>;
   /**
    *
    */
   steps?: Steps;
+
+  middlewares?: AsyncGeneratorMiddleware<any, any, any>[];
 }
 
 export interface AgentMethods {

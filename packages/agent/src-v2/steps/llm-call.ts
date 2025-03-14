@@ -38,7 +38,7 @@ export const LLMStep: Step<any, LLMCallYieldValues, any, any> = {
       provider: params.provider,
       messages: params.state.messages,
       instructions: params.instructions,
-      tools: params.currentAgent.agent.tools,
+      tools: params.currentAgent.agentConfig.tools,
       stream: params.stream,
     };
   },

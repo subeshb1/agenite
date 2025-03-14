@@ -19,15 +19,28 @@ const agent = new Agent({
     'agenite.llm-call': {
       ...LLMStep,
       afterExecute: async (params: any) => {
-        return { state: { ...params.state, a: 100 }, next: 'agenite.end' };
+        return {
+          state: { ...params.state, a: 100 },
+          next: 'agenite.end',
+        } as const;
       },
     },
   },
 });
 
-const iterator = agent.iterate(
-  'What is the weather in Tokyo? And tell me about aws s3 security'
-);
+const iterator = agent.iterate({
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'What is the weather in Tokyo? And tell me about aws s3 security',
+        },
+      ],
+    },
+  ],
+});
 
 let result = await iterator.next();
 
@@ -53,6 +66,18 @@ while (!result.done) {
 
 console.log(result.value);
 
-let data = await agent.execute('Hi');
+let data = await agent.execute({
+  messages: [
+    {
+      role: 'user',
+      content: [
+        {
+          type: 'text',
+          text: 'What is the weather in Tokyo? And tell me about aws s3 security',
+        },
+      ],
+    },
+  ],
+});
 
 console.log(data.a);

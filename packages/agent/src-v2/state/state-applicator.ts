@@ -4,11 +4,11 @@ export const stateApplicator = <
   Reducer extends StateReducer<Record<string, any>>,
 >(
   stateReducer: Reducer,
-  previousState: StateFromReducer<Reducer>,
+  previousState: Partial<StateFromReducer<Reducer>>,
   newState: Partial<StateFromReducer<Reducer>>
 ): StateFromReducer<Reducer> => {
   // Start with a copy of previous state to ensure required fields are preserved
-  const updatedState: StateFromReducer<Reducer> = {
+  const updatedState: Partial<StateFromReducer<Reducer>> = {
     ...previousState,
     messages: previousState.messages || [], // Ensure messages is always present
   };
