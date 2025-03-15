@@ -1,18 +1,55 @@
 import { BaseMessage, LLMProvider } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
 import { StateFromReducer, StateReducer } from '../state/state-reducer';
-import { Step } from './step';
+import { Step, BaseYieldValue, BaseNextValue } from './step';
+import {
+  GeneratorYieldType,
+  GeneratorNextType,
+  GeneratorReturnType,
+  BaseReturnValues,
+} from '../steps';
+import {
+  MiddlewareBaseYieldValue,
+  MiddlewareBaseNextValue,
+} from './middleware';
 
-export type AsyncGeneratorMiddleware<Yield, Return, Next> = (
-  generator: AsyncGenerator<Yield, Return, Next>,
+export type AllMiddlewareYieldValues<
+  Middlewares extends AsyncGeneratorMiddleware<any, any, any, any>[],
+> = GeneratorYieldType<ReturnType<Middlewares[number]>>;
+
+export type AllMiddlewareNextValues<
+  Middlewares extends AsyncGeneratorMiddleware<any, any, any, any>[],
+> = GeneratorNextType<ReturnType<Middlewares[number]>>;
+
+export type AllMiddlewareReturnValues<
+  Middlewares extends AsyncGeneratorMiddleware<any, any, any, any>[],
+> = GeneratorReturnType<ReturnType<Middlewares[number]>>;
+
+export type AsyncGeneratorMiddleware<
+  Yield extends MiddlewareBaseYieldValue,
+  Return,
+  Next extends MiddlewareBaseNextValue,
+  Generator extends AsyncGenerator<
+    BaseYieldValue,
+    unknown,
+    BaseNextValue
+  > = AsyncGenerator<any, any, any>,
+> = (
+  generator: Generator,
   context: unknown
 ) => AsyncGenerator<Yield, Return, Next>;
 
 export interface AgentConfig<
   CustomStateReducer extends StateReducer<Record<string, any>>,
   Steps extends {
-    [key: string]: Step<any, any, any, any>;
+    [key: string]: Step<BaseReturnValues, BaseYieldValue, any, any>;
   },
+  Middlewares extends AsyncGeneratorMiddleware<
+    MiddlewareBaseYieldValue,
+    unknown,
+    MiddlewareBaseNextValue,
+    AsyncGenerator<BaseYieldValue, unknown, BaseNextValue>
+  >[],
 > {
   /**
    * The name of the agent
@@ -25,7 +62,7 @@ export interface AgentConfig<
   /**
    * The tools of the agent
    */
-  tools: Tool[];
+  tools?: Tool[];
   /**
    * The system prompt of the agent
    */
@@ -50,7 +87,7 @@ export interface AgentConfig<
    */
   steps?: Steps;
 
-  middlewares?: AsyncGeneratorMiddleware<any, any, any>[];
+  middlewares?: Middlewares;
 }
 
 export interface AgentMethods {

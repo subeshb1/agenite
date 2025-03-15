@@ -11,6 +11,11 @@
   - [ ] Add tracing to agent
   - [ ] Injecting logger
   - [ ] Middle wares???
+- [ ] Handle llm options
+  - [ ] Streaming
+  - [ ] Tool calling
+  - [ ] Agentic loop
+  - [ ] Observability
 
 ## Steps
 
@@ -24,7 +29,12 @@
 - [ ] Better DX
 - [ ] Make the state independent of `messages`
 
-
 ## Middlewares
+
 - [ ] Root middleware
 - [ ] Experiment step middlewares
+- [ ] How to type safe. OMG
+
+## Types
+
+- [ ] Manage all utilities properly document

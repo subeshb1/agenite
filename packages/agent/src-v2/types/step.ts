@@ -1,14 +1,15 @@
 import { LLMProvider } from '@agenite/llm';
 import { StateFromReducer, StateReducer } from '../state/state-reducer';
 import { Agent } from '../agent';
+import { BaseReturnValues } from '../steps';
 
 export interface StepContext<
   Reducer extends StateReducer<Record<string, unknown>>,
 > {
   state: StateFromReducer<Reducer>;
   context: Record<string, unknown>;
-  currentAgent: Agent<Reducer, any>;
-  parentAgent?: Agent<Reducer, any>;
+  currentAgent: Agent<Reducer, any, any>;
+  parentAgent?: Agent<Reducer, any, any>;
   isChildStep: boolean;
   provider: LLMProvider;
   instructions: string;
@@ -23,11 +24,8 @@ export type DefaultStepType =
   | 'agenite.end';
 
 export interface Step<
-  ReturnValues extends {
-    next: DefaultStepType;
-    state: Record<string, unknown>;
-  },
-  YieldValues,
+  ReturnValues extends BaseReturnValues<Record<string, unknown>>,
+  YieldValues extends BaseYieldValue,
   StepParams,
   State,
 > {
@@ -50,3 +48,13 @@ export interface Step<
    */
   afterExecute: (params: unknown) => Promise<ReturnValues>;
 }
+
+export type BaseYieldValue = {
+  type: string;
+  [key: string]: unknown;
+};
+
+export type BaseNextValue = {
+  type: string;
+  [key: string]: unknown;
+} | undefined;

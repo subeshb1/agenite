@@ -80,4 +80,7 @@ let data = await agent.execute({
   ],
 });
 
-console.log(data.a);
+console.log(data.messages.length);
+console.log(data.a === 1);
+// console.log(data.a === '1');
+// console.log(data.b);
