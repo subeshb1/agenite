@@ -3,14 +3,14 @@ import { Step } from '../types/step';
 import { Tool, ToolResponseData } from '@agenite/tool';
 import { BaseReturnValues } from '.';
 
-type ToolResultYieldValues = {
-  type: 'agenite.tool-result';
-  output: ToolResponseData;
-};
-
 type ToolResultParams = {
   toolUseBlocks: ToolUseBlock[];
   tools: Tool[];
+};
+
+export type ToolResultYieldValues = {
+  type: 'agenite.tool-result';
+  output: ToolResponseData;
 };
 
 export const ToolResultStep: Step<
@@ -54,13 +54,13 @@ export const ToolResultStep: Step<
         output: result.data,
       };
 
-      // TODO: Handle tool content properly
+      // TODO: Handle tool content properly i.e handle images, etc.
       toolResults.push({
         type: 'toolResult',
         toolName: tool.name,
         toolUseId: toolUseBlock.id,
-        content: JSON.stringify(result.success ? result.data : result.error),
-        isError: !result.success,
+        content: JSON.stringify(result.isError ? result.error : result.data),
+        isError: result.isError,
       });
     }
 

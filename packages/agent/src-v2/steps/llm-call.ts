@@ -26,7 +26,7 @@ export function transformToToolDefinitions(
   }));
 }
 
-type LLMCallYieldValues = {
+export type LLMCallYieldValues = {
   type: 'agenite.llm-call.streaming';
   content: PartialReturn;
 };
@@ -40,7 +40,9 @@ type LLMCallParams = {
 };
 
 export const LLMStep: Step<
-  BaseReturnValues<Record<string, unknown>>,
+  BaseReturnValues<{
+    messages: BaseMessage[];
+  }>,
   LLMCallYieldValues,
   LLMCallParams,
   undefined

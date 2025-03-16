@@ -1,7 +1,7 @@
 import { BaseReturnValues } from '.';
 import { Step } from '../types/step';
 
-type ToolCallYieldValues = {
+export type ToolCallYieldValues = {
   type: 'agenite.tool-call.params';
   output: string;
 };

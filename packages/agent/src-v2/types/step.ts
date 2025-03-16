@@ -36,9 +36,12 @@ export type DefaultStepType =
 
 export interface Step<
   ReturnValues extends BaseReturnValues<Record<string, unknown>>,
-  YieldValues extends BaseYieldValue,
+  YieldValues,
   StepParams,
   NextValues extends BaseNextValue | undefined,
+  State extends StateReducer<Record<string, unknown>> = StateReducer<
+    Record<string, unknown>
+  >,
 > {
   /**
    * The name of the executor
@@ -47,9 +50,7 @@ export interface Step<
   /**
    * The beforeExecute function. Used to prepare the state for the Step.
    */
-  beforeExecute: (
-    params: StepContext<StateReducer<Record<string, unknown>>>
-  ) => Promise<StepParams>;
+  beforeExecute: (params: StepContext<State>) => Promise<StepParams>;
   // TODO: Add type for params
   execute: (
     params: StepParams
@@ -62,12 +63,10 @@ export interface Step<
 
 export type BaseYieldValue = {
   type: string;
-  [key: string]: unknown;
 };
 
 export type BaseNextValue =
   | {
       type: string;
-      [key: string]: unknown;
     }
   | undefined;

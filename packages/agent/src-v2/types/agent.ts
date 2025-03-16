@@ -108,7 +108,7 @@ export interface ExecutionOptions {
 
 export interface BaseSteps {
   [key: string]: Step<
-    BaseReturnValues<Record<string, unknown>>,
+    BaseReturnValues<any>,
     BaseYieldValue,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     any,

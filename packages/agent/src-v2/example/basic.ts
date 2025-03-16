@@ -35,7 +35,7 @@ while (!result.done) {
         process.stdout.write('\n');
       }
       if (result.value.content.type === 'toolUse') {
-        console.log(result.value);
+        console.log(result.value.content);
       }
       break;
     default:

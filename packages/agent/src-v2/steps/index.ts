@@ -63,3 +63,12 @@ export type DefaultStepGenerator = AsyncGenerator<
   unknown,
   AllStepsNextValues<typeof defaultStepConfig>
 >;
+
+const a: AllStepsYieldValues<typeof defaultStepConfig> = {
+  type: 'agenite.llm-call.streaming',
+  content: {
+    type: 'text',
+    text: 'Hello',
+    isEnd: false,
+  },
+};

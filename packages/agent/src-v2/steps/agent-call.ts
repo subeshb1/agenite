@@ -1,7 +1,7 @@
 import { Step } from '../types/step';
 import { BaseReturnValues } from '.';
 
-type AgentCallYieldValues =
+export type AgentCallYieldValues =
   | {
       type: 'agenite.agent-call';
       output: string;
