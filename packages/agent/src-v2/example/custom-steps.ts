@@ -3,7 +3,7 @@ import { Agent } from '../agent';
 import { BedrockProvider } from '@agenite/bedrock';
 import { LLMStep } from '../steps/llm-call';
 import { customStateReducer } from '../state/state-reducer';
-
+import { BaseReturnValues } from '../steps';
 const bedrockProvider = new BedrockProvider({
   model: 'anthropic.claude-3-5-haiku-20241022-v1:0',
   region: 'us-west-2',
@@ -18,7 +18,9 @@ const agent = new Agent({
   steps: {
     'agenite.llm-call': {
       ...LLMStep,
-      afterExecute: async (params: any) => {
+      afterExecute: async (
+        params: BaseReturnValues<Record<string, unknown>>
+      ) => {
         return {
           state: { ...params.state, a: 100 },
           next: 'agenite.end',
@@ -66,7 +68,7 @@ while (!result.done) {
 
 console.log(result.value);
 
-let data = await agent.execute({
+const data = await agent.execute({
   messages: [
     {
       role: 'user',

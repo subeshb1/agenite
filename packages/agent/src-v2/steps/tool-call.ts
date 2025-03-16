@@ -1,30 +1,22 @@
+import { BaseReturnValues } from '.';
 import { Step } from '../types/step';
-
-import { BaseMessage } from '@agenite/llm';
 
 type ToolCallYieldValues = {
   type: 'agenite.tool-call.params';
   output: string;
 };
 
-export const ToolStep: Step<any, ToolCallYieldValues, any, any> = {
+export const ToolStep: Step<
+  BaseReturnValues<Record<string, unknown>>,
+  ToolCallYieldValues,
+  unknown,
+  undefined
+> = {
   name: 'agenite.tool-call',
   beforeExecute: async (params: unknown) => {
     return params;
   },
-  execute: async function* (params: unknown): AsyncGenerator<
-    {
-      type: 'agenite.tool-call.params';
-      output: string;
-    },
-    {
-      next: 'agenite.tool-result';
-      state: {
-        messages: BaseMessage[];
-      };
-    },
-    unknown
-  > {
+  execute: async function* () {
     yield {
       type: 'agenite.tool-call.params',
       output: 'Executed tool call',
@@ -35,7 +27,7 @@ export const ToolStep: Step<any, ToolCallYieldValues, any, any> = {
       state: { messages: [] },
     };
   },
-  afterExecute: async (params: unknown) => {
+  afterExecute: async (params) => {
     return params;
   },
 };

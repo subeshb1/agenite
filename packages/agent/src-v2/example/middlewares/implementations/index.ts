@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AsyncGeneratorMiddleware } from '../../../types/agent';
+import { BaseAgeniteIterateGenerator } from '../../../types/middleware';
+import { BaseNextValue } from '../../../types/step';
 
 const logger = async function* (
-  generator: AsyncGenerator<any, any, any>,
-  context: any
-) {
-  let nextValue: unknown | undefined = undefined;
+  generator: BaseAgeniteIterateGenerator
+): AsyncGenerator<any, any, any> {
+  let nextValue: BaseNextValue | undefined = undefined;
   while (true) {
     const { value, done } = await generator.next(nextValue);
     if (done) return { ...value, from: 'me' }; // Return final result
@@ -30,7 +32,7 @@ const logger = async function* (
 export const middlewareWithAllAny = (): AsyncGeneratorMiddleware<
   any,
   any,
-  unknown
+  any
 > => {
   return logger;
 };
@@ -50,7 +52,7 @@ export const middlewareWithYieldDefined = (): AsyncGeneratorMiddleware<
       a: 2;
     },
   any,
-  unknown
+  any
 > => {
   return logger;
 };
@@ -72,7 +74,7 @@ export const middlewareWithReturnDefined = (): AsyncGeneratorMiddleware<
   {
     from: string;
   },
-  unknown
+  any
 > => {
   return logger;
 };

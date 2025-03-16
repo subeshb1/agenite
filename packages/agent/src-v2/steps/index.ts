@@ -1,5 +1,11 @@
 import { StateReducer } from '../state/state-reducer';
-import { Step, StepContext, BaseYieldValue } from '../types/step';
+import { BaseSteps } from '../types/agent';
+import {
+  Step,
+  StepContext,
+  BaseNextValue,
+  BaseYieldValue,
+} from '../types/step';
 
 import { DefaultStepType } from '../types/step';
 import { AgentStep } from './agent-call';
@@ -23,17 +29,13 @@ export type GeneratorReturnType<T extends AsyncGenerator> =
 export type GeneratorNextType<T extends AsyncGenerator> =
   T extends AsyncGenerator<unknown, unknown, infer N> ? N : never;
 
-export type AllStepsYieldValues<
-  Steps extends {
-    [key: string]: Step<BaseReturnValues, BaseYieldValue, unknown, unknown>;
-  },
-> = GeneratorYieldType<ReturnType<Steps[keyof Steps]['execute']>>;
+export type AllStepsYieldValues<Steps extends BaseSteps> = GeneratorYieldType<
+  ReturnType<Steps[keyof Steps]['execute']>
+>;
 
-export type AllStepsNextValues<
-  Steps extends {
-    [key: string]: Step<BaseReturnValues, BaseYieldValue, unknown, unknown>;
-  },
-> = GeneratorNextType<ReturnType<Steps[keyof Steps]['execute']>>;
+export type AllStepsNextValues<Steps extends BaseSteps> = GeneratorNextType<
+  ReturnType<Steps[keyof Steps]['execute']>
+>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyStateReducer = StateReducer<Record<string, any>>;
@@ -46,8 +48,9 @@ export const defaultStepConfig = {
 };
 
 export const executeAgentStep = async function* (
-  task: Step<any, any, unknown, unknown>,
-  executionContext: StepContext<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  task: Step<BaseReturnValues<any>, BaseYieldValue, unknown, BaseNextValue>,
+  executionContext: StepContext<AnyStateReducer>
 ) {
   const beforeResult = await task.beforeExecute(executionContext);
   const result = yield* task.execute(beforeResult);
@@ -60,4 +63,3 @@ export type DefaultStepGenerator = AsyncGenerator<
   unknown,
   AllStepsNextValues<typeof defaultStepConfig>
 >;
-

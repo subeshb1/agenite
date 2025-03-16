@@ -3,12 +3,23 @@ import { StateFromReducer, StateReducer } from '../state/state-reducer';
 import { Agent } from '../agent';
 import { BaseReturnValues } from '../steps';
 
+export type StepWithReducerState<
+  Reducer extends StateReducer<Record<string, unknown>>,
+> = Step<
+  BaseReturnValues<StateFromReducer<Reducer>>,
+  BaseYieldValue,
+  unknown,
+  BaseNextValue
+>;
+
 export interface StepContext<
   Reducer extends StateReducer<Record<string, unknown>>,
 > {
   state: StateFromReducer<Reducer>;
   context: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentAgent: Agent<Reducer, any, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parentAgent?: Agent<Reducer, any, any>;
   isChildStep: boolean;
   provider: LLMProvider;
@@ -27,7 +38,7 @@ export interface Step<
   ReturnValues extends BaseReturnValues<Record<string, unknown>>,
   YieldValues extends BaseYieldValue,
   StepParams,
-  State,
+  NextValues extends BaseNextValue | undefined,
 > {
   /**
    * The name of the executor
@@ -42,11 +53,11 @@ export interface Step<
   // TODO: Add type for params
   execute: (
     params: StepParams
-  ) => AsyncGenerator<YieldValues, ReturnValues, State>;
+  ) => AsyncGenerator<YieldValues, ReturnValues, NextValues>;
   /**
    * The afterExecute function. Used to update the state after the Step.
    */
-  afterExecute: (params: unknown) => Promise<ReturnValues>;
+  afterExecute: (params: ReturnValues) => Promise<ReturnValues>;
 }
 
 export type BaseYieldValue = {
@@ -54,7 +65,9 @@ export type BaseYieldValue = {
   [key: string]: unknown;
 };
 
-export type BaseNextValue = {
-  type: string;
-  [key: string]: unknown;
-} | undefined;
+export type BaseNextValue =
+  | {
+      type: string;
+      [key: string]: unknown;
+    }
+  | undefined;

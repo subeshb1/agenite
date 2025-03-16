@@ -6,7 +6,7 @@ import {
 } from '@agenite/llm';
 import { Step } from '../types/step';
 import { AgentTool } from '../../src/types/agent';
-
+import { BaseReturnValues } from '.';
 export function transformToToolDefinitions(
   tools: AgentTool[]
 ): ToolDefinition[] {
@@ -31,7 +31,20 @@ type LLMCallYieldValues = {
   content: PartialReturn;
 };
 
-export const LLMStep: Step<any, LLMCallYieldValues, any, any> = {
+type LLMCallParams = {
+  provider: LLMProvider;
+  messages: BaseMessage[];
+  instructions: string;
+  tools?: AgentTool[];
+  stream?: boolean;
+};
+
+export const LLMStep: Step<
+  BaseReturnValues<Record<string, unknown>>,
+  LLMCallYieldValues,
+  LLMCallParams,
+  undefined
+> = {
   name: 'agenite.llm-call',
   beforeExecute: async (params) => {
     return {
@@ -43,13 +56,7 @@ export const LLMStep: Step<any, LLMCallYieldValues, any, any> = {
     };
   },
 
-  execute: async function* (params: {
-    provider: LLMProvider;
-    messages: BaseMessage[];
-    instructions: string;
-    tools?: AgentTool[];
-    stream?: boolean;
-  }): AsyncGenerator<LLMCallYieldValues, any, any> {
+  execute: async function* (params: LLMCallParams) {
     const { provider, messages, instructions, tools, stream } = params;
 
     const generator = provider.iterate(messages, {
@@ -89,7 +96,7 @@ export const LLMStep: Step<any, LLMCallYieldValues, any, any> = {
       },
     };
   },
-  afterExecute: async (params: unknown) => {
+  afterExecute: async (params) => {
     return params;
   },
 };

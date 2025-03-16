@@ -1,13 +1,20 @@
-import { AllMiddlewareNextValues, AllMiddlewareReturnValues } from './agent';
+import {
+  AllMiddlewareNextValues,
+  AllMiddlewareReturnValues,
+  BaseSteps,
+} from './agent';
 import { AllMiddlewareYieldValues } from './agent';
 import { MiddlewareBaseNextValue } from './middleware';
 import { MiddlewareBaseYieldValue } from './middleware';
 import { IntersectButUnionCommonProps } from './utils';
 import { IfNeverOrIfAny } from './utils';
 import { AsyncGeneratorMiddleware } from './agent';
-import { StepWithReducerState } from '../agent';
 import { StateFromReducer } from '../state/state-reducer';
-import { AllStepsYieldValues, AllStepsNextValues, AnyStateReducer } from '../steps';
+import {
+  AllStepsYieldValues,
+  AllStepsNextValues,
+  AnyStateReducer,
+} from '../steps';
 
 export type MergedYieldValues<MiddlewareYieldValues, StepYieldValues> =
   IfNeverOrIfAny<
@@ -41,9 +48,7 @@ export type IterateResponse<
     unknown,
     MiddlewareBaseNextValue
   >[],
-  Steps extends {
-    [key: string]: StepWithReducerState<Reducer>;
-  },
+  Steps extends BaseSteps,
   Reducer extends AnyStateReducer,
 > = FullMergedMiddlewareStepGeneratorResponse<
   Middlewares,

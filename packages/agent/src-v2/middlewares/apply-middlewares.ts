@@ -4,7 +4,6 @@ import {
   MiddlewareBaseNextValue,
   MiddlewareBaseYieldValue,
 } from '../types/middleware';
-import { BaseNextValue, BaseYieldValue } from '../types/step';
 
 export function applyMiddlewares<
   YieldValues,
@@ -16,6 +15,7 @@ export function applyMiddlewares<
     MiddlewareBaseNextValue
   >[] = [],
 >(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   genFunc: () => AsyncGenerator<any, any, any>,
   middlewares: Middlewares,
   context: unknown

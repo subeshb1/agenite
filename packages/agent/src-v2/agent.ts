@@ -1,50 +1,21 @@
-import { AgentConfig, AsyncGeneratorMiddleware } from './types/agent';
 import {
-  StepContext,
-  Step,
-  DefaultStepType,
-  BaseYieldValue,
-} from './types/step';
-import {
-  defaultStateReducer,
-  StateFromReducer,
-  StateReducer,
-} from './state/state-reducer';
+  AgentConfig,
+  BaseMiddlewares,
+  BaseSteps,
+  ExecutionOptions,
+} from './types/agent';
+import { StepContext, DefaultStepType } from './types/step';
+import { defaultStateReducer, StateFromReducer } from './state/state-reducer';
 import { stateApplicator } from './state/state-applicator';
 import { AnyStateReducer, BaseReturnValues, defaultStepConfig } from './steps';
 import { executeAgentStep } from './steps';
-import {
-  MiddlewareBaseNextValue,
-  MiddlewareBaseYieldValue,
-} from './types/middleware';
 import { IterateResponse } from './types/execution';
 import { applyMiddlewares } from './middlewares/apply-middlewares';
 
-interface ExecutionOptions {
-  stream?: boolean;
-  context?: Record<string, unknown>;
-  isChildStep?: boolean;
-}
-
-export type StepWithReducerState<
-  Reducer extends StateReducer<Record<string, unknown>>,
-> = Step<
-  BaseReturnValues<StateFromReducer<Reducer>>,
-  BaseYieldValue,
-  unknown,
-  unknown
->;
-
 export class Agent<
   Reducer extends AnyStateReducer = typeof defaultStateReducer,
-  Steps extends {
-    [key: string]: StepWithReducerState<Reducer>;
-  } = typeof defaultStepConfig,
-  Middlewares extends AsyncGeneratorMiddleware<
-    MiddlewareBaseYieldValue,
-    unknown,
-    MiddlewareBaseNextValue
-  >[] = [],
+  Steps extends BaseSteps = typeof defaultStepConfig,
+  Middlewares extends BaseMiddlewares = [],
 > {
   constructor(
     public readonly agentConfig: AgentConfig<Reducer, Steps, Middlewares>
@@ -84,7 +55,7 @@ export class Agent<
           break;
         }
 
-        const step: StepWithReducerState<Reducer> | undefined =
+        const step: BaseSteps[keyof BaseSteps] | undefined =
           actions[next as keyof typeof actions];
 
         if (!step) {

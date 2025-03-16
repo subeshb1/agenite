@@ -1,29 +1,15 @@
-import {
-  AllStepsNextValues,
-  AllStepsYieldValues,
-  BaseReturnValues,
-  defaultStepConfig,
-  DefaultStepGenerator,
-} from '../steps';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AsyncGeneratorMiddleware } from '../types/agent';
-import {
-  MiddlewareBaseNextValue,
-  MiddlewareBaseYieldValue,
-} from '../types/middleware';
-import { BaseNextValue, BaseYieldValue } from '../types/step';
+import { MiddlewareBaseNextValue } from '../types/middleware';
+import { BaseNextValue } from '../types/step';
 export const cliLogger = (): AsyncGeneratorMiddleware<
   any,
   {
     from: string;
   },
-  MiddlewareBaseNextValue,
-  AsyncGenerator<
-    AllStepsYieldValues<typeof defaultStepConfig>,
-    BaseReturnValues,
-    AllStepsNextValues<typeof defaultStepConfig>
-  >
+  MiddlewareBaseNextValue
 > => {
-  return async function* (generator, context) {
+  return async function* (generator) {
     let nextValue: BaseNextValue | undefined = undefined;
     while (true) {
       const { value, done } = await generator.next(nextValue);

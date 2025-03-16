@@ -1,29 +1,28 @@
 import { BaseMessage, LLMProvider } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
-import { StateFromReducer, StateReducer } from '../state/state-reducer';
+import { StateFromReducer } from '../state/state-reducer';
 import { Step, BaseYieldValue, BaseNextValue } from './step';
 import {
   GeneratorYieldType,
   GeneratorNextType,
   GeneratorReturnType,
   BaseReturnValues,
+  AnyStateReducer,
 } from '../steps';
 import {
   MiddlewareBaseYieldValue,
   MiddlewareBaseNextValue,
+  BaseAgeniteIterateGenerator,
 } from './middleware';
 
-export type AllMiddlewareYieldValues<
-  Middlewares extends AsyncGeneratorMiddleware<any, any, any, any>[],
-> = GeneratorYieldType<ReturnType<Middlewares[number]>>;
+export type AllMiddlewareYieldValues<Middlewares extends BaseMiddlewares> =
+  GeneratorYieldType<ReturnType<Middlewares[number]>>;
 
-export type AllMiddlewareNextValues<
-  Middlewares extends AsyncGeneratorMiddleware<any, any, any, any>[],
-> = GeneratorNextType<ReturnType<Middlewares[number]>>;
+export type AllMiddlewareNextValues<Middlewares extends BaseMiddlewares> =
+  GeneratorNextType<ReturnType<Middlewares[number]>>;
 
-export type AllMiddlewareReturnValues<
-  Middlewares extends AsyncGeneratorMiddleware<any, any, any, any>[],
-> = GeneratorReturnType<ReturnType<Middlewares[number]>>;
+export type AllMiddlewareReturnValues<Middlewares extends BaseMiddlewares> =
+  GeneratorReturnType<ReturnType<Middlewares[number]>>;
 
 export type AsyncGeneratorMiddleware<
   Yield extends MiddlewareBaseYieldValue,
@@ -33,23 +32,16 @@ export type AsyncGeneratorMiddleware<
     BaseYieldValue,
     unknown,
     BaseNextValue
-  > = AsyncGenerator<any, any, any>,
+  > = BaseAgeniteIterateGenerator,
 > = (
   generator: Generator,
   context: unknown
 ) => AsyncGenerator<Yield, Return, Next>;
 
 export interface AgentConfig<
-  CustomStateReducer extends StateReducer<Record<string, any>>,
-  Steps extends {
-    [key: string]: Step<BaseReturnValues, BaseYieldValue, any, any>;
-  },
-  Middlewares extends AsyncGeneratorMiddleware<
-    MiddlewareBaseYieldValue,
-    unknown,
-    MiddlewareBaseNextValue,
-    AsyncGenerator<BaseYieldValue, unknown, BaseNextValue>
-  >[],
+  CustomStateReducer extends AnyStateReducer,
+  Steps extends BaseSteps,
+  Middlewares extends BaseMiddlewares,
 > {
   /**
    * The name of the agent
@@ -107,3 +99,25 @@ export interface AgentMethods {
     options?: unknown
   ) => AsyncGenerator<string, void, unknown>;
 }
+
+export interface ExecutionOptions {
+  stream?: boolean;
+  context?: Record<string, unknown>;
+  isChildStep?: boolean;
+}
+
+export interface BaseSteps {
+  [key: string]: Step<
+    BaseReturnValues<Record<string, unknown>>,
+    BaseYieldValue,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any,
+    BaseNextValue
+  >;
+}
+
+export type BaseMiddlewares = AsyncGeneratorMiddleware<
+  MiddlewareBaseYieldValue,
+  unknown,
+  MiddlewareBaseNextValue
+>[];

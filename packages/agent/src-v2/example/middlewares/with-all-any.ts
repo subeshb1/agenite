@@ -45,7 +45,7 @@ while (!result.done) {
       }
       break;
     // Example of custom middleware yeild when any
-    case 'middleware.tokens':
+    case 'middleware.sda':
       console.log(result.value);
       break;
     default:

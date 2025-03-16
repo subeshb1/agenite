@@ -1,13 +1,24 @@
-import { BaseMessage, ToolUseBlock, ToolResultBlock } from '@agenite/llm';
+import { ToolUseBlock, ToolResultBlock } from '@agenite/llm';
 import { Step } from '../types/step';
 import { Tool, ToolResponseData } from '@agenite/tool';
+import { BaseReturnValues } from '.';
 
 type ToolResultYieldValues = {
   type: 'agenite.tool-result';
   output: ToolResponseData;
 };
 
-export const ToolResultStep: Step<any, ToolResultYieldValues, any, any> = {
+type ToolResultParams = {
+  toolUseBlocks: ToolUseBlock[];
+  tools: Tool[];
+};
+
+export const ToolResultStep: Step<
+  BaseReturnValues<Record<string, unknown>>,
+  ToolResultYieldValues,
+  ToolResultParams,
+  undefined
+> = {
   name: 'agenite.tool-result',
   beforeExecute: async (params) => {
     const lastMessage = params.state.messages[params.state.messages.length - 1];
@@ -24,17 +35,11 @@ export const ToolResultStep: Step<any, ToolResultYieldValues, any, any> = {
     }
     return {
       toolUseBlocks: toolUseBlocks,
-      tools: params.currentAgent.agentConfig.tools,
+      tools: params.currentAgent.agentConfig.tools!,
     };
   },
 
-  execute: async function* ({
-    toolUseBlocks,
-    tools,
-  }: {
-    toolUseBlocks: ToolUseBlock[];
-    tools: Tool[];
-  }): AsyncGenerator<ToolResultYieldValues, any, any> {
+  execute: async function* ({ toolUseBlocks, tools }) {
     const toolResults: ToolResultBlock[] = [];
     for (const toolUseBlock of toolUseBlocks) {
       const tool = tools.find((t) => t.name === toolUseBlock.name);
@@ -71,7 +76,7 @@ export const ToolResultStep: Step<any, ToolResultYieldValues, any, any> = {
       },
     };
   },
-  afterExecute: async (params: unknown) => {
+  afterExecute: async (params) => {
     return params;
   },
 };

@@ -47,7 +47,7 @@ while (!result.done) {
 
 console.log(result.value);
 
-let data = await agent.execute({
+const data = await agent.execute({
   messages: [userTextMessage('hi')],
 });
 

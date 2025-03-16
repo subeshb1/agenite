@@ -1,6 +1,7 @@
 import { StateFromReducer, StateReducer } from './state-reducer';
 
 export const stateApplicator = <
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Reducer extends StateReducer<Record<string, any>>,
 >(
   stateReducer: Reducer,

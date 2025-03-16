@@ -1,18 +1,27 @@
 import { Step } from '../types/step';
+import { BaseReturnValues } from '.';
 
-type AgentCallYieldValues = {
-  type: 'agenite.agent-call';
-  output: string;
-};
+type AgentCallYieldValues =
+  | {
+      type: 'agenite.agent-call';
+      output: string;
+    }
+  | {
+      type: 'agenite.end';
+      output: string;
+    };
 
-export const AgentStep: Step<any, AgentCallYieldValues, any, any> = {
+export const AgentStep: Step<
+  BaseReturnValues<Record<string, unknown>>,
+  AgentCallYieldValues,
+  unknown,
+  undefined
+> = {
   name: 'agenite.agent-call',
   beforeExecute: async (params: unknown) => {
     return params;
   },
-  execute: async function* (
-    params: unknown
-  ): AsyncGenerator<AgentCallYieldValues, unknown, unknown> {
+  execute: async function* () {
     yield {
       type: 'agenite.agent-call',
       output: 'Executed agent call',
@@ -20,10 +29,12 @@ export const AgentStep: Step<any, AgentCallYieldValues, any, any> = {
 
     return {
       next: 'agenite.end',
-      output: 'Executed agent call',
+      state: {
+        messages: [],
+      },
     };
   },
-  afterExecute: async (params: unknown) => {
+  afterExecute: async (params) => {
     return params;
   },
 };
