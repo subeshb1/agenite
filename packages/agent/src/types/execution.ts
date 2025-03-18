@@ -1,88 +1,97 @@
 import {
-  BaseMessage,
-  ToolUseBlock,
-  ToolResultBlock,
-  LLMProvider,
-  PartialReturn,
-} from '@agenite/llm';
-import { Tool } from '@agenite/tool';
-import {
-  AgentResponse,
-  DetailedTokenUsage,
-  Agent,
-  AgentContext,
+  AllMiddlewareNextValues,
+  AllMiddlewareReturnValues,
+  BaseSteps,
 } from './agent';
-import { Logger } from './logger';
+import { AllMiddlewareYieldValues } from './agent';
+import { MiddlewareBaseNextValue } from './middleware';
+import { MiddlewareBaseYieldValue } from './middleware';
+import { IntersectButUnionCommonProps } from './utils';
+import { IfNeverOrIfAny } from './utils';
+import { AsyncGeneratorMiddleware } from './agent';
+import { StateFromReducer } from '../state/state-reducer';
+import {
+  AllStepsYieldValues,
+  AllStepsNextValues,
+  AnyStateReducer,
+} from '../steps';
 
-export interface ExecutionMetadata {
-  toolUseId: string;
-  agentName: string;
-  parentAgentName?: string;
-  parentExecutionId?: string;
-  executionPath: string[];
-}
+export type MergedYieldValues<MiddlewareYieldValues, StepYieldValues> =
+  IfNeverOrIfAny<
+    MiddlewareYieldValues,
+    StepYieldValues,
+    StepYieldValues | MiddlewareBaseYieldValue,
+    StepYieldValues | MiddlewareYieldValues
+  >;
 
-export type ExecutionStep =
-  | ExecutionStopStep
-  | ExecutionStreamingStep
-  | ExecutionToolUseStep
-  | ExecutionToolResultStep
-  | ExecutionStartStep;
+export type MergedReturnValues<MiddlewareReturnValues, StepReturnValues> =
+  IfNeverOrIfAny<
+    MiddlewareReturnValues,
+    StepReturnValues,
+    StepReturnValues & {
+      [key: string]: unknown;
+    },
+    IntersectButUnionCommonProps<StepReturnValues, MiddlewareReturnValues>
+  >;
 
-export interface BaseExecutionStep {
-  type: string;
-  agentName: string;
-  metadata?: ExecutionMetadata;
-}
+export type MergedNextValues<MiddlewareNextValues, StepNextValues> =
+  IfNeverOrIfAny<
+    MiddlewareNextValues,
+    StepNextValues,
+    StepNextValues | MiddlewareBaseNextValue,
+    StepNextValues | MiddlewareNextValues
+  >;
 
-export interface ExecutionStopStep extends BaseExecutionStep {
-  type: 'stop';
-  response: AgentResponse;
-  tokenUsage: DetailedTokenUsage;
-}
+export type IterateResponse<
+  Middlewares extends AsyncGeneratorMiddleware<
+    MiddlewareBaseYieldValue,
+    unknown,
+    MiddlewareBaseNextValue
+  >[],
+  Steps extends BaseSteps,
+  Reducer extends AnyStateReducer,
+> = FullMergedMiddlewareStepGeneratorResponse<
+  Middlewares,
+  AllStepsYieldValues<Steps>,
+  AllStepsNextValues<Steps>,
+  StateFromReducer<Reducer>
+>;
+// export type IterateResponse<
+//   Middlewares extends AsyncGeneratorMiddleware<
+//     MiddlewareBaseYieldValue,
+//     unknown,
+//     MiddlewareBaseNextValue
+//   >[],
+//   Steps extends {
+//     [key: string]: StepWithReducerState<Reducer>;
+//   },
+//   Reducer extends AnyStateReducer,
+// > = AsyncGenerator<
+//   MergedYieldValues<
+//     AllMiddlewareYieldValues<Middlewares>,
+//     AllStepsYieldValues<Steps>
+//   >,
+//   MergedReturnValues<
+//     AllMiddlewareReturnValues<Middlewares>,
+//     StateFromReducer<Reducer>
+//   >,
+//   MergedNextValues<
+//     AllMiddlewareNextValues<Middlewares>,
+//     AllStepsNextValues<Steps>
+//   >
+// >;
 
-export interface ExecutionStreamingStep extends BaseExecutionStep {
-  type: 'streaming';
-  response: PartialReturn;
-}
-
-export interface ExecutionToolUseStep extends BaseExecutionStep {
-  type: 'toolUse';
-  response: AgentResponse;
-  tools: ToolExecutionBlock[];
-  tokenUsage: DetailedTokenUsage;
-}
-
-export interface ExecutionToolResultStep extends BaseExecutionStep {
-  type: 'toolResult';
-  results: ToolResultExecutionBlock[];
-  tokenUsage: DetailedTokenUsage;
-}
-
-export interface ExecutionStartStep extends BaseExecutionStep {
-  type: 'start';
-  message: BaseMessage;
-}
-
-export interface ToolExecutionBlock {
-  type: 'agent' | 'tool';
-  tool: ToolUseBlock;
-}
-
-export interface ToolResultExecutionBlock {
-  type: 'agent' | 'tool';
-  result: ToolResultBlock;
-}
-
-export interface ExecuteToolsParams {
-  toolExecutionBlocks: ToolExecutionBlock[];
-  tools: (Tool | Agent)[];
-  context: AgentContext | undefined;
-  logger: Logger;
-  agentName: string;
-  metadata?: ExecutionMetadata;
-  provider: LLMProvider;
-  stream?: boolean;
-  currentExecutionPath: string[];
-  messages?: BaseMessage[];
-}
+export type FullMergedMiddlewareStepGeneratorResponse<
+  Middlewares extends AsyncGeneratorMiddleware<
+    MiddlewareBaseYieldValue,
+    unknown,
+    MiddlewareBaseNextValue
+  >[],
+  YieldValues,
+  NextValues,
+  ReturnValues,
+> = AsyncGenerator<
+  MergedYieldValues<AllMiddlewareYieldValues<Middlewares>, YieldValues>,
+  MergedReturnValues<AllMiddlewareReturnValues<Middlewares>, ReturnValues>,
+  MergedNextValues<AllMiddlewareNextValues<Middlewares>, NextValues>
+>;

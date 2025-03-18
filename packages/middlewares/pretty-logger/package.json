@@ -1,7 +1,7 @@
 {
-  "name": "@agenite/agent",
-  "version": "0.3.0",
-  "description": "Simple and maintainable agent library",
+  "name": "@agenite/pretty-logger",
+  "version": "0.0.0",
+  "description": "A middleware to pretty print the logs for Agenite",
   "private": false,
   "type": "module",
   "main": "./dist/index.js",
@@ -21,19 +21,16 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@agenite/llm": "workspace:*",
-    "@agenite/tool": "workspace:*"
+    "@agenite/agent": "workspace:*",
+    "chalk": "^4.1.2"
   },
   "devDependencies": {
-    "@agenite/bedrock": "workspace:*",
-    "@agenite/ollama": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^20.17.24",
     "tsup": "^8.4.0",
-    "typescript": "^5.8.2",
-    "@agenite/pretty-logger": "workspace:*"
+    "typescript": "^5.8.2"
   },
   "publishConfig": {
     "access": "public",
@@ -48,25 +45,24 @@
   "keywords": [
     "ai",
     "generative-ai",
-    "agent",
-    "llm",
-    "chatbot",
-    "typescript",
-    "multi-agent",
-    "tool-integration",
-    "openai",
-    "anthropic",
+    "aws",
     "bedrock",
-    "ollama",
+    "claude",
+    "titan",
+    "llm",
+    "provider",
+    "typescript",
+    "function-calling",
     "streaming",
-    "ioc"
+    "agenite",
+    "pretty-logger"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/subeshb1/agenite.git",
-    "directory": "packages/agent"
+    "directory": "packages/middlewares/pretty-logger"
   },
-  "homepage": "https://github.com/subeshb1/agenite/tree/main/packages/agent#readme",
+  "homepage": "https://github.com/subeshb1/agenite/tree/main/packages/middlewares/pretty-logger#readme",
   "bugs": {
     "url": "https://github.com/subeshb1/agenite/issues"
   },

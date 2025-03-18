@@ -5,7 +5,7 @@ import {
   ToolDefinition,
 } from '@agenite/llm';
 import { Step } from '../types/step';
-import { AgentTool } from '../../src/types/agent';
+import { AgentTool } from '../types/agent';
 import { BaseReturnValues } from '.';
 export function transformToToolDefinitions(
   tools: AgentTool[]

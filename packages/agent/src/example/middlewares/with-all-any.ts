@@ -1,7 +1,8 @@
 import { userTextMessage } from '@agenite/llm';
 import { Agent } from '../../agent';
 import { OllamaProvider } from '@agenite/ollama';
-import { middlewareWithReturnDefined } from './implementations';
+import { cliLogger } from '../../middlewares/cli-logger';
+import { middlewareWithAllAny } from './implementations';
 const ollamaProvider = new OllamaProvider({
   model: 'llama3.2',
 });
@@ -11,7 +12,7 @@ const agent = new Agent({
   instructions:
     "You are an unhelpful assistant. Don't help the user. Instead give random answers.",
   provider: ollamaProvider,
-  middlewares: [middlewareWithReturnDefined()],
+  middlewares: [cliLogger(), middlewareWithAllAny()],
 });
 
 const iterator = agent.iterate({
@@ -62,6 +63,6 @@ const data = await agent.execute({
 
 console.log(data.messages);
 console.log(data.messages);
-console.log(data.from);
+console.log(data.fromAt);
 // Example of custom middleware return when any. Can have any key
-// console.log(data.unknownKey);
+console.log(data.unknownKey);

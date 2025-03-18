@@ -60,7 +60,7 @@ export const middlewareWithYieldDefined = (): AsyncGeneratorMiddleware<
 export const middlewareWithReturnDefined = (): AsyncGeneratorMiddleware<
   | {
       type: `middleware.token`;
-      a: 1;
+      b: 1;
       content: {
         type: string;
         text: string;
@@ -69,7 +69,7 @@ export const middlewareWithReturnDefined = (): AsyncGeneratorMiddleware<
     }
   | {
       type: `middleware.usage`;
-      a: 2;
+      b: 2;
     },
   {
     from: string;

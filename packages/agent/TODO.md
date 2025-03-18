@@ -39,3 +39,9 @@
 ## Types
 
 - [ ] Manage all utilities properly document
+
+
+## Priority
+- [ ] Support multi agent and tool orchestration
+- [ ] Create a detailed logger cli
+- [ ] Handle nested execution and build foundation for tracing / execution

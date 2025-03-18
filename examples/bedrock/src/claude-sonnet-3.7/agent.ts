@@ -26,33 +26,33 @@ console.log(chalk.blueBright(userInput));
 
 while (!response.done) {
   switch (response.value.type) {
-    case 'streaming':
-      if (response.value.response.type === 'thinking') {
-        if (response.value.response.isStart) {
+    case 'agenite.llm-call.streaming':
+      if (response.value.content.type === 'thinking') {
+        if (response.value.content.isStart) {
           console.log(chalk.yellow.bold('\n🧠 Thinking:'));
           console.log(chalk.yellow('┌' + '─'.repeat(70) + '┐'));
         }
-        process.stdout.write(chalk.yellow(response.value.response.thinking));
-        if (response.value.response.isEnd) {
+        process.stdout.write(chalk.yellow(response.value.content.thinking));
+        if (response.value.content.isEnd) {
           console.log(chalk.yellow('\n└' + '─'.repeat(70) + '┘'));
         }
-      } else if (response.value.response.type === 'text') {
-        if (response.value.response.isStart) {
+      } else if (response.value.content.type === 'text') {
+        if (response.value.content.isStart) {
           console.log(chalk.green.bold('\n💡 Assistant:'));
           console.log(chalk.green('┌' + '─'.repeat(70) + '┐'));
         }
-        process.stdout.write(chalk.green(response.value.response.text));
-        if (response.value.response.isEnd) {
+        process.stdout.write(chalk.green(response.value.content.text));
+        if (response.value.content.isEnd) {
           console.log(chalk.green('\n└' + '─'.repeat(70) + '┘'));
         }
-      } else if (response.value.response.type === 'toolUse') {
+      } else if (response.value.content.type === 'toolUse') {
         console.log(chalk.cyan.bold('\n🛠️  Using Tool:'));
-        printMessage('tool', [response.value.response.toolUse]);
+        printMessage('tool', [response.value.content.toolUse]);
       }
 
       break;
 
-    case 'toolResult':
+    case 'agenite.tool-result':
       console.log(chalk.blue.bold('\n📊 Tool Result:'));
       printMessage(
         'toolResult',

@@ -1,7 +1,8 @@
 packages:
-  - "apps/*"
-  - "dev-config/*"
-  - "packages/*"
-  - "packages/provider/*"
-  - "examples/*"
-  - "examples/shared/*"
+  - 'apps/*'
+  - 'dev-config/*'
+  - 'packages/*'
+  - 'packages/providers/*'
+  - 'packages/middlewares/*'
+  - 'examples/*'
+  - 'examples/shared/*'

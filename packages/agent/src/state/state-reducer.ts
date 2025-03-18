@@ -25,7 +25,7 @@ type MakeUndefinedOptional<T> = {
  * Then, we can add a flag to the state reducer to indicate that the state is optional.
  */
 export type StateFromReducer<
-  Reducer extends StateReducer<Record<string, unknown>>,
+  Reducer extends StateReducer<any>,
 > = MakeUndefinedOptional<{
   [K in keyof Reducer as undefined extends Reducer[K] ? never : K]: ReturnType<
     Reducer[K]
@@ -71,3 +71,5 @@ export const customStateReducer: StateReducer<{
     return (newValue || 0) + 1000;
   },
 };
+
+
