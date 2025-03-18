@@ -19,6 +19,8 @@
     "@agenite-examples/llm-provider": "workspace:*",
     "@agenite/agent": "workspace:*",
     "@agenite/tool": "workspace:*",
+    "@agenite/llm": "workspace:*",
+    "@agenite/pretty-logger": "workspace:*",
     "chalk": "^4.1.2"
   },
   "devDependencies": {

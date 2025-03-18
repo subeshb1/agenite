@@ -188,6 +188,12 @@ importers:
       '@agenite/agent':
         specifier: workspace:*
         version: link:../../packages/agent
+      '@agenite/llm':
+        specifier: workspace:*
+        version: link:../../packages/llm
+      '@agenite/pretty-logger':
+        specifier: workspace:*
+        version: link:../../packages/middlewares/pretty-logger
       '@agenite/tool':
         specifier: workspace:*
         version: link:../../packages/tool

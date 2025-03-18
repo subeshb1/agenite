@@ -1,8 +1,4 @@
-import {
-  AsyncGeneratorMiddleware,
-  BaseAgeniteIterateGenerator,
-  BaseNextValue,
-} from '@agenite/agent';
+import { BaseAgeniteIterateGenerator, BaseNextValue } from '@agenite/agent';
 import chalk from 'chalk';
 
 export const prettyLogger = () => {

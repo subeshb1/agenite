@@ -43,5 +43,6 @@
 
 ## Priority
 - [ ] Support multi agent and tool orchestration
-- [ ] Create a detailed logger cli
+- [X] Create a logger cli middleware
+  - [ ] Add more details to the logger
 - [ ] Handle nested execution and build foundation for tracing / execution
