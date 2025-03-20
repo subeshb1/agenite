@@ -21,8 +21,6 @@ const superVisorAgent = new Agent({
   description: 'superVisor agent',
   instructions: 'You are a superVisor agent',
   provider: bedrockProvider,
-  // tools: [createWeatherTool('dummy-key')],
-
   agents: [weatherAgent],
   middlewares: [prettyLogger()],
 });

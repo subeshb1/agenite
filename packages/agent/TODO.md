@@ -40,9 +40,16 @@
 
 - [ ] Manage all utilities properly document
 
+## Multi Agent Orchestration
+- [ ] Support different type of multi agent orchestration
+  - [ ] Supervisor tool
+  - [ ] Supervisor agent with shared state
+  - [ ] Multi agent with shared state handoff
+
+## Pretty logger
+  - [ ] Add more details to the logger
 
 ## Priority
-- [ ] Support multi agent and tool orchestration
+- [X] Support multi agent and tool orchestration
 - [X] Create a logger cli middleware
-  - [ ] Add more details to the logger
 - [ ] Handle nested execution and build foundation for tracing / execution
