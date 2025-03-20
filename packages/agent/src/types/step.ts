@@ -51,14 +51,20 @@ export interface Step<
    * The beforeExecute function. Used to prepare the state for the Step.
    */
   beforeExecute: (params: StepContext<State>) => Promise<StepParams>;
-  // TODO: Add type for params
+  /**
+   * The execute function. Used to execute the Step.
+   */
   execute: (
-    params: StepParams
+    params: StepParams,
+    context: StepContext<State>
   ) => AsyncGenerator<YieldValues, ReturnValues, NextValues>;
   /**
    * The afterExecute function. Used to update the state after the Step.
    */
-  afterExecute: (params: ReturnValues) => Promise<ReturnValues>;
+  afterExecute: (
+    params: ReturnValues,
+    context: StepContext<State>
+  ) => Promise<ReturnValues>;
 }
 
 export type BaseYieldValue = {

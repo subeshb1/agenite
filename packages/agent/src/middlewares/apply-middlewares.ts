@@ -4,8 +4,6 @@ import {
   MiddlewareBaseNextValue,
   MiddlewareBaseYieldValue,
 } from '../types/middleware';
-import { BaseNextValue } from '../types/step';
-import { BaseYieldValue } from '../types/step';
 
 export function applyMiddlewares<
   YieldValues,

@@ -68,7 +68,7 @@ while (!result.done) {
   result = await iterator.next();
 }
 
-agent.agentConfig.middlewares = [prettyLogger()] as any;
+agent.agentConfig.middlewares = [prettyLogger()] as never;
 
 console.log(result.value);
 

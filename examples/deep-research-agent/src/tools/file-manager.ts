@@ -74,7 +74,7 @@ export const fileManagerTool = new Tool<FileManagerInput>({
         await fs.writeFile(filePath, content, 'utf8');
 
         return {
-          success: true,
+          isError: false,
           data: JSON.stringify({
             message: 'File written successfully',
             filePath,
@@ -91,13 +91,13 @@ export const fileManagerTool = new Tool<FileManagerInput>({
         const content = await fs.readFile(filePath, 'utf8');
 
         return {
-          success: true,
+          isError: false,
           data: content,
         };
       }
     } catch (error) {
       return {
-        success: false,
+        isError: true,
         data: `File operation failed: ${error}`,
         error: {
           code: 'FILE_OPERATION_ERROR',

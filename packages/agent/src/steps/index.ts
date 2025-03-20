@@ -53,8 +53,8 @@ export const executeAgentStep = async function* (
   executionContext: StepContext<AnyStateReducer>
 ) {
   const beforeResult = await task.beforeExecute(executionContext);
-  const result = yield* task.execute(beforeResult);
-  const afterResult = await task.afterExecute(result);
+  const result = yield* task.execute(beforeResult, executionContext);
+  const afterResult = await task.afterExecute(result, executionContext);
   return afterResult;
 };
 

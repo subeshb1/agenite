@@ -25,6 +25,7 @@ type MakeUndefinedOptional<T> = {
  * Then, we can add a flag to the state reducer to indicate that the state is optional.
  */
 export type StateFromReducer<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Reducer extends StateReducer<any>,
 > = MakeUndefinedOptional<{
   [K in keyof Reducer as undefined extends Reducer[K] ? never : K]: ReturnType<
@@ -33,7 +34,6 @@ export type StateFromReducer<
 }> & {
   messages: BaseMessage[];
 };
-
 
 export type StateReducer<
   T extends Record<string, unknown> = Record<string, unknown>,
@@ -71,5 +71,3 @@ export const customStateReducer: StateReducer<{
     return (newValue || 0) + 1000;
   },
 };
-
-

@@ -124,7 +124,7 @@ export const webScraperTool = new Tool<WebScraperInput>({
   execute: async ({ input }) => {
     if (!input?.url) {
       return {
-        success: false,
+        isError: true,
         data: 'URL is required',
         error: {
           code: 'INVALID_INPUT',
@@ -138,12 +138,12 @@ export const webScraperTool = new Tool<WebScraperInput>({
       const information = await extractor.extract(input.url);
 
       return {
-        success: true,
+        isError: false,
         data: JSON.stringify(information, null, 2),
       };
     } catch (error) {
       return {
-        success: false,
+        isError: true,
         data: `Failed to extract information: ${error}`,
         error: {
           code: 'EXTRACTION_ERROR',

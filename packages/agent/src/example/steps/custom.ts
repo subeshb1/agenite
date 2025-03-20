@@ -3,7 +3,7 @@ import { Agent } from '../../agent';
 import { BedrockProvider } from '@agenite/bedrock';
 import { StateReducer, StateFromReducer } from '../../state/state-reducer';
 import { BaseReturnValues } from '../../steps';
-import { BaseYieldValue, Step } from '../../types/step';
+import { Step } from '../../types/step';
 import { BaseMessage } from '@agenite/llm';
 const bedrockProvider = new BedrockProvider({
   model: 'anthropic.claude-3-5-haiku-20241022-v1:0',

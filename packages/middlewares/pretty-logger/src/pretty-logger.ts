@@ -33,6 +33,10 @@ export const prettyLogger = () => {
             console.log(chalk.cyan(JSON.stringify(result.value.content)));
           }
           break;
+        case 'agenite.tool-result':
+          console.log(chalk.cyan.bold('\n🛠️  Tool Result:'));
+          console.log(chalk.cyan(JSON.stringify(result.value.output)));
+          break;
         default:
           // console.log(result);
           break;

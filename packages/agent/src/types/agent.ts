@@ -14,7 +14,7 @@ import {
   MiddlewareBaseNextValue,
   BaseAgeniteIterateGenerator,
 } from './middleware';
-
+import { Agent } from '../agent';
 export type AllMiddlewareYieldValues<Middlewares extends BaseMiddlewares> =
   GeneratorYieldType<ReturnType<Middlewares[number]>>;
 
@@ -70,7 +70,7 @@ export interface AgentConfig<
   /**
    * The other agents that this agent can call
    */
-  agents?: unknown[];
+  agents?: Agent[];
 
   stateReducer?: CustomStateReducer;
 
@@ -112,6 +112,7 @@ export interface ExecutionOptions {
 
 export interface BaseSteps {
   [key: string]: Step<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     BaseReturnValues<any>,
     BaseYieldValue,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

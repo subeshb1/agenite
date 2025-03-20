@@ -35,7 +35,7 @@ type LLMCallParams = {
   provider: LLMProvider;
   messages: BaseMessage[];
   instructions: string;
-  tools?: AgentTool[];
+  tools?: ToolDefinition[];
   stream?: boolean;
 };
 
@@ -49,11 +49,19 @@ export const LLMStep: Step<
 > = {
   name: 'agenite.llm-call',
   beforeExecute: async (params) => {
+    const tools = params.currentAgent.agentConfig.tools || [];
+    const agents =
+      params.currentAgent.agentConfig.agents?.map((agent) => {
+        return {
+          name: agent.agentConfig.name,
+          description: agent.agentConfig.description || '',
+        };
+      }) || [];
     return {
       provider: params.provider,
       messages: params.state.messages,
       instructions: params.instructions,
-      tools: params.currentAgent.agentConfig.tools,
+      tools: transformToToolDefinitions([...tools, ...agents]),
       stream: params.stream,
     };
   },
@@ -63,7 +71,7 @@ export const LLMStep: Step<
 
     const generator = provider.iterate(messages, {
       systemPrompt: instructions,
-      tools: tools ? transformToToolDefinitions(tools) : undefined,
+      tools: tools?.length ? tools : undefined,
       stream: stream ?? false,
     });
 
