@@ -9,10 +9,15 @@ const bedrockProvider = new BedrockProvider({
   region: 'us-west-2',
 });
 
+const bedrockProvider2 = new BedrockProvider({
+  model: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
+  region: 'us-west-2',
+});
+
 const weatherAgent = new Agent({
   name: 'weather',
   description: 'weather agent',
-  provider: bedrockProvider,
+  provider: bedrockProvider2,
   tools: [createWeatherTool('dummy-key')],
 });
 
@@ -56,3 +61,5 @@ while (!result.done) {
 }
 
 console.log(result.value);
+
+console.log(JSON.stringify(result.value.tokenUsage, null, 2));

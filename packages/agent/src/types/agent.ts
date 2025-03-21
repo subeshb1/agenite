@@ -38,6 +38,7 @@ export type AsyncGeneratorMiddleware<
   > = BaseAgeniteIterateGenerator,
 > = (
   generator: Generator,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   context: StepContext<any>
 ) => AsyncGenerator<
   Yield | GeneratorYieldType<Generator>,
@@ -135,4 +136,22 @@ export type AgentTool = {
   name: string;
   description: string;
   inputSchema?: ToolSchema;
+};
+
+export type TokenUsage = {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+
+  inputCost: number;
+  outputCost: number;
+  totalCost: number;
+};
+
+export interface AgentTokenUsage extends TokenUsage {
+  modelBreakdown: ModelBreakdown;
+}
+
+export type ModelBreakdown = {
+  [model: string]: TokenUsage;
 };

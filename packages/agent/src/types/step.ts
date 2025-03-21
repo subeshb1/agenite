@@ -2,6 +2,7 @@ import { LLMProvider } from '@agenite/llm';
 import { StateFromReducer, StateReducer } from '../state/state-reducer';
 import { Agent } from '../agent';
 import { BaseReturnValues } from '../steps';
+import { AgentTokenUsage } from './agent';
 
 export type StepWithReducerState<
   Reducer extends StateReducer<Record<string, unknown>>,
@@ -25,6 +26,7 @@ export interface StepContext<
   provider: LLMProvider;
   instructions: string;
   stream: boolean;
+  tokenUsage: AgentTokenUsage;
 }
 
 export type DefaultStepType =

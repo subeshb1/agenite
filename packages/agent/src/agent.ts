@@ -11,6 +11,7 @@ import { AnyStateReducer, BaseReturnValues, defaultStepConfig } from './steps';
 import { executeAgentStep } from './steps';
 import { IterateResponse } from './types/execution';
 import { applyMiddlewares } from './middlewares/apply-middlewares';
+import { mergeAgentTokenUsage } from './utils/token-usage';
 
 export class Agent<
   Reducer extends AnyStateReducer = typeof defaultStateReducer,
@@ -44,6 +45,15 @@ export class Agent<
       instructions:
         this.agentConfig.instructions || 'You are a helpful assistant.',
       stream: options?.stream || true,
+      tokenUsage: {
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+        inputCost: 0,
+        outputCost: 0,
+        totalCost: 0,
+        modelBreakdown: {},
+      },
     };
 
     const actions = this.agentConfig.steps || defaultStepConfig;
@@ -66,6 +76,13 @@ export class Agent<
         const result: BaseReturnValues<StateFromReducer<Reducer>> =
           yield* executeAgentStep(step, executionContext);
 
+        if (result.tokenUsage) {
+          executionContext.tokenUsage = mergeAgentTokenUsage(
+            executionContext.tokenUsage,
+            result.tokenUsage
+          );
+        }
+
         // Apply state changes after executor completes
         if (result.state) {
           const newState = stateApplicator(
@@ -85,6 +102,7 @@ export class Agent<
 
       return {
         ...executionContext.state,
+        tokenUsage: executionContext.tokenUsage,
       };
     };
 

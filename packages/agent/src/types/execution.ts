@@ -1,4 +1,5 @@
 import {
+  AgentTokenUsage,
   AllMiddlewareNextValues,
   AllMiddlewareReturnValues,
   BaseSteps,
@@ -56,7 +57,9 @@ export type IterateResponse<
     executionContext: StepContext<Reducer>;
   },
   AllStepsNextValues<Steps>,
-  StateFromReducer<Reducer>
+  StateFromReducer<Reducer> & {
+    tokenUsage: AgentTokenUsage;
+  }
 >;
 // export type IterateResponse<
 //   Middlewares extends AsyncGeneratorMiddleware<

@@ -1,5 +1,5 @@
 import { StateReducer } from '../state/state-reducer';
-import { BaseSteps } from '../types/agent';
+import { AgentTokenUsage, BaseSteps } from '../types/agent';
 import {
   Step,
   StepContext,
@@ -18,6 +18,7 @@ export interface BaseReturnValues<
 > {
   next: DefaultStepType | (string & {});
   state: T;
+  tokenUsage?: AgentTokenUsage;
 }
 
 export type GeneratorYieldType<T extends AsyncGenerator> =

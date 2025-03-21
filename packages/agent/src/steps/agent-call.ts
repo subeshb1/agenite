@@ -108,6 +108,7 @@ export const AgentStep: Step<
           },
         ],
       },
+      tokenUsage: result.tokenUsage,
     };
   },
   afterExecute: async (params) => {

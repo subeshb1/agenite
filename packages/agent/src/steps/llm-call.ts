@@ -7,6 +7,8 @@ import {
 import { Step } from '../types/step';
 import { AgentTool } from '../types/agent';
 import { BaseReturnValues } from '.';
+import { convertLLMTokenUsage } from '../utils/token-usage';
+
 export function transformToToolDefinitions(
   tools: AgentTool[]
 ): ToolDefinition[] {
@@ -89,6 +91,7 @@ export const LLMStep: Step<
       role: 'assistant',
       content: response.value.content,
     } as const;
+    const tokenUsage = convertLLMTokenUsage(response.value.tokens);
 
     if (response.value.stopReason === 'toolUse') {
       return {
@@ -96,6 +99,7 @@ export const LLMStep: Step<
         state: {
           messages: [message],
         },
+        tokenUsage,
       };
     }
 
@@ -104,6 +108,7 @@ export const LLMStep: Step<
       state: {
         messages: [message],
       },
+      tokenUsage,
     };
   },
   afterExecute: async (params) => {
