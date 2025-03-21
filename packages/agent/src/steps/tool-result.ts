@@ -35,11 +35,11 @@ export const ToolResultStep: Step<
     }
     return {
       toolUseBlocks: toolUseBlocks,
-      tools: params.currentAgent.agentConfig.tools!,
+      tools: params.agent.agentConfig.tools!,
     };
   },
 
-  execute: async function* ({ toolUseBlocks, tools }) {
+  execute: async function* ({ toolUseBlocks, tools }, executionContext) {
     const toolResults: ToolResultBlock[] = [];
     for (const toolUseBlock of toolUseBlocks) {
       const tool = tools.find((t) => t.name === toolUseBlock.name);
@@ -47,7 +47,10 @@ export const ToolResultStep: Step<
         throw new Error(`Tool ${toolUseBlock.toolName} not found`);
       }
       const input = toolUseBlock.input;
-      const result = await tool.execute({ input });
+      const result = await tool.execute({
+        input,
+        context: executionContext.context,
+      });
 
       yield {
         type: 'agenite.tool-result',

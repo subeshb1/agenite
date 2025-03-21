@@ -15,7 +15,7 @@ import {
   AllStepsNextValues,
   AnyStateReducer,
 } from '../steps';
-
+import { StepContext } from './step';
 export type MergedYieldValues<MiddlewareYieldValues, StepYieldValues> =
   IfNeverOrIfAny<
     MiddlewareYieldValues,
@@ -52,7 +52,9 @@ export type IterateResponse<
   Reducer extends AnyStateReducer,
 > = FullMergedMiddlewareStepGeneratorResponse<
   Middlewares,
-  AllStepsYieldValues<Steps>,
+  AllStepsYieldValues<Steps> & {
+    executionContext: StepContext<Reducer>;
+  },
   AllStepsNextValues<Steps>,
   StateFromReducer<Reducer>
 >;

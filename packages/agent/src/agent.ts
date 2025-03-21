@@ -37,9 +37,10 @@ export class Agent<
     const executionContext: StepContext<Reducer> = {
       state,
       context: options?.context || {},
-      currentAgent: this,
-      isChildStep: options?.isChildStep || false,
+      agent: this,
+      parentExecution: options?.parentExecution,
       provider: this.agentConfig.provider,
+      isNestedExecution: !!options?.parentExecution,
       instructions:
         this.agentConfig.instructions || 'You are a helpful assistant.',
       stream: options?.stream || true,

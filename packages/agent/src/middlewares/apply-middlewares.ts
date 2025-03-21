@@ -4,6 +4,8 @@ import {
   MiddlewareBaseNextValue,
   MiddlewareBaseYieldValue,
 } from '../types/middleware';
+import { StepContext } from '../types/step';
+import { executionContextInjector } from './context-injector';
 
 export function applyMiddlewares<
   YieldValues,
@@ -18,14 +20,18 @@ export function applyMiddlewares<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   genFunc: () => AsyncGenerator<any, any, any>,
   middlewares: Middlewares,
-  context: unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  context: StepContext<any>
 ): FullMergedMiddlewareStepGeneratorResponse<
   Middlewares,
-  YieldValues,
+  YieldValues & {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    executionContext: StepContext<any>;
+  },
   NextValues,
   ReturnValues
 > {
-  return middlewares.reduceRight(
+  return [...middlewares, executionContextInjector()].reduceRight(
     (gen, middleware) => middleware(gen, context),
     genFunc()
   );

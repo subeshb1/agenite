@@ -43,7 +43,7 @@ export const ToolStep: Step<
       throw new Error('No tool use block found');
     }
 
-    const agents = context.currentAgent.agentConfig.agents;
+    const agents = context.agent.agentConfig.agents;
 
     const isAgentCall = agents?.some(
       (agent) => agent?.agentConfig?.name === toolUseBlock.name

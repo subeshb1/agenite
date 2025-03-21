@@ -1,13 +1,12 @@
-import { BaseAgeniteIterateGenerator, BaseNextValue } from '@agenite/agent';
+import { BaseNextValue } from '@agenite/agent';
 import chalk from 'chalk';
-
-export const prettyLogger = () => {
-  return async function* (generator: BaseAgeniteIterateGenerator) {
+import { AsyncGeneratorMiddleware } from '@agenite/agent';
+export const prettyLogger: () => AsyncGeneratorMiddleware = () => {
+  return async function* (generator) {
     let result = await generator.next();
     let nextValue: BaseNextValue | undefined;
 
     while (!result.done) {
-      // Return final result
       switch (result.value.type) {
         case 'agenite.llm-call.streaming':
           if (result.value.content.type === 'thinking') {
@@ -21,7 +20,11 @@ export const prettyLogger = () => {
             }
           } else if (result.value.content.type === 'text') {
             if (result.value.content.isStart) {
-              console.log(chalk.green.bold('\n💡 Assistant:'));
+              console.log(
+                chalk.green.bold(
+                  `\n💡 Assistant: ${result.value.executionContext.agent.agentConfig.name}`
+                )
+              );
               console.log(chalk.green('┌' + '─'.repeat(70) + '┐'));
             }
             process.stdout.write(chalk.green(result.value.content.text));

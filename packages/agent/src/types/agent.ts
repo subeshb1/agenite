@@ -1,7 +1,7 @@
 import { BaseMessage, LLMProvider, ToolSchema } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
 import { StateFromReducer } from '../state/state-reducer';
-import { Step, BaseYieldValue, BaseNextValue } from './step';
+import { Step, BaseYieldValue, BaseNextValue, StepContext } from './step';
 import {
   GeneratorYieldType,
   GeneratorNextType,
@@ -29,13 +29,16 @@ export type AsyncGeneratorMiddleware<
   Return = unknown,
   Next extends MiddlewareBaseNextValue = MiddlewareBaseNextValue,
   Generator extends AsyncGenerator<
-    BaseYieldValue,
+    BaseYieldValue & {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      executionContext: StepContext<any>;
+    },
     unknown,
     BaseNextValue
   > = BaseAgeniteIterateGenerator,
 > = (
   generator: Generator,
-  context: unknown
+  context: StepContext<any>
 ) => AsyncGenerator<
   Yield | GeneratorYieldType<Generator>,
   Return,
@@ -107,7 +110,8 @@ export interface AgentMethods {
 export interface ExecutionOptions {
   stream?: boolean;
   context?: Record<string, unknown>;
-  isChildStep?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parentExecution?: StepContext<any>;
 }
 
 export interface BaseSteps {

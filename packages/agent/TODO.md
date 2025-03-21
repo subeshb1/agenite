@@ -21,9 +21,9 @@
 
 - [ ] Typesafe steps
 - [ ] Look into human in the middle step
-- [ ] Agent call step
+- [X] Agent call step
 - [ ] Support agents that don't have native tool calling.
-- [ ] Handle custom steps start end flows
+- [ ] Handle custom steps start end flows, custom start / end
 
 ## States
 
@@ -52,4 +52,6 @@
 ## Priority
 - [X] Support multi agent and tool orchestration
 - [X] Create a logger cli middleware
-- [ ] Handle nested execution and build foundation for tracing / execution
+- [X] Handle nested execution and build foundation for tracing / execution
+- [ ] Track tokens
+- [ ] Docs

@@ -49,9 +49,9 @@ export const LLMStep: Step<
 > = {
   name: 'agenite.llm-call',
   beforeExecute: async (params) => {
-    const tools = params.currentAgent.agentConfig.tools || [];
+    const tools = params.agent.agentConfig.tools || [];
     const agents =
-      params.currentAgent.agentConfig.agents?.map((agent) => {
+      params.agent.agentConfig.agents?.map((agent) => {
         return {
           name: agent.agentConfig.name,
           description: agent.agentConfig.description || '',

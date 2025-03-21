@@ -14,7 +14,6 @@ export type AgentCallYieldValues = {
 export type AgentCallParams = {
   targetAgent?: string;
   input?: BaseMessage[];
-  context?: Record<string, unknown>;
   toolName?: string;
   toolUseId?: string;
 };
@@ -45,7 +44,7 @@ export const AgentStep: Step<
 
     const agentUseBlock = agentUseBlocks[0];
     const targetAgent = (
-      params.currentAgent.agentConfig.agents as Agent[] | undefined
+      params.agent.agentConfig.agents as Agent[] | undefined
     )?.find((agent) => agent.agentConfig.name === agentUseBlock?.name);
 
     if (!targetAgent) {
@@ -67,15 +66,14 @@ export const AgentStep: Step<
       ],
       toolName: agentUseBlock?.name,
       toolUseId: agentUseBlock?.id,
-      context: params.context,
     };
   },
   execute: async function* (
-    { targetAgent, input, context, toolName, toolUseId },
+    { targetAgent, input, toolName, toolUseId },
     executionContext
   ) {
     const targetAgentInstance = (
-      executionContext.currentAgent.agentConfig.agents as Agent[] | undefined
+      executionContext.agent.agentConfig.agents as Agent[] | undefined
     )?.find((agent) => agent.agentConfig.name === targetAgent);
 
     if (!targetAgentInstance) {
@@ -87,8 +85,8 @@ export const AgentStep: Step<
         messages: input,
       },
       {
-        context,
-        isChildStep: true,
+        parentExecution: executionContext,
+        context: executionContext.context,
       }
     );
 

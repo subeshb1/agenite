@@ -18,10 +18,10 @@ export interface StepContext<
   state: StateFromReducer<Reducer>;
   context: Record<string, unknown>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  currentAgent: Agent<Reducer, any, any>;
+  agent: Agent<Reducer, any, any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  parentAgent?: Agent<Reducer, any, any>;
-  isChildStep: boolean;
+  parentExecution?: StepContext<any>;
+  isNestedExecution?: boolean;
   provider: LLMProvider;
   instructions: string;
   stream: boolean;
