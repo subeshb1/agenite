@@ -28,11 +28,11 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.17.24",
-    "tsup": "^8.4.0",
-    "typescript": "^5.8.2",
+    "@types/node": "^20.17.25",
     "cli-table3": "^0.6.5",
-    "strip-ansi": "^7.1.0"
+    "strip-ansi": "^7.1.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2"
   },
   "publishConfig": {
     "access": "public",

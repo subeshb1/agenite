@@ -21,17 +21,17 @@
   "dependencies": {
     "@agenite-examples/llm-provider": "workspace:*",
     "@agenite/agent": "workspace:*",
-    "@agenite/tool": "workspace:*",
     "@agenite/llm": "workspace:*",
     "@agenite/pretty-logger": "workspace:*",
+    "@agenite/tool": "workspace:*",
     "chalk": "^4.1.2"
   },
   "devDependencies": {
-    "@types/node": "^20.17.24",
-    "tsx": "^4.7.0",
-    "typescript": "^5.8.2",
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*"
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20.17.25",
+    "tsx": "^4.7.0",
+    "typescript": "^5.8.2"
   }
 }

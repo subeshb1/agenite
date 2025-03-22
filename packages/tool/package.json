@@ -25,14 +25,14 @@
     "@agenite/llm": "workspace:*",
     "ajv": "^8.12.0",
     "zod": "^3.24.2",
-    "zod-to-json-schema": "^3.24.3"
+    "zod-to-json-schema": "^3.24.5"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/ajv": "^1.0.4",
-    "@types/node": "^20.17.24",
+    "@types/node": "^20.17.25",
     "tsup": "^8.4.0",
     "typescript": "^5.8.2"
   },
