@@ -29,13 +29,13 @@ async function main() {
   );
 
   for await (const chunk of generator) {
-    if (chunk.type === 'reasoning') {
+    if (chunk.type === 'thinking') {
       if (chunk.isStart) {
-        process.stdout.write('<Reasoning> ');
+        process.stdout.write('<Thinking> ');
       }
-      process.stdout.write(chunk.reasoning);
+      process.stdout.write(chunk.thinking);
       if (chunk.isEnd) {
-        process.stdout.write('</Reasoning>\n');
+        process.stdout.write('</Thinking>\n');
       }
     } else if (chunk.type === 'text') {
       if (chunk.isStart) {

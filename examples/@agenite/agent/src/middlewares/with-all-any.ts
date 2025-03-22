@@ -44,7 +44,7 @@ while (!result.done) {
         console.log(result.value);
       }
       break;
-    // Example of custom middleware yeild when any
+    // Example of custom middleware yield when any
     case 'middleware.token':
       console.log(result.value);
       break;

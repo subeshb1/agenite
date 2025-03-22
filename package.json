@@ -8,8 +8,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "publish-packages": "turbo run build lint && changeset version && changeset publish",
     "publish-alpha": "turbo build && changeset && changeset pre enter alpha && changeset version && changeset publish && changeset pre exit",
-    "cspell-ignore": "cspell --words-only --unique \"**/*.md\" | sort --ignore-case >> .cspell/project-words.txt",
-    "cspell-check": "cspell"
+    "cspell-ignore": "cspell --words-only --unique . | sort --ignore-case >> .cspell/project-words.txt",
+    "cspell-check": "cspell .",
+    "check-types": "turbo check-types"
   },
   "devDependencies": {
     "@changesets/cli": "^2.28.1",

@@ -90,11 +90,11 @@ async function main() {
 
     let response = await generator.next();
     while (!response.done) {
-      if (response.value.type === 'reasoning') {
+      if (response.value.type === 'thinking') {
         if (response.value.isStart) {
           process.stdout.write('<thinking>');
         }
-        process.stdout.write(response.value.reasoning);
+        process.stdout.write(response.value.thinking);
         if (response.value.isEnd) {
           process.stdout.write('</thinking>');
         }

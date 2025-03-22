@@ -4,3 +4,21 @@ tseslint
 Turborepo
 turborepo
 
+Agentic
+antrophic
+codellama
+Deepseek
+deepseek
+iterface
+mirostat
+multimodal
+Ollama
+ollama
+Typesafe
+unrequired
+jamba
+luma
+mixtral
+openchat
+rerank
+
