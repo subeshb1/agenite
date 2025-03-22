@@ -1,0 +1,29 @@
+{
+  "mode": "exit",
+  "tag": "alpha",
+  "initialVersions": {
+    "docs": "0.1.2",
+    "web": "0.1.2",
+    "@repo/eslint-config": "0.0.4",
+    "@repo/tsup-config": "0.0.3",
+    "@repo/typescript-config": "0.0.1",
+    "@agenite-examples/agent": "1.0.5",
+    "@agenite-examples/bedrock": "1.0.3",
+    "coding-agent": "1.0.1",
+    "@agenite-examples/deep-research-agent": "1.0.5",
+    "@agenite-examples/llm-provider": "1.0.3",
+    "@agenite/agent": "0.3.0",
+    "@agenite/llm": "0.3.0",
+    "@agenite/pretty-logger": "0.0.0",
+    "@agenite/anthropic": "0.3.0",
+    "@agenite/bedrock": "0.3.1",
+    "@agenite/ollama": "0.3.0",
+    "@agenite/openai": "0.3.0",
+    "@agenite/tool": "0.2.4",
+    "@repo/ui": "0.0.2"
+  },
+  "changesets": [
+    "crazy-plants-tan",
+    "heavy-days-check"
+  ]
+}
