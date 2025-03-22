@@ -1,15 +1,17 @@
 # @agenite/agent
 
-A simple and maintainable TypeScript library for building AI agents with tool integration capabilities.
+A powerful and flexible TypeScript library for building AI agents with advanced tool integration and state management capabilities.
 
 ## Features
 
-- 🛠️ Tool Integration - Easily integrate custom tools and APIs
-- 🔄 Stateful Conversations - Maintain conversation history and context
-- 🌊 Streaming Support - Real-time streaming of agent responses
-- 🎯 Execution Context - Track and manage nested agent executions
-- 🔌 Provider Agnostic - Support for multiple LLM providers (Ollama, Bedrock)
-- 🎨 Flexible Architecture - Build simple to complex agent hierarchies
+- 🛠️ Advanced tool integration - Seamlessly integrate custom tools and APIs with type safety
+- 🔄 Stateful conversations - Built-in state management with custom reducers
+- 🌊 Streaming support - Real-time streaming of agent responses and tool executions
+- 🎯 Execution context - Track and manage nested agent executions with context inheritance
+- 🔌 Provider agnostic - Support for multiple LLM providers (Ollama, Bedrock)
+- 🎨 Flexible architecture - Build simple to complex agent hierarchies with middleware support
+- 📊 Token usage tracking - Monitor and optimize token consumption across executions
+- 🔄 Step-based execution - Fine-grained control over agent execution flow
 
 ## Installation
 
@@ -17,7 +19,7 @@ A simple and maintainable TypeScript library for building AI agents with tool in
 npm install @agenite/agent
 ```
 
-## Quick Start
+## Quick start
 
 ```typescript
 import { Agent } from '@agenite/agent';
@@ -38,35 +40,35 @@ const agent = new Agent({
   name: 'math-buddy',
   provider: new OllamaProvider({ model: 'llama2' }),
   tools: [calculatorTool],
-  systemPrompt: 'You are a helpful math assistant.',
+  instructions: 'You are a helpful math assistant.',
 });
 
 // Execute the agent
 const result = await agent.execute({
-  input: 'What is 1234 * 5678?',
-  stream: true, // Enable streaming
+  messages: [{ role: 'user', content: [{ type: 'text', text: 'What is 1234 * 5678?' }] }],
 });
 ```
 
-## Core Concepts
+## Core concepts
 
 ### Agent
 
 The main class that orchestrates interactions between the LLM and tools. It handles:
 
-- Message processing
-- Tool execution
+- Message processing and state management
+- Tool execution and result handling
 - Response streaming
-- State management
+- Nested agent execution
+- Token usage tracking
 
 ### Tools
 
 Tools are functions that agents can use to perform specific tasks. Each tool has:
 
 - Name and description
-- Input schema
-- Execute function
-- Version information
+- Input schema with type safety
+- Execute function with context support
+- Error handling capabilities
 
 ### Providers
 
@@ -76,31 +78,43 @@ LLM providers that handle the actual language model interactions:
 - Amazon Bedrock
 - Extensible for other providers
 
-## Advanced Usage
+### Steps
 
-### Stateful Agent
+The agent execution is broken down into steps:
 
-Maintain conversation history and state across multiple interactions:
+- `llm-call` - Handles LLM interactions
+- `tool-call` - Manages tool execution
+- `tool-result` - Processes tool results
+- `agent-call` - Handles nested agent execution
+
+## Advanced usage
+
+### Stateful agent with custom reducer
 
 ```typescript
+const customReducer = {
+  messages: (newValue, previousValue) => [
+    ...(previousValue || []),
+    ...(newValue || []),
+  ],
+  runningTotal: (newValue, previousValue) =>
+    (previousValue || 0) + (newValue || 0),
+};
+
 const agent = new Agent({
   name: 'stateful-calculator',
   provider,
   tools: [calculatorTool],
-  systemPrompt: `You are a helpful math assistant that maintains a running total.`,
+  stateReducer: customReducer,
+  initialState: {
+    runningTotal: 0,
+  },
+  instructions:
+    'You are a helpful math assistant that maintains a running total.',
 });
-
-let messages = [];
-const result = await agent.execute({
-  input: [...messages, { role: 'user', content: query }],
-  stream: true,
-});
-messages = result.messages;
 ```
 
-### Nested Agents
-
-Create hierarchical agent structures where agents can delegate tasks:
+### Nested agents with delegation
 
 ```typescript
 // Specialist agents
@@ -108,78 +122,95 @@ const calculatorAgent = new Agent({
   name: 'calculator-specialist',
   provider,
   tools: [calculatorTool],
+  description: 'Specializes in mathematical calculations',
 });
 
 const weatherAgent = new Agent({
   name: 'weather-specialist',
   provider,
   tools: [weatherTool],
+  description: 'Provides weather information',
 });
 
 // Coordinator agent
 const coordinatorAgent = new Agent({
   name: 'coordinator',
   provider,
-  tools: [
-    createDelegateTool('askCalculator', calculatorAgent),
-    createDelegateTool('askWeather', weatherAgent),
-  ],
+  agents: [calculatorAgent, weatherAgent],
+  instructions:
+    'Coordinate between specialist agents to solve complex problems.',
 });
 ```
 
-### Streaming Responses
-
-Process agent responses in real-time:
+### Streaming responses with middleware
 
 ```typescript
+const agent = new Agent({
+  name: 'streaming-agent',
+  provider,
+  tools: [calculatorTool],
+  middlewares: [
+    executionContextInjector(),
+    // Add custom middleware here
+  ],
+});
+
 const iterator = agent.iterate({
-  input: 'Your query here',
+  messages: [{ role: 'user', content: [{ type: 'text', text: 'Your query here' }] }],
   stream: true,
 });
 
 for await (const chunk of iterator) {
   switch (chunk.type) {
-    case 'streaming':
-      console.log(chunk.response.text);
+    case 'agenite.llm-call.streaming':
+      console.log(chunk.content);
       break;
-    case 'toolUse':
-      console.log('Using tool:', chunk.tools[0]?.tool);
+    case 'agenite.tool-call.params':
+      console.log('Using tool:', chunk.toolUseBlocks);
       break;
-    // Handle other chunk types
+    case 'agenite.tool-result':
+      console.log('Tool result:', chunk.result);
+      break;
   }
 }
 ```
 
-## API Reference
+## API reference
 
-### Agent Constructor
+### Agent constructor
 
 ```typescript
 new Agent({
   name: string;
   provider: LLMProvider;
   tools?: Tool[];
-  systemPrompt?: string;
+  instructions?: string;
+  description?: string;
+  agents?: Agent[];
+  stateReducer?: CustomStateReducer;
+  initialState?: Partial<StateFromReducer<CustomStateReducer>>;
+  steps?: Steps;
+  middlewares?: Middlewares;
 })
 ```
 
-### Execute Method
+### Execute method
 
 ```typescript
 execute({
-  input: string | BaseMessage[];
+  messages: BaseMessage[];
   stream?: boolean;
-  context?: ExecutionContext;
+  context?: Record<string, unknown>;
 }): Promise<ExecutionResult>
 ```
 
-### Iterate Method
+### Iterate method
 
 ```typescript
 iterate({
-  input: string | BaseMessage[];
+  messages: BaseMessage[];
   stream?: boolean;
-  context?: ExecutionContext;
+  context?: Record<string, unknown>;
 }): AsyncIterator<StreamChunk>
 ```
 

@@ -60,12 +60,12 @@ const calculatorTool = new Tool<CalculatorInput>({
       }
       
       return {
-        success: true,
+        isError: false,
         data: result.toString(),
       };
     } catch (error) {
       return {
-        success: false,
+        isError: true,
         data: error.message,
         error: {
           code: 'CALCULATION_ERROR',
@@ -133,10 +133,10 @@ export const createWeatherTool = (apiKey: string) => {
     execute: async ({ input }) => {
       try {
         const weather = await client.getWeather(input.city, input.units);
-        return { success: true, data: weather };
+        return { isError: false, data: weather };
       } catch (error) {
         return {
-          success: false,
+          isError: true,
           data: `Failed to get weather: ${error}`,
           error: {
             code: 'WEATHER_ERROR',
@@ -190,7 +190,7 @@ new Tool<TInput>({
 
 ```typescript
 interface ToolResult {
-  success: boolean;
+  isError: boolean;
   data: string;
   error?: {
     code: string;

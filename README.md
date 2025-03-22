@@ -1,9 +1,8 @@
+# 🤖 Agenite
+
 <div align="center">
-  
-  <h1>🤖 Agenite</h1>
   <img src="./assets/agenite.png" alt="Agenite Logo" width="200" height="200"/>
   <p><strong>A modern, modular, and type-safe framework for building AI agents using typescript</strong></p>
- 
 </div>
 
 <div align="center">
@@ -17,14 +16,15 @@
 
 ## ✨ Features
 
-- 🎯 **Provider Agnostic** - Support for multiple LLM providers (OpenAI, Anthropic, AWS Bedrock, Ollama)
+- 🎯 **Provider Agnostic** - Support for multiple LLM providers (Ollama, AWS Bedrock)
 - 🔌 **Modular Architecture** - Plug-and-play components with clean interfaces
 - 🛠️ **Tool Integration** - First-class support for function calling and tool usage
 - 🤝 **Multi-Agent Systems** - Build complex agent hierarchies with delegation
 - 🔒 **Type Safety** - Full TypeScript support with strong typing
 - 🌊 **Streaming Support** - Real-time streaming responses across all providers
 - 🎨 **Flexible Design** - IoC (Inversion of Control) for maximum extensibility
-- 📦 **Zero Lock-in** - Easy to switch between providers or use multiple providers
+- 📊 **Token Usage Tracking** - Monitor and optimize token consumption
+- 🔄 **Step-Based Execution** - Fine-grained control over agent execution flow
 
 ## 📦 Installation
 
@@ -33,8 +33,6 @@
 npm install @agenite/agent @agenite/llm @agenite/tool
 
 # Install your preferred provider(s)
-npm install @agenite/openai    # For OpenAI
-npm install @agenite/anthropic # For Anthropic/Claude
 npm install @agenite/bedrock   # For AWS Bedrock
 npm install @agenite/ollama    # For Ollama
 ```
@@ -44,7 +42,7 @@ npm install @agenite/ollama    # For Ollama
 ```typescript
 import { Agent } from '@agenite/agent';
 import { OllamaProvider } from '@agenite/ollama';
-import { Tool, userTextMessage } from '@agenite/llm';
+import { Tool } from '@agenite/tool';
 
 // Create a simple calculator tool
 const calculatorTool = new Tool({
@@ -59,14 +57,15 @@ const calculatorTool = new Tool({
 // Initialize the agent
 const agent = new Agent({
   name: 'math-buddy',
-  provider: new OllamaProvider({ model: 'llama2' }),,
+  provider: new OllamaProvider({ model: 'llama2' }),
   tools: [calculatorTool],
   instructions: 'You are a helpful math assistant.',
 });
 
 // Execute the agent
 const result = await agent.execute({
-  messages: [userTextMessage('What is 1234 * 5678?')],
+  messages: [{ role: 'user', content: [{ type: 'text', text: 'What is 1234 * 5678?' }] }],
+  stream: true, // Enable streaming
 });
 ```
 
@@ -78,10 +77,12 @@ Agenite is built on three core packages:
 
 The main orchestrator that manages interactions between LLMs and tools. Supports:
 
-- Message processing
-- Tool execution
-- Multi-agent composition
-- State management
+- Message processing and state management
+- Tool execution and result handling
+- Multi-agent composition with delegation
+- Step-based execution flow
+- Token usage tracking
+- Middleware support
 
 ### @agenite/llm
 
@@ -105,8 +106,6 @@ The tool definition and execution framework:
 
 Agenite supports multiple LLM providers out of the box:
 
-- **@agenite/openai** - OpenAI API integration
-- **@agenite/anthropic** - Anthropic Claude integration
 - **@agenite/bedrock** - AWS Bedrock integration
 - **@agenite/ollama** - Local Ollama integration
 
@@ -122,19 +121,23 @@ const calculatorAgent = new Agent({
   name: 'calculator-specialist',
   provider,
   tools: [calculatorTool],
+  description: 'Specializes in mathematical calculations',
 });
 
 const weatherAgent = new Agent({
   name: 'weather-specialist',
   provider,
   tools: [weatherTool],
+  description: 'Provides weather information',
 });
 
 // Create a coordinator agent
 const coordinatorAgent = new Agent({
   name: 'coordinator',
   provider,
-  tools: [calculatorAgent, weatherAgent],
+  agents: [calculatorAgent, weatherAgent],
+  instructions:
+    'Coordinate between specialist agents to solve complex problems.',
 });
 ```
 
@@ -146,16 +149,6 @@ Easily switch between providers or use multiple providers:
 // Use Ollama locally
 const ollamaAgent = new Agent({
   provider: new OllamaProvider({ model: 'llama2' }),
-});
-
-// Use OpenAI
-const openaiAgent = new Agent({
-  provider: new OpenAIProvider({ apiKey: 'openai-key' }),
-});
-
-// Use Claude
-const claudeAgent = new Agent({
-  provider: new AnthropicProvider({ apiKey: 'claude-key' }),
 });
 
 // Use Bedrock
@@ -195,14 +188,14 @@ const weatherTool = new Tool<WeatherInput>({
 });
 ```
 
-### Inversion of Control
+### Step-Based Execution
 
-Take full control of the tool execution flow by injecting custom results:
+Take full control of the agent execution flow:
 
 ```typescript
 // Initialize agent with tools
 const agent = new Agent({
-  name: 'ioc-calculator',
+  name: 'step-agent',
   provider,
   tools: [calculatorTool],
   instructions: 'You are a math assistant.',
@@ -210,50 +203,29 @@ const agent = new Agent({
 
 // Create an iterator for fine-grained control
 const iterator = agent.iterate({
-  messages: [userTextMessage('Calculate 25 divided by 5, then multiply by 3')],
+  messages: [{ role: 'user', content: [{ type: 'text', text: 'Calculate 25 divided by 5, then multiply by 3' }] }],
+  stream: true,
 });
 
-// Process the stream with custom tool handling
+// Process the stream with custom handling
 for await (const chunk of iterator) {
   switch (chunk.type) {
-    case 'toolUse':
-      if (chunk.tools[0]?.tool) {
-        // Inject custom tool result
-        const mockResult = [
-          {
-            type: 'toolResult',
-            toolUseId: chunk.tools[0].tool.id,
-            toolName: chunk.tools[0].tool.name,
-            content:
-              chunk.tools[0].tool.input.operation === 'divide' ? '5' : '15',
-          },
-        ];
-
-        // Pass result back to the agent
-        await iterator.next(mockResult);
-      }
+    case 'agenite.llm-call.streaming':
+      console.log(chunk.content);
       break;
-
-    case 'streaming':
-      if (chunk.response.type === 'text') {
-        process.stdout.write(chunk.response.text);
-      }
+    case 'agenite.tool-call.params':
+      console.log('Using tool:', chunk.toolUseBlocks);
+      break;
+    case 'agenite.tool-result':
+      console.log('Tool result:', chunk.result);
       break;
   }
 }
 ```
 
-This IoC pattern allows you to:
-
-- Intercept tool calls
-- Inject custom results
-- Implement custom tool execution logic
-- Handle external integrations
-- Add middleware layers
-
 ## 📚 Examples
 
-Check out our [examples](./packages/agent/examples) directory for more:
+Check out our [examples](./examples) directory for more:
 
 - Basic chat agents
 - Multi-agent systems
@@ -261,6 +233,7 @@ Check out our [examples](./packages/agent/examples) directory for more:
 - Streaming responses
 - Provider switching
 - State management
+- Step-based execution
 
 ## 🛠️ Development
 
@@ -278,8 +251,6 @@ packages/
   ├── llm/          # Provider interface layer
   ├── tool/         # Tool framework
   ├── provider/     # LLM providers
-  │   ├── openai/
-  │   ├── anthropic/
   │   ├── bedrock/
   │   └── ollama/
   └── examples/     # Example implementations
