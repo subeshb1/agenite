@@ -1,6 +1,6 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 
-import { Agent } from '../../src';
+import { Agent } from '@agenite/agent';
 import { calculatorTool, createWeatherTool } from '../shared/tools';
 import { createProvider } from '../shared/provider-factory';
 import { userTextMessage } from '@agenite/llm';

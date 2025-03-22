@@ -1,6 +1,6 @@
 import { ToolUseBlock, ToolResultBlock } from '@agenite/llm';
 import { Step } from '../types/step';
-import { Tool, ToolResponseData } from '@agenite/tool';
+import { Tool, ToolResponse } from '@agenite/tool';
 import { BaseReturnValues } from '.';
 
 type ToolResultParams = {
@@ -10,7 +10,8 @@ type ToolResultParams = {
 
 export type ToolResultYieldValues = {
   type: 'agenite.tool-result';
-  output: ToolResponseData;
+  result: ToolResponse;
+  toolUseBlock: ToolUseBlock;
 };
 
 export const ToolResultStep: Step<
@@ -54,15 +55,18 @@ export const ToolResultStep: Step<
 
       yield {
         type: 'agenite.tool-result',
-        output: result.data,
-      };
+        result,
+        toolUseBlock,
+      } as ToolResultYieldValues;
 
       // TODO: Handle tool content properly i.e handle images, etc.
       toolResults.push({
         type: 'toolResult',
         toolName: tool.name,
         toolUseId: toolUseBlock.id,
-        content: JSON.stringify(result.isError ? result.error : result.data),
+        content: JSON.stringify(
+          result.isError ? `${result.data}:${result.error}` : result.data
+        ),
         isError: result.isError,
       });
     }

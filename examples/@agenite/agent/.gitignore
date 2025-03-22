@@ -1,0 +1,11 @@
+# Generated blog posts
+/blogs
+
+# Node modules and build
+/node_modules
+/dist
+
+# Editor and OS files
+.DS_Store
+.vscode/
+*.log 

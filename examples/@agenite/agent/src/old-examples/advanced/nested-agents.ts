@@ -1,8 +1,10 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
-import { Agent } from '../../src';
+import { Agent } from '@agenite/agent';
 import { calculatorTool, createWeatherTool } from '../shared/tools';
 import { createProvider } from '../shared/provider-factory';
 import { Tool } from '@agenite/tool';
+import { userTextMessage } from '@agenite/llm';
+import { prettyLogger } from '@agenite/pretty-logger';
 
 interface DelegateInput {
   input: string;
@@ -22,7 +24,7 @@ async function main() {
     name: 'calculator-specialist',
     provider,
     tools: [calculatorTool],
-    systemPrompt:
+    instructions:
       'You are a math specialist. Always use the calculator tool for calculations.',
   });
 
@@ -31,7 +33,7 @@ async function main() {
     name: 'weather-specialist',
     provider,
     tools: [createWeatherTool('dummy-key')],
-    systemPrompt:
+    instructions:
       'You are a weather specialist. Always check the weather when asked about temperature or conditions.',
   });
 
@@ -48,15 +50,19 @@ async function main() {
       required: ['input'],
     },
     execute: async ({ input }) => {
-      const result = await calculatorAgent.execute({
-        input: input.input,
-        context: {
-          executionId: crypto.randomUUID(),
-          parentExecutionId: 'coordinator',
+      const result = await calculatorAgent.execute(
+        {
+          messages: [userTextMessage(input.input)],
         },
-      });
+        {
+          context: {
+            executionId: crypto.randomUUID(),
+            parentExecutionId: 'coordinator',
+          },
+        }
+      );
       return {
-        success: true,
+        isError: false,
         data: JSON.stringify(result.messages[result.messages.length - 1]),
       };
     },
@@ -74,15 +80,19 @@ async function main() {
       required: ['input'],
     },
     execute: async ({ input }) => {
-      const result = await weatherAgent.execute({
-        input: input.input,
-        context: {
-          executionId: crypto.randomUUID(),
-          parentExecutionId: 'coordinator',
+      const result = await weatherAgent.execute(
+        {
+          messages: [userTextMessage(input.input)],
         },
-      });
+        {
+          context: {
+            executionId: crypto.randomUUID(),
+            parentExecutionId: 'coordinator',
+          },
+        }
+      );
       return {
-        success: true,
+        isError: false,
         data: JSON.stringify(result.messages[result.messages.length - 1]),
       };
     },
@@ -93,7 +103,8 @@ async function main() {
     name: 'coordinator',
     provider,
     tools: [calculatorDelegateTool, weatherDelegateTool],
-    systemPrompt: `You are a coordinator that delegates tasks to specialized agents.
+    middlewares: [prettyLogger()],
+    instructions: `You are a coordinator that delegates tasks to specialized agents.
 For math questions, use askCalculator.
 For weather questions, use askWeather.
 For complex queries involving both, break them down and ask each specialist.`,
@@ -101,8 +112,11 @@ For complex queries involving both, break them down and ask each specialist.`,
 
   // Example: Complex query requiring multiple specialists
   const result = await coordinatorAgent.execute({
-    input:
-      'What is the temperature in New York? If we double that temperature, what would it be?',
+    messages: [
+      userTextMessage(
+        'What is the temperature in New York? If we double that temperature, what would it be?'
+      ),
+    ],
   });
 
   // Format and print results

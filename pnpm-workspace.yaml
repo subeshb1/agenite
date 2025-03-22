@@ -6,3 +6,4 @@ packages:
   - 'packages/middlewares/*'
   - 'examples/*'
   - 'examples/shared/*'
+  - 'examples/@agenite/*'

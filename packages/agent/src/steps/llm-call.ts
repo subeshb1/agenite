@@ -9,6 +9,12 @@ import { AgentTool } from '../types/agent';
 import { BaseReturnValues } from '.';
 import { convertLLMTokenUsage } from '../utils/token-usage';
 
+export type LLMCallInput = {
+  messages: BaseMessage[];
+  instructions: string;
+  tools?: ToolDefinition[];
+};
+
 export function transformToToolDefinitions(
   tools: AgentTool[]
 ): ToolDefinition[] {
@@ -31,6 +37,9 @@ export function transformToToolDefinitions(
 export type LLMCallYieldValues = {
   type: 'agenite.llm-call.streaming';
   content: PartialReturn;
+} | {
+  type: 'agenite.llm-call.input';
+  content: LLMCallInput;
 };
 
 type LLMCallParams = {
@@ -70,6 +79,15 @@ export const LLMStep: Step<
 
   execute: async function* (params: LLMCallParams) {
     const { provider, messages, instructions, tools, stream } = params;
+
+    yield {
+      type: 'agenite.llm-call.input',
+      content: {
+        messages,
+        instructions,
+        tools,
+      },
+    };
 
     const generator = provider.iterate(messages, {
       systemPrompt: instructions,

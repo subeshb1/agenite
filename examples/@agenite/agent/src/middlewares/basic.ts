@@ -1,7 +1,7 @@
 import { userTextMessage } from '@agenite/llm';
-import { Agent } from '../../agent';
+import { Agent } from '@agenite/agent';
 import { OllamaProvider } from '@agenite/ollama';
-import { cliLogger } from '../../middlewares/cli-logger';
+import { cliLogger } from './implementations/cli-logger';
 
 const ollamaProvider = new OllamaProvider({
   model: 'llama3.2',

@@ -41,12 +41,12 @@ export const createWeatherTool = (apiKey: string) => {
       try {
         const weather = await client.getWeather(city, units);
         return {
-          success: true,
+          isError: false,
           data: weather,
         };
       } catch (error) {
         return {
-          success: false,
+          isError: true,
           data: `Failed to get weather: ${error}`,
           error: {
             code: 'WEATHER_ERROR',

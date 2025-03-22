@@ -1,9 +1,9 @@
-import { createWeatherTool } from '../../../examples/shared/tools';
-import { Agent } from '../../agent';
+import { createWeatherTool } from '../old-examples/shared/tools';
+import { Agent } from '@agenite/agent';
 import { BedrockProvider } from '@agenite/bedrock';
-import { StateReducer, StateFromReducer } from '../../state/state-reducer';
-import { BaseReturnValues } from '../../steps';
-import { Step } from '../../types/step';
+import { StateReducer, StateFromReducer } from '@agenite/agent';
+import { BaseReturnValues } from '@agenite/agent';
+import { Step } from '@agenite/agent';
 import { BaseMessage } from '@agenite/llm';
 const bedrockProvider = new BedrockProvider({
   model: 'anthropic.claude-3-5-haiku-20241022-v1:0',

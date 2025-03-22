@@ -1,6 +1,6 @@
 import { userTextMessage } from '@agenite/llm';
-import { createWeatherTool } from '../../examples/shared/tools';
-import { Agent } from '../agent';
+import { createWeatherTool } from './old-examples/shared/tools';
+import { Agent } from '@agenite/agent';
 import { BedrockProvider } from '@agenite/bedrock';
 
 const bedrockProvider = new BedrockProvider({

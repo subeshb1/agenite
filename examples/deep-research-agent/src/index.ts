@@ -91,86 +91,84 @@ async function main() {
           }
           break;
 
-        // case 'agenite.tool-result':
-        //   if (response.value.output && response.value.output.length > 0) {
-        //     const result = response.value.output[0];
-        //     if (
-        //       result?.toolName === 'web_search' &&
-        //       result?.content
-        //     ) {
-        //       console.log(
-        //         '\n' + chalk.green.bold('📚 Found relevant resources:')
-        //       );
-        //       const table = new Table({
-        //         style: { head: ['cyan'] },
-        //         head: ['Title', 'URL', 'Snippet'],
-        //         colWidths: [40, 50, 50],
-        //         wordWrap: true,
-        //       });
+        case 'agenite.tool-result':
+          if (response.value.result) {
+            const result = response.value.result;
+            if (
+              response.value.toolUseBlock.name === 'web_search' &&
+              result?.data
+            ) {
+              console.log(
+                '\n' + chalk.green.bold('📚 Found relevant resources:')
+              );
+              const table = new Table({
+                style: { head: ['cyan'] },
+                head: ['Title', 'URL', 'Snippet'],
+                colWidths: [40, 50, 50],
+                wordWrap: true,
+              });
 
-        //       try {
-        //         const searchResults = JSON.parse(
-        //           result.content as string
-        //         );
-        //         searchResults.results.forEach(
-        //           (searchResult: {
-        //             title: string;
-        //             url: string;
-        //             snippet: string;
-        //           }) => {
-        //             table.push([
-        //               chalk.white(searchResult.title),
-        //               chalk.gray(searchResult.url),
-        //               chalk.yellow(searchResult.snippet),
-        //             ]);
-        //           }
-        //         );
+              try {
+                const searchResults = JSON.parse(result.data as string);
+                searchResults.results.forEach(
+                  (searchResult: {
+                    title: string;
+                    url: string;
+                    snippet: string;
+                  }) => {
+                    table.push([
+                      chalk.white(searchResult.title),
+                      chalk.gray(searchResult.url),
+                      chalk.yellow(searchResult.snippet),
+                    ]);
+                  }
+                );
 
-        //         console.log(table.toString());
-        //         console.log(
-        //           chalk.gray(
-        //             `\nTotal results: ${searchResults.metadata.totalResults}`
-        //           )
-        //         );
-        //         console.log(
-        //           chalk.gray(
-        //             `Search date: ${new Date(searchResults.metadata.searchDate).toLocaleString()}`
-        //           )
-        //         );
-        //       } catch {
-        //         console.log(chalk.red('Error parsing search results'));
-        //       }
-        //     } else if (result?.result?.toolName === 'file_manager') {
-        //       // Handle file manager and other tool results
-        //       console.log(chalk.green(`\n✓ File written successfully`));
-        //     } else {
-        //       // For any other tools, display a generic success message
-        //       console.log(
-        //         chalk.green(`\n✓ Web investigation completed successfully`)
-        //       );
-        //     }
-        //   }
-        //   break;
+                console.log(table.toString());
+                console.log(
+                  chalk.gray(
+                    `\nTotal results: ${searchResults.metadata.totalResults}`
+                  )
+                );
+                console.log(
+                  chalk.gray(
+                    `Search date: ${new Date(searchResults.metadata.searchDate).toLocaleString()}`
+                  )
+                );
+              } catch {
+                console.log(chalk.red('Error parsing search results'));
+              }
+            } else if (response.value.toolUseBlock.name === 'file_manager') {
+              // Handle file manager and other tool results
+              console.log(chalk.green(`\n✓ File written successfully`));
+            } else {
+              // For any other tools, display a generic success message
+              console.log(
+                chalk.green(`\n✓ Web investigation completed successfully`)
+              );
+            }
+          }
+          break;
       }
       response = await iterator.next();
     }
 
     console.log('\n' + chalk.green.bold('✨ Research completed successfully!'));
 
-    // const usage = response.value.tokenUsage;
-    // const usageTable = new Table({
-    //   style: { head: ['cyan'] },
-    //   head: ['Metric', 'Count'],
-    // });
+    const usage = response.value.tokenUsage;
+    const usageTable = new Table({
+      style: { head: ['cyan'] },
+      head: ['Metric', 'Count'],
+    });
 
-    // usageTable.push(
-    //   ['Input Tokens', usage.total.inputTokens],
-    //   ['Output Tokens', usage.total.outputTokens],
-    //   ['Total Tokens', usage.total.inputTokens + usage.total.outputTokens]
-    // );
+    usageTable.push(
+      ['Input Tokens', usage.inputTokens],
+      ['Output Tokens', usage.outputTokens],
+      ['Total Tokens', usage.inputTokens + usage.outputTokens]
+    );
 
     console.log('\n' + chalk.blue.bold('📊 Token Usage:'));
-    // console.log(usageTable.toString());
+    console.log(usageTable.toString());
     process.exit(0);
   } catch (error) {
     console.error('\n' + chalk.red.bold('❌ Research failed'));

@@ -74,15 +74,18 @@ export function convertLLMTokenUsage(
     const inputTokens = usage.inputTokens;
     const outputTokens = usage.outputTokens;
     const totalTokens = inputTokens + outputTokens;
+    const inputCost = 0;
+    const outputCost = 0;
+    const totalCost = 0;
 
     modelBreakdown[modelId] = {
       inputTokens,
       outputTokens,
       totalTokens,
       // TODO: introduce cost LLM
-      inputCost: 0,
-      outputCost: 0,
-      totalCost: 0,
+      inputCost,
+      outputCost,
+      totalCost,
     };
 
     totalInputTokens += inputTokens;

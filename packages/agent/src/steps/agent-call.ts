@@ -5,6 +5,7 @@ import { Agent } from '../agent';
 import { LLMCallYieldValues } from './llm-call';
 import { ToolCallYieldValues } from './tool-call';
 import { ToolResultYieldValues } from './tool-result';
+import { YieldAgeniteEnd, YieldAgeniteStart } from '../types';
 
 export type AgentCallYieldValues = {
   type: 'agenite.agent-call.start';
@@ -23,6 +24,8 @@ export const AgentStep: Step<
   | AgentCallYieldValues
   | LLMCallYieldValues
   | ToolCallYieldValues
+  | YieldAgeniteEnd
+  | YieldAgeniteStart
   | ToolResultYieldValues,
   AgentCallParams,
   BaseNextValue

@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AsyncGeneratorMiddleware } from '../../../types/agent';
-import { BaseAgeniteIterateGenerator } from '../../../types/middleware';
-import { BaseNextValue } from '../../../types/step';
+import {
+  AsyncGeneratorMiddleware,
+  BaseAgeniteIterateGenerator,
+  BaseNextValue,
+} from '@agenite/agent';
 
 const logger = async function* (
   generator: BaseAgeniteIterateGenerator

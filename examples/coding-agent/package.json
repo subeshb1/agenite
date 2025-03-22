@@ -3,9 +3,12 @@
   "version": "1.0.1",
   "description": "An AI coding agent using @agenite framework",
   "main": "src/index.ts",
+  "type": "module",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "tsx src/index.ts",
-    "dev": "tsx watch src/index.ts"
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0"
   },
   "keywords": [
     "ai",
@@ -26,6 +29,9 @@
   "devDependencies": {
     "@types/node": "^20.17.24",
     "tsx": "^4.7.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/tsup-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*"
   }
 }

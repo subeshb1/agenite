@@ -1,8 +1,7 @@
-import { createWeatherTool } from '../../examples/shared/tools';
-import { Agent } from '../agent';
-import { LLMStep } from '../steps/llm-call';
-import { customStateReducer } from '../state/state-reducer';
-import { BaseReturnValues } from '../steps';
+import { createWeatherTool } from './old-examples/shared/tools';
+import { Agent, LLMStep } from '@agenite/agent';
+import { customStateReducer } from './state-reducer/custom';
+import { BaseReturnValues } from '@agenite/agent';
 import { prettyLogger } from '@agenite/pretty-logger';
 import { BedrockProvider } from '@agenite/bedrock';
 

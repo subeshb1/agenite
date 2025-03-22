@@ -1,8 +1,8 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
-import { Agent } from '../../src';
+import { Agent } from '@agenite/agent';
 import { calculatorTool } from '../shared/tools';
 import { createProvider } from '../shared/provider-factory';
-import { BaseMessage } from '@agenite/llm';
+import { BaseMessage, userTextMessage } from '@agenite/llm';
 
 async function main() {
   // Initialize the LLM provider
@@ -17,7 +17,7 @@ async function main() {
     name: 'stateful-calculator',
     provider,
     tools: [calculatorTool],
-    systemPrompt: `You are a helpful math assistant that maintains a running total.
+    instructions: `You are a helpful math assistant that maintains a running total.
 Keep track of the current total and explain each calculation step.
 Always use the calculator tool for calculations.
 After each calculation, mention the current total.
@@ -33,9 +33,9 @@ Remember previous calculations when asked about history.`,
 
     const result = await agent.execute({
       // Pass all previous messages along with the new query
-      input: [
+      messages: [
         ...messages,
-        { role: 'user', content: [{ type: 'text', text: query }] },
+        userTextMessage(query),
       ],
     });
 

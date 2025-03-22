@@ -143,6 +143,64 @@ importers:
 
   dev-config/typescript-config: {}
 
+  examples/@agenite/agent:
+    dependencies:
+      '@agenite-examples/llm-provider':
+        specifier: workspace:*
+        version: link:../../shared/llm-provider
+      '@agenite/agent':
+        specifier: workspace:*
+        version: link:../../../packages/agent
+      '@agenite/bedrock':
+        specifier: workspace:*
+        version: link:../../../packages/providers/bedrock
+      '@agenite/llm':
+        specifier: workspace:*
+        version: link:../../../packages/llm
+      '@agenite/ollama':
+        specifier: workspace:*
+        version: link:../../../packages/providers/ollama
+      '@agenite/pretty-logger':
+        specifier: workspace:*
+        version: link:../../../packages/middlewares/pretty-logger
+      '@agenite/tool':
+        specifier: workspace:*
+        version: link:../../../packages/tool
+      axios:
+        specifier: ^1.8.2
+        version: 1.8.2
+      chalk:
+        specifier: ^4.1.2
+        version: 4.1.2
+      cli-table3:
+        specifier: ^0.6.5
+        version: 0.6.5
+      puppeteer:
+        specifier: ^24.4.0
+        version: 24.4.0(typescript@5.8.2)
+      puppeteer-extra:
+        specifier: ^3.3.6
+        version: 3.3.6(puppeteer-core@24.4.0)(puppeteer@24.4.0(typescript@5.8.2))
+      puppeteer-extra-plugin-stealth:
+        specifier: ^2.11.2
+        version: 2.11.2(puppeteer-extra@3.3.6(puppeteer-core@24.4.0)(puppeteer@24.4.0(typescript@5.8.2)))
+      tsx:
+        specifier: ^4.19.3
+        version: 4.19.3
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../../dev-config/eslint-config
+      '@repo/tsup-config':
+        specifier: workspace:*
+        version: link:../../../dev-config/tsup-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../../dev-config/typescript-config
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.13.10
+
   examples/bedrock:
     dependencies:
       '@agenite-examples/llm-provider':
@@ -157,6 +215,9 @@ importers:
       '@agenite/ollama':
         specifier: workspace:*
         version: link:../../packages/providers/ollama
+      '@agenite/pretty-logger':
+        specifier: workspace:*
+        version: link:../../packages/middlewares/pretty-logger
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -201,6 +262,15 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2
     devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../dev-config/eslint-config
+      '@repo/tsup-config':
+        specifier: workspace:*
+        version: link:../../dev-config/tsup-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../dev-config/typescript-config
       '@types/node':
         specifier: ^20.17.24
         version: 20.17.24
@@ -219,6 +289,9 @@ importers:
       '@agenite/agent':
         specifier: workspace:*
         version: link:../../packages/agent
+      '@agenite/llm':
+        specifier: workspace:*
+        version: link:../../packages/llm
       '@agenite/tool':
         specifier: workspace:*
         version: link:../../packages/tool
@@ -300,9 +373,6 @@ importers:
       '@agenite/ollama':
         specifier: workspace:*
         version: link:../providers/ollama
-      '@agenite/pretty-logger':
-        specifier: workspace:*
-        version: link:../middlewares/pretty-logger
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../dev-config/eslint-config
@@ -364,6 +434,12 @@ importers:
       '@types/node':
         specifier: ^20.17.24
         version: 20.17.24
+      cli-table3:
+        specifier: ^0.6.5
+        version: 0.6.5
+      strip-ansi:
+        specifier: ^7.1.0
+        version: 7.1.0
       tsup:
         specifier: ^8.4.0
         version: 8.4.0(postcss@8.4.31)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
@@ -2919,10 +2995,6 @@ packages:
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
-
-  import-fresh@3.3.0:
-    resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
-    engines: {node: '>=6'}
 
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
@@ -6612,7 +6684,7 @@ snapshots:
   cosmiconfig@9.0.0(typescript@5.8.2):
     dependencies:
       env-paths: 2.2.1
-      import-fresh: 3.3.0
+      import-fresh: 3.3.1
       js-yaml: 4.1.0
       parse-json: 5.2.0
     optionalDependencies:
@@ -7606,11 +7678,6 @@ snapshots:
   ieee754@1.2.1: {}
 
   ignore@5.3.2: {}
-
-  import-fresh@3.3.0:
-    dependencies:
-      parent-module: 1.0.1
-      resolve-from: 4.0.0
 
   import-fresh@3.3.1:
     dependencies:

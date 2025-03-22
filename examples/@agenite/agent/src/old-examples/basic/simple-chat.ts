@@ -1,7 +1,8 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
-import { Agent } from '../../src';
+import { Agent } from '@agenite/agent';
 import { calculatorTool } from '../shared/tools';
 import { createProvider } from '../shared/provider-factory';
+import { userTextMessage } from '@agenite/llm';
 
 // Create a simple chat agent that can do basic math
 async function main() {
@@ -17,15 +18,18 @@ async function main() {
     name: 'math-buddy',
     provider,
     tools: [calculatorTool],
-    systemPrompt:
+    instructions:
       'You are a helpful math assistant. Use the calculator tool when you need to perform calculations. Always use tool even if the result is wrong. Re submit',
     // Stop after getting tool results to show intermediate steps
   });
 
   // Start a conversation
   const result = await agent.execute({
-    input:
-      'What is 1234 * 5678?  Always use tool even if the result is wrong. Re submit',
+    messages: [
+      userTextMessage(
+        'What is 1234 * 5678?  Always use tool even if the result is wrong. Re submit'
+      ),
+    ],
   });
 
   // Format and print results

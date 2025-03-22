@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AsyncGeneratorMiddleware } from '../types/agent';
-import { MiddlewareBaseNextValue } from '../types/middleware';
-import { BaseNextValue } from '../types/step';
+import { AsyncGeneratorMiddleware } from '@agenite/agent';
+import { MiddlewareBaseNextValue } from '@agenite/agent';
+import { BaseNextValue } from '@agenite/agent';
 export const cliLogger = (): AsyncGeneratorMiddleware<
   any,
   {

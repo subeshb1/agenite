@@ -61,6 +61,11 @@ export class Agent<
     const generator = async function* () {
       let next: DefaultStepType | (string & {}) = 'agenite.llm-call';
 
+      yield {
+        type: 'agenite.start',
+        executionContext,
+      };
+
       while (true) {
         if (next === 'agenite.end') {
           break;
@@ -100,6 +105,11 @@ export class Agent<
         next = result.next;
       }
 
+      yield {
+        type: 'agenite.end',
+        executionContext,
+      };
+
       return {
         ...executionContext.state,
         tokenUsage: executionContext.tokenUsage,
@@ -115,7 +125,7 @@ export class Agent<
 
   async execute(
     input: Partial<StateFromReducer<Reducer>>,
-    options?: { stream?: boolean }
+    options?: ExecutionOptions
   ) {
     const iterator = this.iterate(input, options);
     let result = await iterator.next();

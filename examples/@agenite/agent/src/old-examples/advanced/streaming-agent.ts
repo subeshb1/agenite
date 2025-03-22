@@ -1,8 +1,9 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 
-import { Agent } from '../../src';
+import { Agent } from '@agenite/agent';
 import { calculatorTool } from '../shared/tools';
 import { createProvider } from '../shared/provider-factory';
+import { userTextMessage } from '@agenite/llm';
 
 async function main() {
   // Initialize the LLM provider
@@ -17,18 +18,23 @@ async function main() {
     name: 'streaming-calculator',
     provider,
     tools: [calculatorTool],
-    systemPrompt: `You are a math tutor that explains calculations step by step.
+    instructions: `You are a math tutor that explains calculations step by step.
 When using the calculator, first explain what you're going to calculate and why.
 After getting the result, explain what it means.
 Always use the calculator tool for actual calculations.`,
   });
 
   // Create an async iterator to handle the stream
-  const iterator = agent.iterate({
-    input:
-      'Can you help me calculate the area of a circle with radius 5, and then multiply that by 2?',
-    stream: true,
-  });
+  const iterator = agent.iterate(
+    {
+      messages: [
+        userTextMessage(
+          'Can you help me calculate the area of a circle with radius 5, and then multiply that by 2?'
+        ),
+      ],
+    },
+    { stream: true }
+  );
 
   // Process the stream
   console.log('\nStarting conversation...\n');
@@ -39,39 +45,18 @@ Always use the calculator tool for actual calculations.`,
 
     // Handle different types of responses
     switch (value.type) {
-      case 'start':
+      case 'agenite.start':
         console.log('🤔 Starting to process your question...\n');
         break;
 
-      case 'streaming':
-        if (value.response.type === 'text') {
+      case 'agenite.llm-call.streaming':
+        if (value.content.type === 'text') {
           // Stream the text response in real-time
-          process.stdout.write(value.response.text);
+          process.stdout.write(value.content.text);
         }
         break;
 
-      case 'toolUse':
-        if (value.tools[0]?.tool) {
-          console.log('\n\n🔧 Using calculator...');
-          console.log(
-            'Input:',
-            JSON.stringify(value.tools[0].tool.input),
-            '\n'
-          );
-        }
-        break;
-
-      case 'toolResult':
-        if (value.results[0]?.result) {
-          console.log(
-            '\n✅ Calculator returned:',
-            value.results[0].result.content,
-            '\n'
-          );
-        }
-        break;
-
-      case 'stop':
+      case 'agenite.end':
         console.log('\n🎯 Finished processing\n');
         break;
     }

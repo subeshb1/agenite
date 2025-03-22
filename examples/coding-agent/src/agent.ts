@@ -2,7 +2,7 @@ import { Agent } from '@agenite/agent';
 import { getLLMProvider, printMessage } from '@agenite-examples/llm-provider';
 import { createFileSystemTool } from './tools/file-system';
 import { createCommandRunnerTool } from './tools/command-runner';
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 import { userTextMessage } from '@agenite/llm';
 import { prettyLogger } from '@agenite/pretty-logger';
 export async function runAgent(userInput: string) {
@@ -29,7 +29,7 @@ Always explain your thought process before taking actions.
 
   printMessage('user', userInput);
 
-  const response = await agent.execute({
+  const _response = await agent.execute({
     messages: [userTextMessage(userInput)],
   });
 

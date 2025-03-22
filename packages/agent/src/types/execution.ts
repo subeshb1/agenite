@@ -43,6 +43,14 @@ export type MergedNextValues<MiddlewareNextValues, StepNextValues> =
     StepNextValues | MiddlewareNextValues
   >;
 
+export type YieldAgeniteStart = {
+  type: 'agenite.start';
+};
+
+export type YieldAgeniteEnd = {
+  type: 'agenite.end';
+};
+
 export type IterateResponse<
   Middlewares extends AsyncGeneratorMiddleware<
     MiddlewareBaseYieldValue,
@@ -53,7 +61,7 @@ export type IterateResponse<
   Reducer extends AnyStateReducer,
 > = FullMergedMiddlewareStepGeneratorResponse<
   Middlewares,
-  AllStepsYieldValues<Steps> & {
+  (AllStepsYieldValues<Steps> | YieldAgeniteStart | YieldAgeniteEnd) & {
     executionContext: StepContext<Reducer>;
   },
   AllStepsNextValues<Steps>,

@@ -1,5 +1,5 @@
+/* eslint-disable no-control-regex */
 import { Tool } from '@agenite/tool';
-import puppeteer from 'puppeteer';
 import puppeteerExtra from 'puppeteer-extra';
 import Stealth from 'puppeteer-extra-plugin-stealth';
 
@@ -23,11 +23,7 @@ class ContentExtractor {
     this.debug = debug;
   }
 
-  private log(message: string) {
-    // if (this.debug) {
-    //   console.log(`🔍 [WebScraper] ${message}`);
-    // }
-  }
+  private log(_message: string) {}
 
   async extract(url: string): Promise<ExtractedInformation> {
     if (!url) {

@@ -1,11 +1,13 @@
 {
-  "name": "@agenite-examples/bedrock",
-  "version": "1.0.3",
+  "name": "@agenite-examples/agent",
+  "version": "1.0.5",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsup"
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0"
   },
   "keywords": [],
   "author": "",
@@ -14,17 +16,23 @@
   "dependencies": {
     "@agenite-examples/llm-provider": "workspace:*",
     "@agenite/agent": "workspace:*",
+    "@agenite/llm": "workspace:*",
+    "@agenite/tool": "workspace:*",
+    "@agenite/pretty-logger": "workspace:*",
     "@agenite/bedrock": "workspace:*",
     "@agenite/ollama": "workspace:*",
+    "axios": "^1.8.2",
     "chalk": "^4.1.2",
-    "@agenite/pretty-logger": "workspace:*"
+    "cli-table3": "^0.6.5",
+    "puppeteer": "^24.4.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "tsx": "^4.19.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.13.10",
-    "tsup": "^8.4.0",
-    "tsx": "^4.19.3"
+    "@types/node": "^22.13.10"
   }
 }

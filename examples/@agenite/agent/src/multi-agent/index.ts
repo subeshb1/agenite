@@ -1,6 +1,6 @@
 import { userTextMessage } from '@agenite/llm';
-import { createWeatherTool } from '../../../examples/shared/tools';
-import { Agent } from '../../agent';
+import { createWeatherTool } from '../old-examples/shared/tools';
+import { Agent } from '@agenite/agent';
 import { BedrockProvider } from '@agenite/bedrock';
 import { prettyLogger } from '@agenite/pretty-logger';
 
@@ -12,30 +12,44 @@ const bedrockProvider = new BedrockProvider({
 const bedrockProvider2 = new BedrockProvider({
   model: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
   region: 'us-west-2',
+  converseCommandConfig: {
+    additionalModelRequestFields: {
+      reasoning_config: {
+        type: 'enabled',
+        budget_tokens: 1024,
+      },
+    },
+    inferenceConfig: {
+      temperature: 1,
+    },
+  },
+});
+
+const nestedWeatherAgent = new Agent({
+  name: 'nested-weather',
+  description: 'nested weather agent',
+  provider: bedrockProvider,
+  tools: [createWeatherTool('dummy-key')],
 });
 
 const weatherAgent = new Agent({
   name: 'weather',
   description: 'weather agent',
-  provider: bedrockProvider2,
-  tools: [createWeatherTool('dummy-key')],
+  provider: bedrockProvider,
+  agents: [nestedWeatherAgent],
 });
 
 const superVisorAgent = new Agent({
   name: 'superVisor',
   description: 'superVisor agent',
   instructions: 'You are a superVisor agent',
-  provider: bedrockProvider,
+  provider: bedrockProvider2,
   agents: [weatherAgent],
   middlewares: [prettyLogger()],
 });
 
 const iterator = superVisorAgent.iterate({
-  messages: [
-    userTextMessage(
-      'What is the weather in Tokyo? And tell me about aws s3 security'
-    ),
-  ],
+  messages: [userTextMessage('Hi check weather in tokyo')],
 });
 
 let result = await iterator.next();

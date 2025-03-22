@@ -2,9 +2,12 @@
   "name": "@agenite-examples/deep-research-agent",
   "version": "1.0.5",
   "main": "src/index.ts",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "tsx src/index.ts"
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +16,7 @@
   "dependencies": {
     "@agenite-examples/llm-provider": "workspace:*",
     "@agenite/agent": "workspace:*",
+    "@agenite/llm": "workspace:*",
     "@agenite/tool": "workspace:*",
     "axios": "^1.8.2",
     "chalk": "^4.1.2",

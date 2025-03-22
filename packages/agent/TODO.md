@@ -53,5 +53,5 @@
 - [X] Support multi agent and tool orchestration
 - [X] Create a logger cli middleware
 - [X] Handle nested execution and build foundation for tracing / execution
-- [ ] Track tokens
+- [X] Track tokens
 - [ ] Docs
