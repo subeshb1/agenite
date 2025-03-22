@@ -1,5 +1,18 @@
 # @agenite/bedrock
 
+## 0.4.0-alpha.0
+
+### Minor Changes
+
+- 71295a4: feat: introduce new agent architecture
+
+### Patch Changes
+
+- 2cab817: bump packages and add deepseek example
+- Updated dependencies [2cab817]
+- Updated dependencies [71295a4]
+  - @agenite/llm@0.4.0-alpha.0
+
 ## 0.3.1
 
 ### Patch Changes

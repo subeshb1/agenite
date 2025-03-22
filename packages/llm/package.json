@@ -1,6 +1,6 @@
 {
   "name": "@agenite/llm",
-  "version": "0.3.0",
+  "version": "0.4.0-alpha.0",
   "description": "LLM interface for Agenite",
   "private": false,
   "type": "module",

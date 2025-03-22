@@ -1,5 +1,17 @@
 # @agenite/bedrock
 
+## 0.1.0-alpha.0
+
+### Minor Changes
+
+- 71295a4: feat: introduce new agent architecture
+
+### Patch Changes
+
+- Updated dependencies [2cab817]
+- Updated dependencies [71295a4]
+  - @agenite/agent@0.4.0-alpha.0
+
 ## 0.3.1
 
 ### Patch Changes

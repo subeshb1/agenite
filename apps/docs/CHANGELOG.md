@@ -1,5 +1,13 @@
 # docs
 
+## 0.1.3-alpha.0
+
+### Patch Changes
+
+- 2cab817: bump packages and add deepseek example
+- Updated dependencies [2cab817]
+  - @repo/ui@0.0.3-alpha.0
+
 ## 0.1.2
 
 ### Patch Changes

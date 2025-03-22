@@ -1,5 +1,15 @@
 # @repo/eslint-config
 
+## 0.1.0-alpha.0
+
+### Minor Changes
+
+- 71295a4: feat: introduce new agent architecture
+
+### Patch Changes
+
+- 2cab817: bump packages and add deepseek example
+
 ## 0.0.4
 
 ### Patch Changes
