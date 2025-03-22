@@ -1,6 +1,6 @@
 {
   "name": "@agenite-examples/bedrock",
-  "version": "1.1.0-alpha.0",
+  "version": "1.1.0",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {

@@ -44,7 +44,7 @@ npm install @agenite/ollama    # For Ollama
 ```typescript
 import { Agent } from '@agenite/agent';
 import { OllamaProvider } from '@agenite/ollama';
-import { Tool } from '@agenite/tool';
+import { Tool, userTextMessage } from '@agenite/llm';
 
 // Create a simple calculator tool
 const calculatorTool = new Tool({
@@ -52,7 +52,7 @@ const calculatorTool = new Tool({
   description: 'Perform basic math operations',
   execute: async ({ input }) => {
     // Tool implementation
-    return { success: true, data: result.toString() };
+    return { isError: false, data: result.toString() };
   },
 });
 
@@ -61,12 +61,12 @@ const agent = new Agent({
   name: 'math-buddy',
   provider: new OllamaProvider({ model: 'llama2' }),,
   tools: [calculatorTool],
-  systemPrompt: 'You are a helpful math assistant.',
+  instructions: 'You are a helpful math assistant.',
 });
 
 // Execute the agent
 const result = await agent.execute({
-  input: 'What is 1234 * 5678?',
+  messages: [userTextMessage('What is 1234 * 5678?')],
 });
 ```
 
@@ -190,7 +190,7 @@ const weatherTool = new Tool<WeatherInput>({
   },
   execute: async ({ input }) => {
     // Tool implementation
-    return { success: true, data: weatherData };
+    return { isError: false, data: weatherData };
   },
 });
 ```
@@ -205,12 +205,12 @@ const agent = new Agent({
   name: 'ioc-calculator',
   provider,
   tools: [calculatorTool],
-  systemPrompt: 'You are a math assistant.',
+  instructions: 'You are a math assistant.',
 });
 
 // Create an iterator for fine-grained control
 const iterator = agent.iterate({
-  input: 'Calculate 25 divided by 5, then multiply by 3',
+  messages: [userTextMessage('Calculate 25 divided by 5, then multiply by 3')],
 });
 
 // Process the stream with custom tool handling

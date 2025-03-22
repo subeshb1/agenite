@@ -1,5 +1,23 @@
 # @agenite-examples/deep-research-agent
 
+## 1.1.0
+
+### Minor Changes
+
+- 71295a4: feat: introduce new agent architecture
+
+### Patch Changes
+
+- Updated dependencies [2cab817]
+- Updated dependencies [71295a4]
+  - @agenite-examples/llm-provider@1.1.0
+  - @agenite/bedrock@0.4.0
+  - @agenite/ollama@0.4.0
+  - @agenite/agent@0.4.0
+  - @agenite/tool@0.3.0
+  - @agenite/llm@0.4.0
+  - @agenite/pretty-logger@0.1.0
+
 ## 1.1.0-alpha.0
 
 ### Minor Changes
