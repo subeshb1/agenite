@@ -1,5 +1,5 @@
+/* eslint-disable no-control-regex */
 import { Tool } from '@agenite/tool';
-import puppeteer from 'puppeteer';
 import puppeteerExtra from 'puppeteer-extra';
 import Stealth from 'puppeteer-extra-plugin-stealth';
 
@@ -23,11 +23,7 @@ class ContentExtractor {
     this.debug = debug;
   }
 
-  private log(message: string) {
-    // if (this.debug) {
-    //   console.log(`🔍 [WebScraper] ${message}`);
-    // }
-  }
+  private log(_message: string) {}
 
   async extract(url: string): Promise<ExtractedInformation> {
     if (!url) {
@@ -124,7 +120,7 @@ export const webScraperTool = new Tool<WebScraperInput>({
   execute: async ({ input }) => {
     if (!input?.url) {
       return {
-        success: false,
+        isError: true,
         data: 'URL is required',
         error: {
           code: 'INVALID_INPUT',
@@ -138,12 +134,12 @@ export const webScraperTool = new Tool<WebScraperInput>({
       const information = await extractor.extract(input.url);
 
       return {
-        success: true,
+        isError: false,
         data: JSON.stringify(information, null, 2),
       };
     } catch (error) {
       return {
-        success: false,
+        isError: true,
         data: `Failed to extract information: ${error}`,
         error: {
           code: 'EXTRACTION_ERROR',

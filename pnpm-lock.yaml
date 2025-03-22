@@ -20,6 +20,9 @@ importers:
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
+      tsx:
+        specifier: ^4.19.3
+        version: 4.19.3
       turbo:
         specifier: ^2.4.4
         version: 2.4.4
@@ -143,6 +146,64 @@ importers:
 
   dev-config/typescript-config: {}
 
+  examples/@agenite/agent:
+    dependencies:
+      '@agenite-examples/llm-provider':
+        specifier: workspace:*
+        version: link:../../shared/llm-provider
+      '@agenite/agent':
+        specifier: workspace:*
+        version: link:../../../packages/agent
+      '@agenite/bedrock':
+        specifier: workspace:*
+        version: link:../../../packages/providers/bedrock
+      '@agenite/llm':
+        specifier: workspace:*
+        version: link:../../../packages/llm
+      '@agenite/ollama':
+        specifier: workspace:*
+        version: link:../../../packages/providers/ollama
+      '@agenite/pretty-logger':
+        specifier: workspace:*
+        version: link:../../../packages/middlewares/pretty-logger
+      '@agenite/tool':
+        specifier: workspace:*
+        version: link:../../../packages/tool
+      axios:
+        specifier: ^1.8.2
+        version: 1.8.2
+      chalk:
+        specifier: ^4.1.2
+        version: 4.1.2
+      cli-table3:
+        specifier: ^0.6.5
+        version: 0.6.5
+      puppeteer:
+        specifier: ^24.4.0
+        version: 24.4.0(typescript@5.8.2)
+      puppeteer-extra:
+        specifier: ^3.3.6
+        version: 3.3.6(puppeteer-core@24.4.0)(puppeteer@24.4.0(typescript@5.8.2))
+      puppeteer-extra-plugin-stealth:
+        specifier: ^2.11.2
+        version: 2.11.2(puppeteer-extra@3.3.6(puppeteer-core@24.4.0)(puppeteer@24.4.0(typescript@5.8.2)))
+      tsx:
+        specifier: ^4.19.3
+        version: 4.19.3
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../../dev-config/eslint-config
+      '@repo/tsup-config':
+        specifier: workspace:*
+        version: link:../../../dev-config/tsup-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../../dev-config/typescript-config
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.13.10
+
   examples/bedrock:
     dependencies:
       '@agenite-examples/llm-provider':
@@ -153,10 +214,13 @@ importers:
         version: link:../../packages/agent
       '@agenite/bedrock':
         specifier: workspace:*
-        version: link:../../packages/provider/bedrock
+        version: link:../../packages/providers/bedrock
       '@agenite/ollama':
         specifier: workspace:*
-        version: link:../../packages/provider/ollama
+        version: link:../../packages/providers/ollama
+      '@agenite/pretty-logger':
+        specifier: workspace:*
+        version: link:../../packages/middlewares/pretty-logger
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -188,6 +252,12 @@ importers:
       '@agenite/agent':
         specifier: workspace:*
         version: link:../../packages/agent
+      '@agenite/llm':
+        specifier: workspace:*
+        version: link:../../packages/llm
+      '@agenite/pretty-logger':
+        specifier: workspace:*
+        version: link:../../packages/middlewares/pretty-logger
       '@agenite/tool':
         specifier: workspace:*
         version: link:../../packages/tool
@@ -195,6 +265,15 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2
     devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../dev-config/eslint-config
+      '@repo/tsup-config':
+        specifier: workspace:*
+        version: link:../../dev-config/tsup-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../dev-config/typescript-config
       '@types/node':
         specifier: ^20.17.24
         version: 20.17.24
@@ -213,6 +292,9 @@ importers:
       '@agenite/agent':
         specifier: workspace:*
         version: link:../../packages/agent
+      '@agenite/llm':
+        specifier: workspace:*
+        version: link:../../packages/llm
       '@agenite/tool':
         specifier: workspace:*
         version: link:../../packages/tool
@@ -255,13 +337,13 @@ importers:
     dependencies:
       '@agenite/bedrock':
         specifier: workspace:*
-        version: link:../../../packages/provider/bedrock
+        version: link:../../../packages/providers/bedrock
       '@agenite/llm':
         specifier: workspace:*
         version: link:../../../packages/llm
       '@agenite/ollama':
         specifier: workspace:*
-        version: link:../../../packages/provider/ollama
+        version: link:../../../packages/providers/ollama
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -290,10 +372,10 @@ importers:
     devDependencies:
       '@agenite/bedrock':
         specifier: workspace:*
-        version: link:../provider/bedrock
+        version: link:../providers/bedrock
       '@agenite/ollama':
         specifier: workspace:*
-        version: link:../provider/ollama
+        version: link:../providers/ollama
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../dev-config/eslint-config
@@ -334,7 +416,41 @@ importers:
         specifier: ^5.8.2
         version: 5.8.2
 
-  packages/provider/anthropic:
+  packages/middlewares/pretty-logger:
+    dependencies:
+      '@agenite/agent':
+        specifier: workspace:*
+        version: link:../../agent
+      chalk:
+        specifier: ^4.1.2
+        version: 4.1.2
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../../dev-config/eslint-config
+      '@repo/tsup-config':
+        specifier: workspace:*
+        version: link:../../../dev-config/tsup-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../../dev-config/typescript-config
+      '@types/node':
+        specifier: ^20.17.24
+        version: 20.17.24
+      cli-table3:
+        specifier: ^0.6.5
+        version: 0.6.5
+      strip-ansi:
+        specifier: ^7.1.0
+        version: 7.1.0
+      tsup:
+        specifier: ^8.4.0
+        version: 8.4.0(postcss@8.4.31)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
+      typescript:
+        specifier: ^5.8.2
+        version: 5.8.2
+
+  packages/providers/anthropic:
     dependencies:
       '@agenite/llm':
         specifier: workspace:*
@@ -362,7 +478,7 @@ importers:
         specifier: ^5.8.2
         version: 5.8.2
 
-  packages/provider/bedrock:
+  packages/providers/bedrock:
     dependencies:
       '@agenite/llm':
         specifier: workspace:*
@@ -390,7 +506,7 @@ importers:
         specifier: ^5.8.2
         version: 5.8.2
 
-  packages/provider/ollama:
+  packages/providers/ollama:
     dependencies:
       '@agenite/llm':
         specifier: workspace:*
@@ -418,7 +534,7 @@ importers:
         specifier: ^5.8.2
         version: 5.8.2
 
-  packages/provider/openai:
+  packages/providers/openai:
     dependencies:
       '@agenite/llm':
         specifier: workspace:*
@@ -602,10 +718,6 @@ packages:
 
   '@aws-sdk/token-providers@3.758.0':
     resolution: {integrity: sha512-ckptN1tNrIfQUaGWm/ayW1ddG+imbKN7HHhjFdS4VfItsP0QQOB0+Ov+tpgb4MoNR4JaUghMIVStjIeHN2ks1w==}
-    engines: {node: '>=18.0.0'}
-
-  '@aws-sdk/types@3.731.0':
-    resolution: {integrity: sha512-NrdkJg6oOUbXR2r9WvHP408CLyvST8cJfp1/jP9pemtjvjPoh6NukbCtiSFdOOb1eryP02CnqQWItfJC1p2Y/Q==}
     engines: {node: '>=18.0.0'}
 
   '@aws-sdk/types@3.734.0':
@@ -2887,10 +2999,6 @@ packages:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
 
-  import-fresh@3.3.0:
-    resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
-    engines: {node: '>=6'}
-
   import-fresh@3.3.1:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
     engines: {node: '>=6'}
@@ -4535,7 +4643,7 @@ snapshots:
   '@aws-crypto/crc32@5.2.0':
     dependencies:
       '@aws-crypto/util': 5.2.0
-      '@aws-sdk/types': 3.731.0
+      '@aws-sdk/types': 3.734.0
       tslib: 2.8.1
 
   '@aws-crypto/sha256-browser@5.2.0':
@@ -4560,7 +4668,7 @@ snapshots:
 
   '@aws-crypto/util@5.2.0':
     dependencies:
-      '@aws-sdk/types': 3.731.0
+      '@aws-sdk/types': 3.734.0
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
@@ -4852,11 +4960,6 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
-
-  '@aws-sdk/types@3.731.0':
-    dependencies:
-      '@smithy/types': 4.1.0
-      tslib: 2.8.1
 
   '@aws-sdk/types@3.734.0':
     dependencies:
@@ -6006,7 +6109,7 @@ snapshots:
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/inquirer@6.5.0':
     dependencies:
@@ -6021,7 +6124,7 @@ snapshots:
 
   '@types/node-fetch@2.6.12':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
       form-data: 4.0.1
 
   '@types/node@12.20.55': {}
@@ -6060,7 +6163,7 @@ snapshots:
 
   '@types/through@0.0.33':
     dependencies:
-      '@types/node': 20.17.24
+      '@types/node': 22.13.10
 
   '@types/tinycolor2@1.4.6': {}
 
@@ -6584,7 +6687,7 @@ snapshots:
   cosmiconfig@9.0.0(typescript@5.8.2):
     dependencies:
       env-paths: 2.2.1
-      import-fresh: 3.3.0
+      import-fresh: 3.3.1
       js-yaml: 4.1.0
       parse-json: 5.2.0
     optionalDependencies:
@@ -7578,11 +7681,6 @@ snapshots:
   ieee754@1.2.1: {}
 
   ignore@5.3.2: {}
-
-  import-fresh@3.3.0:
-    dependencies:
-      parent-module: 1.0.1
-      resolve-from: 4.0.0
 
   import-fresh@3.3.1:
     dependencies:

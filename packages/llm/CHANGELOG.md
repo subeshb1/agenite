@@ -1,5 +1,25 @@
 # @agenite/llm
 
+## 0.4.0
+
+### Minor Changes
+
+- 71295a4: feat: introduce new agent architecture
+
+### Patch Changes
+
+- 2cab817: bump packages and add deepseek example
+
+## 0.4.0-alpha.0
+
+### Minor Changes
+
+- 71295a4: feat: introduce new agent architecture
+
+### Patch Changes
+
+- 2cab817: bump packages and add deepseek example
+
 ## 0.3.0
 
 ### Minor Changes

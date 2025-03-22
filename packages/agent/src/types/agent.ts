@@ -1,83 +1,157 @@
-import {
-  BaseMessage,
-  TokenUsage,
-  LLMProvider,
-  ToolDefinition,
-} from '@agenite/llm';
+import { BaseMessage, LLMProvider, ToolSchema } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
-import { Logger } from './logger';
-import { ExecutionStep } from './execution';
+import { StateFromReducer } from '../state/state-reducer';
+import { Step, BaseYieldValue, BaseNextValue, StepContext } from './step';
+import {
+  GeneratorYieldType,
+  GeneratorNextType,
+  GeneratorReturnType,
+  BaseReturnValues,
+  AnyStateReducer,
+} from '../steps';
+import {
+  MiddlewareBaseYieldValue,
+  MiddlewareBaseNextValue,
+  BaseAgeniteIterateGenerator,
+} from './middleware';
+import { Agent } from '../agent';
+export type AllMiddlewareYieldValues<Middlewares extends BaseMiddlewares> =
+  GeneratorYieldType<ReturnType<Middlewares[number]>>;
 
-export interface DetailedTokenUsage {
-  total: {
-    inputTokens: number;
-    outputTokens: number;
-  };
-  completion: TokenUsage[];
-  children: {
-    [name: string]: {
-      usage: TokenUsage[];
-      details?: DetailedTokenUsage;
-    };
-  };
-}
+export type AllMiddlewareNextValues<Middlewares extends BaseMiddlewares> =
+  GeneratorNextType<ReturnType<Middlewares[number]>>;
 
-// Update AgentTool to be a union type
-export type AgentTool = Tool | Agent;
+export type AllMiddlewareReturnValues<Middlewares extends BaseMiddlewares> =
+  GeneratorReturnType<ReturnType<Middlewares[number]>>;
 
-export interface Agent {
+export type AsyncGeneratorMiddleware<
+  Yield extends MiddlewareBaseYieldValue = MiddlewareBaseYieldValue,
+  Return = unknown,
+  Next extends MiddlewareBaseNextValue = MiddlewareBaseNextValue,
+  Generator extends AsyncGenerator<
+    BaseYieldValue & {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      executionContext: StepContext<any>;
+    },
+    unknown,
+    BaseNextValue
+  > = BaseAgeniteIterateGenerator,
+> = (
+  generator: Generator,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  context: StepContext<any>
+) => AsyncGenerator<
+  Yield | GeneratorYieldType<Generator>,
+  Return,
+  Next | GeneratorNextType<Generator>
+>;
+
+export interface AgentConfig<
+  CustomStateReducer extends AnyStateReducer,
+  Steps extends BaseSteps,
+  Middlewares extends BaseMiddlewares,
+> {
+  /**
+   * The name of the agent
+   */
   name: string;
+  /**
+   * The LLM provider of the agent
+   */
   provider: LLMProvider;
-  tools: AgentTool[];
-  systemPrompt?: string;
+  /**
+   * The tools of the agent
+   */
+  tools?: Tool[];
+  /**
+   * The system prompt of the agent
+   */
+  instructions?: string;
+  /**
+   * The description of the agent. This is used to describe the agent to the other agents.
+   */
   description?: string;
-  stopCondition: StopCondition;
-  inputSchema?: ToolDefinition['inputSchema'];
+  /**
+   * The other agents that this agent can call
+   */
+  agents?: Agent[];
 
-  iterate(
-    params: AgentExecuteParams
-  ): AsyncGenerator<
-    ExecutionStep,
-    { messages: BaseMessage[]; tokenUsage: DetailedTokenUsage },
-    unknown
-  >;
-  execute(params: AgentExecuteParams): Promise<AgentExecuteResult>;
+  stateReducer?: CustomStateReducer;
+
+  /**
+   * The state of the agent
+   */
+  initialState?: Partial<StateFromReducer<CustomStateReducer>>;
+  /**
+   *
+   */
+  steps?: Steps;
+
+  middlewares?: Middlewares;
 }
 
-export interface AgentExecuteParams {
-  input: string | BaseMessage[];
-  context?: AgentContext;
+export interface AgentMethods {
+  /**
+   * The method to call the agent
+   */
+  execute: (
+    input: string | BaseMessage[],
+    options?: unknown
+  ) => Promise<string>;
+
+  /**
+   * The method to iterate the agent
+   */
+  iterate?: (
+    input: string | BaseMessage[],
+    options?: unknown
+  ) => AsyncGenerator<string, void, unknown>;
+}
+
+export interface ExecutionOptions {
   stream?: boolean;
+  context?: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  parentExecution?: StepContext<any>;
 }
 
-export interface AgentExecuteResult {
-  messages: BaseMessage[];
-  tokenUsage: DetailedTokenUsage;
+export interface BaseSteps {
+  [key: string]: Step<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    BaseReturnValues<any>,
+    BaseYieldValue,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any,
+    BaseNextValue
+  >;
 }
 
-export interface AgentOptions {
+export type BaseMiddlewares = AsyncGeneratorMiddleware<
+  MiddlewareBaseYieldValue,
+  unknown,
+  MiddlewareBaseNextValue
+>[];
+
+export type AgentTool = {
   name: string;
-  provider: LLMProvider;
-  tools?: AgentTool[];
-  systemPrompt?: string;
-  description?: string;
-  stopCondition?: StopCondition;
-  logger?: Logger;
-  inputSchema?: ToolDefinition['inputSchema'];
+  description: string;
+  inputSchema?: ToolSchema;
+};
+
+export type TokenUsage = {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+
+  inputCost: number;
+  outputCost: number;
+  totalCost: number;
+};
+
+export interface AgentTokenUsage extends TokenUsage {
+  modelBreakdown: ModelBreakdown;
 }
 
-export interface AgentContext {
-  executionId: string;
-  parentExecutionId?: string;
-  metadata?: Record<string, unknown>;
-  state?: Record<string, unknown>;
-}
-
-export interface AgentResponse {
-  message: BaseMessage;
-  stopReason?: StopReason;
-  tokens: TokenUsage[];
-}
-
-export type StopReason = 'toolUse' | 'maxTokens' | 'stopSequence' | 'endTurn';
-export type StopCondition = 'terminal' | 'toolUse' | 'toolResult';
+export type ModelBreakdown = {
+  [model: string]: TokenUsage;
+};

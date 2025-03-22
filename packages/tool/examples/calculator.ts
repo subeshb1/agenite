@@ -38,7 +38,7 @@ export const calculatorTool = new Tool<CalculatorInput>({
       case 'divide':
         if (b === 0) {
           return {
-            success: false,
+            isError: true,
             data: 'Division by zero',
             error: {
               code: 'DIVISION_BY_ZERO',
@@ -50,7 +50,7 @@ export const calculatorTool = new Tool<CalculatorInput>({
         break;
       default:
         return {
-          success: false,
+          isError: true,
           data: `Unknown operation: ${operation}`,
           error: {
             code: 'INVALID_OPERATION',
@@ -60,7 +60,7 @@ export const calculatorTool = new Tool<CalculatorInput>({
     }
 
     return {
-      success: true,
+      isError: false,
       data: result.toString(),
     };
   },

@@ -1,0 +1,69 @@
+{
+  "name": "@agenite/bedrock",
+  "version": "0.4.0",
+  "description": "AWS Bedrock provider for Agenite",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit",
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "@agenite/llm": "workspace:*",
+    "@aws-sdk/client-bedrock-runtime": "^3.758.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/tsup-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20.17.24",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "ai",
+    "generative-ai",
+    "aws",
+    "bedrock",
+    "claude",
+    "titan",
+    "llm",
+    "provider",
+    "typescript",
+    "function-calling",
+    "streaming",
+    "agenite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/subeshb1/agenite.git",
+    "directory": "packages/provider/bedrock"
+  },
+  "homepage": "https://github.com/subeshb1/agenite/tree/main/packages/provider/bedrock#readme",
+  "bugs": {
+    "url": "https://github.com/subeshb1/agenite/issues"
+  },
+  "license": "MIT"
+}

@@ -71,7 +71,7 @@ export class Tool<TInput = unknown> implements ToolInterface<TInput> {
         const validationResult = await this.validate(params.input);
         if (!validationResult.isValid) {
           return {
-            success: false,
+            isError: true,
             data: `Validation failed: ${validationResult.errors?.map((e) => e.message).join(', ')}`,
             error: {
               code: 'VALIDATION_ERROR',
@@ -97,7 +97,7 @@ export class Tool<TInput = unknown> implements ToolInterface<TInput> {
     } catch (error) {
       // Handle execution errors
       return {
-        success: false,
+        isError: true,
         data: `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`,
         error: {
           code: 'EXECUTION_ERROR',

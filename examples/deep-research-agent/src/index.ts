@@ -1,4 +1,4 @@
-import { printMessage } from '@agenite-examples/llm-provider';
+import { userTextMessage } from '@agenite/llm';
 import { deepResearchAgent } from './agents/deep-research-agent';
 import fs from 'fs';
 import path from 'path';
@@ -45,25 +45,26 @@ async function main() {
 
   try {
     const iterator = deepResearchAgent.iterate({
-      input: `Research and write a blog post about: ${query}`,
-      stream: false,
+      messages: [
+        userTextMessage(`Research and write a blog post about: ${query}`),
+      ],
     });
 
     let response = await iterator.next();
     while (!response.done) {
       switch (response.value.type) {
-        case 'streaming':
-          if (response.value.response.type === 'thinking') {
-            if (response.value.response.isStart) {
+        case 'agenite.llm-call.streaming':
+          if (response.value.content.type === 'thinking') {
+            if (response.value.content.isStart) {
               console.log('<Reasoning>');
             }
-            process.stdout.write(response.value.response.thinking);
-            if (response.value.response.isEnd) {
+            process.stdout.write(response.value.content.thinking);
+            if (response.value.content.isEnd) {
               console.log('</Reasoning>');
             }
-          } else if (response.value.response.type === 'toolUse') {
+          } else if (response.value.content.type === 'toolUse') {
             // Handle tool use
-            const toolUse = response.value.response.toolUse;
+            const toolUse = response.value.content.toolUse;
             switch (toolUse.name) {
               case 'web_search':
                 console.log(
@@ -90,12 +91,12 @@ async function main() {
           }
           break;
 
-        case 'toolResult':
-          if (response.value.results && response.value.results.length > 0) {
-            const result = response.value.results[0];
+        case 'agenite.tool-result':
+          if (response.value.result) {
+            const result = response.value.result;
             if (
-              result?.result?.toolName === 'web_search' &&
-              result?.result?.content
+              response.value.toolUseBlock.name === 'web_search' &&
+              result?.data
             ) {
               console.log(
                 '\n' + chalk.green.bold('📚 Found relevant resources:')
@@ -108,9 +109,7 @@ async function main() {
               });
 
               try {
-                const searchResults = JSON.parse(
-                  result.result.content as string
-                );
+                const searchResults = JSON.parse(result.data as string);
                 searchResults.results.forEach(
                   (searchResult: {
                     title: string;
@@ -139,7 +138,7 @@ async function main() {
               } catch {
                 console.log(chalk.red('Error parsing search results'));
               }
-            } else if (result?.result?.toolName === 'file_manager') {
+            } else if (response.value.toolUseBlock.name === 'file_manager') {
               // Handle file manager and other tool results
               console.log(chalk.green(`\n✓ File written successfully`));
             } else {
@@ -163,9 +162,9 @@ async function main() {
     });
 
     usageTable.push(
-      ['Input Tokens', usage.total.inputTokens],
-      ['Output Tokens', usage.total.outputTokens],
-      ['Total Tokens', usage.total.inputTokens + usage.total.outputTokens]
+      ['Input Tokens', usage.inputTokens],
+      ['Output Tokens', usage.outputTokens],
+      ['Total Tokens', usage.inputTokens + usage.outputTokens]
     );
 
     console.log('\n' + chalk.blue.bold('📊 Token Usage:'));

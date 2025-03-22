@@ -1,10 +1,13 @@
 {
   "name": "@agenite-examples/llm-provider",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "lint": "eslint . --max-warnings 0"
   },
   "keywords": [],
   "author": "",

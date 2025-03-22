@@ -88,7 +88,7 @@ export const webSearchTool = new Tool<WebSearchInput>({
       const results = await searchDuckDuckGo(query, limit);
 
       return {
-        success: true,
+        isError: false,
         data: JSON.stringify(
           {
             results,
@@ -104,7 +104,7 @@ export const webSearchTool = new Tool<WebSearchInput>({
       };
     } catch (error) {
       return {
-        success: false,
+        isError: true,
         data: `Failed to search: ${error}`,
         error: {
           code: 'SEARCH_ERROR',

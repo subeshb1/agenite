@@ -48,7 +48,7 @@ export function createCommandRunnerTool(): Tool<CommandInput> {
       // Validate command input
       if (!input.command || typeof input.command !== 'string') {
         return {
-          success: false,
+          isError: true,
           data: 'Invalid command input. Must be a non-empty string.',
           duration: 0,
         };
@@ -58,7 +58,7 @@ export function createCommandRunnerTool(): Tool<CommandInput> {
       const cached = commandCache.get(cacheKey);
       if (cached && startTime - cached.timestamp < 60000) {
         return {
-          success: cached.success,
+          isError: !cached.success,
           data: cached.data,
           duration: 0,
         };
@@ -69,6 +69,13 @@ export function createCommandRunnerTool(): Tool<CommandInput> {
         let errorOutput = '';
 
         const [cmd, ...args] = input.command.split(' ');
+        if (!cmd) {
+          return resolve({
+            isError: true,
+            data: 'Invalid command input. Must be a non-empty string.',
+            duration: Date.now() - startTime,
+          });
+        }
         const child = spawn(cmd, args, {
           cwd: process.cwd() + '/' + 'output',
           shell: true,
@@ -78,7 +85,7 @@ export function createCommandRunnerTool(): Tool<CommandInput> {
         const timer = setTimeout(() => {
           child.kill('SIGTERM');
           resolve({
-            success: false,
+            isError: true,
             data: 'Command timed out',
             duration: Date.now() - startTime,
           });
@@ -113,14 +120,14 @@ export function createCommandRunnerTool(): Tool<CommandInput> {
             success: result.success,
           });
 
-          resolve(result);
+          resolve(result as unknown as ToolResponse);
         });
 
         // Catch errors with the subprocess
         child.on('error', (err) => {
           clearTimeout(timer);
           resolve({
-            success: false,
+            isError: true,
             data: `Error executing command: ${err.message}`,
             duration: Date.now() - startTime,
           });
@@ -128,7 +135,7 @@ export function createCommandRunnerTool(): Tool<CommandInput> {
       }).catch((err) => {
         console.error('Unexpected error:', err);
         return {
-          success: false,
+          isError: true,
           data: 'Unexpected error while executing the command',
           duration: Date.now() - startTime,
         };

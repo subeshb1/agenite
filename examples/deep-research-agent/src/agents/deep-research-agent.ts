@@ -8,7 +8,7 @@ export const deepResearchAgent = new Agent({
     'Creates well-researched blog posts by combining topic discovery, source analysis, and content writing',
   tools: [webScraperTool, webSearchTool, fileManagerTool],
   provider: getLLMProvider(),
-  systemPrompt: `You are an advanced research and writing agent that creates comprehensive blog posts.
+  instructions: `You are an advanced research and writing agent that creates comprehensive blog posts.
 
 Your process:
 1. Use webSearchTool to:

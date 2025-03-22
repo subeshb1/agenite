@@ -1,8 +1,8 @@
+/* eslint-disable turbo/no-undeclared-env-vars */
 import { BedrockProvider } from '@agenite/bedrock';
 import { OllamaProvider } from '@agenite/ollama';
 
 const defaultProvider = 'ollama';
-const defaultModel = 'llama3.2';
 
 export const getLLMProvider = () => {
   // Get provider from env var or fallback to default
@@ -43,6 +43,7 @@ export const getLLMProvider = () => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const extractTextFromResponse = (response: any) => {
   return response.content[0]?.text || 'No response';
 };

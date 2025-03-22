@@ -1,98 +1,115 @@
-import { TokenUsage } from '@agenite/llm';
-import { DetailedTokenUsage } from '../types/agent';
-import { ToolExecutionBlock } from '../types/execution';
-import { ToolResultBlock } from '@agenite/llm';
+import { TokenUsage } from '../types/agent';
+import { TokenUsage as LLMTokenUsage } from '@agenite/llm';
 
-export class TokenUsageTracker {
-  private tokenUsage: DetailedTokenUsage;
+/**
+ * Merges two token usage objects by adding their values together
+ * @param oldUsage The existing token usage
+ * @param newUsage The new token usage to merge
+ * @returns A new token usage object with combined values
+ */
+export function mergeTokenUsage(
+  oldUsage: TokenUsage,
+  newUsage: TokenUsage
+): TokenUsage {
+  return {
+    inputTokens: oldUsage.inputTokens + newUsage.inputTokens,
+    outputTokens: oldUsage.outputTokens + newUsage.outputTokens,
+    totalTokens: oldUsage.totalTokens + newUsage.totalTokens,
+    inputCost: oldUsage.inputCost + newUsage.inputCost,
+    outputCost: oldUsage.outputCost + newUsage.outputCost,
+    totalCost: oldUsage.totalCost + newUsage.totalCost,
+  };
+}
 
-  constructor() {
-    this.tokenUsage = {
-      total: { inputTokens: 0, outputTokens: 0 },
-      completion: [],
-      children: {},
-    };
-  }
+/**
+ * Merges two agent token usage objects by adding their values together
+ * @param oldUsage The existing agent token usage
+ * @param newUsage The new agent token usage to merge
+ * @returns A new agent token usage object with combined values
+ */
+export function mergeAgentTokenUsage(
+  oldUsage: TokenUsage & { modelBreakdown: Record<string, TokenUsage> },
+  newUsage: TokenUsage & { modelBreakdown: Record<string, TokenUsage> }
+): TokenUsage & { modelBreakdown: Record<string, TokenUsage> } {
+  const mergedBreakdown: Record<string, TokenUsage> = {
+    ...oldUsage.modelBreakdown,
+  };
 
-  public addCompletionTokens(tokens: TokenUsage[]): void {
-    this.tokenUsage.completion.push(...tokens);
-    this.updateTotalTokens();
-  }
-
-  public addToolExecutionResults(
-    results: ToolResultBlock[],
-    executionBlocks: ToolExecutionBlock[],
-    tokenUsage: DetailedTokenUsage
-  ): void {
-    // Add token usage for each tool execution
-    executionBlocks.forEach((block, index) => {
-      const result = results[index];
-      if (result && block.tool.name) {
-        this.tokenUsage.children[block.tool.name] = {
-          usage: tokenUsage.completion,
-          details: tokenUsage,
-        };
-      }
-    });
-
-    this.updateTotalTokens();
-  }
-
-  public mergeTokenUsages(tokenUsages: DetailedTokenUsage[]): void {
-    tokenUsages.forEach((usage) => {
-      // Merge completion tokens
-      this.tokenUsage.completion.push(...usage.completion);
-
-      // Merge children
-      Object.entries(usage.children).forEach(([name, child]) => {
-        if (this.tokenUsage.children[name]) {
-          this.tokenUsage.children[name].usage.push(...child.usage);
-          if (child.details) {
-            this.tokenUsage.children[name].details = this.mergeDetailedTokenUsage(
-              this.tokenUsage.children[name].details!,
-              child.details
-            );
-          }
-        } else {
-          this.tokenUsage.children[name] = child;
-        }
-      });
-    });
-
-    this.updateTotalTokens();
-  }
-
-  public getTokenUsage(): DetailedTokenUsage {
-    return this.tokenUsage;
-  }
-
-  private updateTotalTokens(): void {
-    this.tokenUsage.total = {
-      inputTokens: this.tokenUsage.completion.reduce(
-        (sum, t) => sum + t.inputTokens,
-        0
-      ),
-      outputTokens: this.tokenUsage.completion.reduce(
-        (sum, t) => sum + t.outputTokens,
-        0
-      ),
-    };
-  }
-
-  private mergeDetailedTokenUsage(
-    current: DetailedTokenUsage,
-    additional: DetailedTokenUsage
-  ): DetailedTokenUsage {
-    return {
-      total: {
-        inputTokens: current.total.inputTokens + additional.total.inputTokens,
-        outputTokens: current.total.outputTokens + additional.total.outputTokens,
+  // Merge model breakdowns
+  Object.entries(newUsage.modelBreakdown).forEach(([model, usage]) => {
+    mergedBreakdown[model] = mergeTokenUsage(
+      mergedBreakdown[model] || {
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+        inputCost: 0,
+        outputCost: 0,
+        totalCost: 0,
       },
-      completion: [...current.completion, ...additional.completion],
-      children: {
-        ...current.children,
-        ...additional.children,
-      },
+      usage
+    );
+  });
+
+  return {
+    ...mergeTokenUsage(oldUsage, newUsage),
+    modelBreakdown: mergedBreakdown,
+  };
+}
+
+/**
+ * Converts LLM token usage to Agent token usage format
+ * @param llmTokenUsages Array of LLM token usage objects
+ * @returns Agent token usage object with model breakdown
+ */
+export function convertLLMTokenUsage(
+  llmTokenUsages: LLMTokenUsage[]
+): TokenUsage & { modelBreakdown: Record<string, TokenUsage> } {
+  const modelBreakdown: Record<string, TokenUsage> = {};
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+
+  // Process each model's token usage
+  llmTokenUsages.forEach((usage) => {
+    const modelId = usage.modelId;
+    const inputTokens = usage.inputTokens;
+    const outputTokens = usage.outputTokens;
+    const totalTokens = inputTokens + outputTokens;
+    const inputCost = 0;
+    const outputCost = 0;
+    const totalCost = 0;
+
+    modelBreakdown[modelId] = {
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      // TODO: introduce cost LLM
+      inputCost,
+      outputCost,
+      totalCost,
     };
-  }
-} 
+
+    totalInputTokens += inputTokens;
+    totalOutputTokens += outputTokens;
+  });
+
+  const totalTokens = totalInputTokens + totalOutputTokens;
+  const totalInputCost = Object.values(modelBreakdown).reduce(
+    (sum, usage) => sum + usage.inputCost,
+    0
+  );
+  const totalOutputCost = Object.values(modelBreakdown).reduce(
+    (sum, usage) => sum + usage.outputCost,
+    0
+  );
+  const totalCost = totalInputCost + totalOutputCost;
+
+  return {
+    inputTokens: totalInputTokens,
+    outputTokens: totalOutputTokens,
+    totalTokens,
+    inputCost: totalInputCost,
+    outputCost: totalOutputCost,
+    totalCost,
+    modelBreakdown,
+  };
+}

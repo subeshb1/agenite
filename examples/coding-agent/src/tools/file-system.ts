@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import { Tool } from '@agenite/tool';
 
 interface FileSystemInput {
@@ -39,7 +39,7 @@ export function createFileSystemTool(): Tool<FileSystemInput> {
           case 'read': {
             const content = await fs.readFile(fullPath, 'utf-8');
             return {
-              success: true,
+              isError: false,
               data: content,
               duration: Date.now() - startTime,
             };
@@ -49,7 +49,7 @@ export function createFileSystemTool(): Tool<FileSystemInput> {
             await fs.mkdir(path.dirname(fullPath), { recursive: true });
             await fs.writeFile(fullPath, input.content || '');
             return {
-              success: true,
+              isError: false,
               data: `File written to ${input.path}`,
               duration: Date.now() - startTime,
             };
@@ -58,7 +58,7 @@ export function createFileSystemTool(): Tool<FileSystemInput> {
           case 'list': {
             const files = await fs.readdir(fullPath, { recursive: true });
             return {
-              success: true,
+              isError: false,
               data: files.join('\n'),
               duration: Date.now() - startTime,
             };
@@ -68,13 +68,13 @@ export function createFileSystemTool(): Tool<FileSystemInput> {
             try {
               await fs.access(input.path);
               return {
-                success: true,
+                isError: false,
                 data: 'true',
                 duration: Date.now() - startTime,
               };
             } catch {
               return {
-                success: true,
+                isError: false,
                 data: 'false',
                 duration: Date.now() - startTime,
               };
@@ -84,7 +84,7 @@ export function createFileSystemTool(): Tool<FileSystemInput> {
           case 'mkdir': {
             await fs.mkdir(fullPath, { recursive: true });
             return {
-              success: true,
+              isError: false,
               data: `Directory created at ${input.path}`,
               duration: Date.now() - startTime,
             };
@@ -92,14 +92,14 @@ export function createFileSystemTool(): Tool<FileSystemInput> {
 
           default:
             return {
-              success: false,
+              isError: true,
               data: `Unknown operation: ${input.operation}`,
               duration: Date.now() - startTime,
             };
         }
       } catch (error) {
         return {
-          success: false,
+          isError: true,
           data: error instanceof Error ? `${error.message}` : 'Unknown error',
           duration: Date.now() - startTime,
         };

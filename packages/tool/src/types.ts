@@ -55,7 +55,7 @@ export interface ToolResponseBlock {
 }
 
 export interface ToolResponse {
-  success: boolean;
+  isError: boolean;
   data: ToolResponseData;
   error?: {
     code: string;
