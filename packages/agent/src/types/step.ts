@@ -19,7 +19,7 @@ export interface StepContext<
   state: StateFromReducer<Reducer>;
   context: Record<string, unknown>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  agent: Agent<Reducer, any, any>;
+  agent: Agent<Reducer, any, any, any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parentExecution?: StepContext<any>;
   isNestedExecution?: boolean;

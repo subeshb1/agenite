@@ -49,9 +49,14 @@
 ## Pretty logger
   - [ ] Add more details to the logger
 
+### LLM
+  - [ ] Update token usage format and include pricing
+
 ## Priority
 - [X] Support multi agent and tool orchestration
 - [X] Create a logger cli middleware
 - [X] Handle nested execution and build foundation for tracing / execution
 - [X] Track tokens
 - [ ] Docs
+
+

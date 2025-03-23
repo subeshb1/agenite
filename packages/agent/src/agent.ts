@@ -17,9 +17,15 @@ export class Agent<
   Reducer extends AnyStateReducer = typeof defaultStateReducer,
   Steps extends BaseSteps = typeof defaultStepConfig,
   Middlewares extends BaseMiddlewares = [],
+  Extensions extends Record<string, unknown> | undefined = undefined,
 > {
   constructor(
-    public readonly agentConfig: AgentConfig<Reducer, Steps, Middlewares>
+    public readonly agentConfig: AgentConfig<
+      Reducer,
+      Steps,
+      Middlewares,
+      Extensions
+    >
   ) {}
 
   public async *iterate(
@@ -58,8 +64,10 @@ export class Agent<
 
     const actions = this.agentConfig.steps || defaultStepConfig;
 
+    const startStep = this.agentConfig.startStep || 'agenite.llm-call';
+
     const generator = async function* () {
-      let next: DefaultStepType | (string & {}) = 'agenite.llm-call';
+      let currentStep: DefaultStepType | (string & {}) = startStep;
 
       yield {
         type: 'agenite.start',
@@ -67,15 +75,15 @@ export class Agent<
       };
 
       while (true) {
-        if (next === 'agenite.end') {
+        if (currentStep === 'agenite.end') {
           break;
         }
 
         const step: BaseSteps[keyof BaseSteps] | undefined =
-          actions[next as keyof typeof actions];
+          actions[currentStep as keyof typeof actions];
 
         if (!step) {
-          throw new Error(`Step ${next} not found`);
+          throw new Error(`Step ${currentStep} not found.`);
         }
 
         const result: BaseReturnValues<StateFromReducer<Reducer>> =
@@ -102,7 +110,13 @@ export class Agent<
           };
         }
 
-        next = result.next;
+        if (!result.next) {
+          throw new Error(
+            `No next step found. Previous step: ${currentStep}. Please review the step configuration to return a valid next step.`
+          );
+        }
+
+        currentStep = result.next;
       }
 
       yield {

@@ -1,7 +1,13 @@
-import { BaseMessage, LLMProvider, ToolSchema } from '@agenite/llm';
+import { LLMProvider, ToolSchema } from '@agenite/llm';
 import { Tool } from '@agenite/tool';
 import { StateFromReducer } from '../state/state-reducer';
-import { Step, BaseYieldValue, BaseNextValue, StepContext } from './step';
+import {
+  Step,
+  BaseYieldValue,
+  BaseNextValue,
+  StepContext,
+  DefaultStepType,
+} from './step';
 import {
   GeneratorYieldType,
   GeneratorNextType,
@@ -50,6 +56,7 @@ export interface AgentConfig<
   CustomStateReducer extends AnyStateReducer,
   Steps extends BaseSteps,
   Middlewares extends BaseMiddlewares,
+  Extensions extends Record<string, unknown> | undefined = undefined,
 > {
   /**
    * The name of the agent
@@ -86,26 +93,21 @@ export interface AgentConfig<
    *
    */
   steps?: Steps;
+  /**
+   * startStep of the agent. Used to start the agent.
+   * @default 'agenite.llm-call'
+   */
+  startStep?: Exclude<keyof Steps, number | symbol> | DefaultStepType;
 
+  /**
+   * The middlewares of the agent. Used to modify the behavior of the agent.
+   */
   middlewares?: Middlewares;
-}
-
-export interface AgentMethods {
-  /**
-   * The method to call the agent
-   */
-  execute: (
-    input: string | BaseMessage[],
-    options?: unknown
-  ) => Promise<string>;
 
   /**
-   * The method to iterate the agent
+   * The extensions of the agent. Used to extend the agent with custom functionality.
    */
-  iterate?: (
-    input: string | BaseMessage[],
-    options?: unknown
-  ) => AsyncGenerator<string, void, unknown>;
+  extensions?: Extensions;
 }
 
 export interface ExecutionOptions {
@@ -122,7 +124,7 @@ export interface BaseSteps {
     BaseYieldValue,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     any,
-    BaseNextValue
+    BaseNextValue | undefined
   >;
 }
 
