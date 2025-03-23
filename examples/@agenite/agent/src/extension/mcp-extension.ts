@@ -116,6 +116,7 @@ const mcpServerSetupStep: Step<
 
     yield {
       type: 'agenite.mcp-server-setup',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       content: tools as any,
     };
 

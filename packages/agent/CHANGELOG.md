@@ -1,5 +1,11 @@
 # @agenite/agent
 
+## 0.4.1
+
+### Patch Changes
+
+- 9d13941: feat: support extensions
+
 ## 0.4.0
 
 ### Minor Changes
