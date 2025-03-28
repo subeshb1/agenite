@@ -1,0 +1,238 @@
+---
+title: "LLM APIs"
+description: "Reference for LLM utilities in Agenite"
+---
+
+## Overview
+
+The LLM package in Agenite provides utilities for working with language models, including prompt management, response parsing, and token counting.
+
+## Prompt templates
+
+### Basic templates
+
+```typescript
+import { PromptTemplate } from '@agenite/llm';
+
+const template = new PromptTemplate({
+  template: 'Hello {name}! How can I help you with {topic}?',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      topic: { type: 'string' },
+    },
+    required: ['name', 'topic'],
+  },
+});
+
+const prompt = template.format({
+  name: 'Alice',
+  topic: 'TypeScript',
+});
+```
+
+### Conditional templates
+
+```typescript
+import { ConditionalTemplate } from '@agenite/llm';
+
+const template = new ConditionalTemplate({
+  conditions: [
+    {
+      condition: (vars) => vars.temperature > 25,
+      template: "It's quite hot at {temperature}°C!",
+    },
+    {
+      condition: (vars) => vars.temperature <= 25,
+      template: "It's a pleasant {temperature}°C today.",
+    },
+  ],
+  inputSchema: {
+    type: 'object',
+    properties: {
+      temperature: { type: 'number' },
+    },
+    required: ['temperature'],
+  },
+});
+
+const prompt = template.format({
+  temperature: 28,
+});
+```
+
+### Template composition
+
+```typescript
+import { CompositeTemplate } from '@agenite/llm';
+
+const headerTemplate = new PromptTemplate({
+  template: '# {title}\n\n',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      title: { type: 'string' },
+    },
+    required: ['title'],
+  },
+});
+
+const bodyTemplate = new PromptTemplate({
+  template: '{content}\n\n',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      content: { type: 'string' },
+    },
+    required: ['content'],
+  },
+});
+
+const footerTemplate = new PromptTemplate({
+  template: '---\nBy {author}',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      author: { type: 'string' },
+    },
+    required: ['author'],
+  },
+});
+
+const documentTemplate = new CompositeTemplate({
+  templates: [headerTemplate, bodyTemplate, footerTemplate],
+  inputSchema: {
+    type: 'object',
+    properties: {
+      title: { type: 'string' },
+      content: { type: 'string' },
+      author: { type: 'string' },
+    },
+    required: ['title', 'content', 'author'],
+  },
+});
+
+const prompt = documentTemplate.format({
+  title: 'My document',
+  content: 'This is the content.',
+  author: 'Alice',
+});
+```
+
+## Response parsing
+
+### Basic parsing
+
+```typescript
+import { ResponseParser } from '@agenite/llm';
+
+const parser = new ResponseParser({
+  schema: {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      age: { type: 'number' },
+      hobbies: { type: 'array', items: { type: 'string' } },
+    },
+    required: ['name', 'age'],
+  },
+});
+
+const response = await parser.parse(
+  'Name: Alice\nAge: 25\nHobbies: reading, coding'
+);
+```
+
+### Custom parsers
+
+```typescript
+import { CustomParser } from '@agenite/llm';
+
+const dateParser = new CustomParser({
+  parse: (text) => {
+    const match = text.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) throw new Error('Invalid date format');
+    return new Date(match[0]);
+  },
+});
+
+const response = await dateParser.parse('2024-03-15');
+```
+
+## Token counting
+
+### Basic counting
+
+```typescript
+import { TokenCounter } from '@agenite/llm';
+
+const counter = new TokenCounter();
+
+const count = counter.count('Hello, how are you?');
+console.log(`Token count: ${count}`);
+```
+
+### Model-specific counting
+
+```typescript
+import { ModelTokenCounter } from '@agenite/llm';
+
+const gpt4Counter = new ModelTokenCounter({
+  model: 'gpt-4',
+});
+
+const claudeCounter = new ModelTokenCounter({
+  model: 'claude-2',
+});
+
+const text = 'Hello, how are you?';
+console.log(`GPT-4 tokens: ${gpt4Counter.count(text)}`);
+console.log(`Claude tokens: ${claudeCounter.count(text)}`);
+```
+
+## Message formatting
+
+### Chat messages
+
+```typescript
+import { ChatMessage } from '@agenite/llm';
+
+const message = new ChatMessage({
+  role: 'user',
+  content: 'Hello!',
+  name: 'Alice',
+});
+
+const formatted = message.format();
+```
+
+### System messages
+
+```typescript
+import { SystemMessage } from '@agenite/llm';
+
+const message = new SystemMessage({
+  content: 'You are a helpful assistant.',
+  metadata: {
+    version: '1.0',
+    capabilities: ['coding', 'math'],
+  },
+});
+
+const formatted = message.format();
+```
+
+## Best practices
+
+1. **Template validation**: Use input schemas for validation
+2. **Error handling**: Handle parsing errors gracefully
+3. **Token optimization**: Monitor and optimize token usage
+4. **Message structure**: Use appropriate message types
+5. **Documentation**: Document templates and parsers
+
+## Next steps
+
+- Learn about [providers](/api-reference/providers)
+- See [examples](/essentials/examples)
+- Read about [advanced features](/essentials/advanced-features) 

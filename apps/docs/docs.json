@@ -1,35 +1,33 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Agenite",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#2E3BFF",
+    "light": "#FF3D9A",
+    "dark": "#2563EB"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.ico",
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-REW76SJKTJ"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Getting Started",
         "groups": [
           {
-            "group": "Get Started",
-            "pages": [
-              "introduction",
-              "quickstart",
-              "development"
-            ]
+            "group": "Introduction",
+            "pages": ["introduction", "quickstart"]
           },
           {
             "group": "Essentials",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
+              "essentials/core-concepts",
+              "essentials/examples",
+              "essentials/advanced-features"
             ]
           }
         ]
@@ -38,18 +36,14 @@
         "tab": "API Reference",
         "groups": [
           {
-            "group": "API Documentation",
+            "group": "Core APIs",
             "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint Examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/agent",
+              "api-reference/tool",
+              "api-reference/providers",
+              "api-reference/middleware",
+              "api-reference/steps",
+              "api-reference/llm"
             ]
           }
         ]
@@ -58,32 +52,27 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Github",
+          "href": "https://github.com/subeshb1/agenite",
+          "icon": "github"
         },
         {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Discord",
+          "href": "https://discord.gg/v3TXcD6tUH",
+          "icon": "discord"
         }
       ]
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png"
   },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:subeshb1@gmail.com"
       }
     ],
     "primary": {
@@ -94,7 +83,7 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/subeshb1/",
+      "twitter": "https://twitter.com/subeshb1",
       "github": "https://github.com/subeshb1/agenite/",
       "linkedin": "https://www.linkedin.com/in/subesh-bhandari-523438112/"
     }

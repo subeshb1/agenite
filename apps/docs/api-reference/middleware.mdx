@@ -1,0 +1,233 @@
+---
+title: "Middleware APIs"
+description: "Reference for middleware in Agenite"
+---
+
+## Overview
+
+Middleware in Agenite allows you to intercept and modify agent behavior at various stages of execution. Middleware can be used for logging, error handling, state management, and more.
+
+## Interface
+
+```typescript
+interface Middleware {
+  onStart?: (context: Context) => Promise<void>;
+  onMessage?: (context: Context, message: Message) => Promise<void>;
+  onToolCall?: (context: Context, tool: Tool) => Promise<void>;
+  onToolResult?: (context: Context, result: ToolResult) => Promise<void>;
+  onError?: (context: Context, error: Error) => Promise<void>;
+  onComplete?: (context: Context) => Promise<void>;
+}
+```
+
+## Context object
+
+The context object provides access to the agent's state and execution details:
+
+```typescript
+interface Context {
+  agent: Agent;
+  state: Record<string, any>;
+  messages: Message[];
+  tools: Tool[];
+  currentStep?: number;
+  startTime: number;
+  endTime?: number;
+  error?: Error;
+}
+```
+
+## Built-in middleware
+
+### Logger middleware
+
+Logs agent execution details to console or custom logger.
+
+```typescript
+import { LoggerMiddleware } from '@agenite/middleware';
+
+const logger = new LoggerMiddleware({
+  level: 'info',
+  format: 'json',
+  destination: 'console',
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  middleware: [logger],
+  // ... other options
+});
+```
+
+### State middleware
+
+Manages persistent state across agent executions.
+
+```typescript
+import { StateMiddleware } from '@agenite/middleware';
+
+const state = new StateMiddleware({
+  initialState: {
+    counter: 0,
+    history: [],
+  },
+  persist: true,
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  middleware: [state],
+  // ... other options
+});
+```
+
+### Timeout middleware
+
+Enforces execution time limits.
+
+```typescript
+import { TimeoutMiddleware } from '@agenite/middleware';
+
+const timeout = new TimeoutMiddleware({
+  limit: 30000, // 30 seconds
+  onTimeout: (context) => {
+    console.log('Agent execution timed out');
+  },
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  middleware: [timeout],
+  // ... other options
+});
+```
+
+### Retry middleware
+
+Automatically retries failed operations.
+
+```typescript
+import { RetryMiddleware } from '@agenite/middleware';
+
+const retry = new RetryMiddleware({
+  maxAttempts: 3,
+  delay: 1000,
+  backoff: 'exponential',
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  middleware: [retry],
+  // ... other options
+});
+```
+
+### Cache middleware
+
+Caches tool results for improved performance.
+
+```typescript
+import { CacheMiddleware } from '@agenite/middleware';
+
+const cache = new CacheMiddleware({
+  ttl: 3600, // 1 hour
+  maxSize: 1000,
+  storage: 'memory',
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  middleware: [cache],
+  // ... other options
+});
+```
+
+## Custom middleware
+
+You can create custom middleware by implementing the `Middleware` interface:
+
+```typescript
+class MetricsMiddleware implements Middleware {
+  private metrics: Record<string, number> = {
+    toolCalls: 0,
+    errors: 0,
+    totalTime: 0,
+  };
+
+  async onStart(context: Context) {
+    this.metrics.startTime = Date.now();
+  }
+
+  async onToolCall(context: Context, tool: Tool) {
+    this.metrics.toolCalls++;
+  }
+
+  async onError(context: Context, error: Error) {
+    this.metrics.errors++;
+  }
+
+  async onComplete(context: Context) {
+    this.metrics.totalTime = Date.now() - this.metrics.startTime;
+    console.log('Execution metrics:', this.metrics);
+  }
+}
+
+const agent = new Agent({
+  name: 'my-agent',
+  middleware: [new MetricsMiddleware()],
+  // ... other options
+});
+```
+
+### Example: Rate limiting middleware
+
+```typescript
+class RateLimitMiddleware implements Middleware {
+  private requests: number = 0;
+  private lastReset: number = Date.now();
+
+  constructor(private config: {
+    limit: number;
+    window: number;
+  }) {}
+
+  async onToolCall(context: Context, tool: Tool) {
+    const now = Date.now();
+    if (now - this.lastReset > this.config.window) {
+      this.requests = 0;
+      this.lastReset = now;
+    }
+
+    if (this.requests >= this.config.limit) {
+      throw new Error('Rate limit exceeded');
+    }
+
+    this.requests++;
+  }
+}
+
+const agent = new Agent({
+  name: 'my-agent',
+  middleware: [
+    new RateLimitMiddleware({
+      limit: 10,
+      window: 60000, // 1 minute
+    }),
+  ],
+  // ... other options
+});
+```
+
+## Best practices
+
+1. **Order matters**: Middleware executes in the order specified
+2. **Keep it focused**: Each middleware should have a single responsibility
+3. **Error handling**: Implement error handling in middleware
+4. **State management**: Use state middleware for persistence
+5. **Performance**: Consider caching and optimization
+
+## Next steps
+
+- Learn about [providers](/api-reference/providers)
+- See [examples](/essentials/examples)
+- Read about [advanced features](/essentials/advanced-features) 

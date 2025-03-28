@@ -1,0 +1,306 @@
+---
+title: "Provider APIs"
+description: "Reference for LLM providers in Agenite"
+---
+
+## Overview
+
+Agenite supports multiple LLM providers through a consistent interface. Each provider implements the `LLMProvider` interface.
+
+## Common interface
+
+```typescript
+interface LLMProvider {
+  generateResponse(params: {
+    messages: Message[];
+    stream?: boolean;
+    options?: ProviderOptions;
+  }): Promise<Response>;
+}
+```
+
+## OpenAI provider
+
+### Installation
+
+```bash
+npm install @agenite/openai
+```
+
+### Usage
+
+```typescript
+import { OpenAIProvider } from '@agenite/openai';
+
+const provider = new OpenAIProvider({
+  apiKey: 'your-api-key',
+  model: 'gpt-4', // or 'gpt-3.5-turbo'
+  temperature: 0.7,
+  maxTokens: 1000,
+});
+
+const agent = new Agent({
+  name: 'openai-agent',
+  provider,
+  // ... other options
+});
+```
+
+### Configuration
+
+```typescript
+interface OpenAIConfig {
+  apiKey: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  stop?: string[];
+  organization?: string;
+}
+```
+
+## Anthropic provider
+
+### Installation
+
+```bash
+npm install @agenite/anthropic
+```
+
+### Usage
+
+```typescript
+import { AnthropicProvider } from '@agenite/anthropic';
+
+const provider = new AnthropicProvider({
+  apiKey: 'your-api-key',
+  model: 'claude-2',
+  maxTokens: 1000,
+});
+
+const agent = new Agent({
+  name: 'anthropic-agent',
+  provider,
+  // ... other options
+});
+```
+
+### Configuration
+
+```typescript
+interface AnthropicConfig {
+  apiKey: string;
+  model: string;
+  maxTokens?: number;
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  stop?: string[];
+}
+```
+
+## AWS Bedrock provider
+
+### Installation
+
+```bash
+npm install @agenite/bedrock
+```
+
+### Usage
+
+```typescript
+import { BedrockProvider } from '@agenite/bedrock';
+
+const provider = new BedrockProvider({
+  credentials: {
+    accessKeyId: 'your-access-key',
+    secretAccessKey: 'your-secret-key',
+  },
+  region: 'us-west-2',
+  model: 'anthropic.claude-v2',
+});
+
+const agent = new Agent({
+  name: 'bedrock-agent',
+  provider,
+  // ... other options
+});
+```
+
+### Configuration
+
+```typescript
+interface BedrockConfig {
+  credentials: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
+  region: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+}
+```
+
+## Ollama provider
+
+### Installation
+
+```bash
+npm install @agenite/ollama
+```
+
+### Usage
+
+```typescript
+import { OllamaProvider } from '@agenite/ollama';
+
+const provider = new OllamaProvider({
+  model: 'llama2',
+  baseUrl: 'http://localhost:11434',
+});
+
+const agent = new Agent({
+  name: 'ollama-agent',
+  provider,
+  // ... other options
+});
+```
+
+### Configuration
+
+```typescript
+interface OllamaConfig {
+  model: string;
+  baseUrl?: string;
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  repeatPenalty?: number;
+  seed?: number;
+  stop?: string[];
+}
+```
+
+## Custom providers
+
+You can create custom providers by implementing the `LLMProvider` interface:
+
+```typescript
+class CustomProvider implements LLMProvider {
+  constructor(private config: CustomConfig) {}
+
+  async generateResponse({
+    messages,
+    stream,
+    options,
+  }: {
+    messages: Message[];
+    stream?: boolean;
+    options?: ProviderOptions;
+  }): Promise<Response> {
+    // Implementation
+  }
+}
+```
+
+### Example: Azure OpenAI
+
+```typescript
+class AzureOpenAIProvider implements LLMProvider {
+  constructor(private config: AzureOpenAIConfig) {}
+
+  async generateResponse({
+    messages,
+    stream,
+    options,
+  }: {
+    messages: Message[];
+    stream?: boolean;
+    options?: ProviderOptions;
+  }): Promise<Response> {
+    const endpoint = `${this.config.endpoint}/openai/deployments/${this.config.deploymentId}/chat/completions?api-version=${this.config.apiVersion}`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': this.config.apiKey,
+      },
+      body: JSON.stringify({
+        messages,
+        stream,
+        temperature: options?.temperature ?? this.config.temperature,
+        max_tokens: options?.maxTokens ?? this.config.maxTokens,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Azure OpenAI request failed');
+    }
+
+    if (stream) {
+      return this.handleStream(response);
+    }
+
+    const data = await response.json();
+    return this.formatResponse(data);
+  }
+
+  private async *handleStream(
+    response: Response
+  ): AsyncGenerator<string> {
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('No response body');
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = JSON.parse(line.slice(6));
+          yield data.choices[0].delta.content;
+        }
+      }
+    }
+  }
+
+  private formatResponse(data: any): Response {
+    return {
+      content: data.choices[0].message.content,
+      tokenUsage: {
+        prompt: data.usage.prompt_tokens,
+        completion: data.usage.completion_tokens,
+        total: data.usage.total_tokens,
+      },
+    };
+  }
+}
+```
+
+## Best practices
+
+1. **Error handling**: Implement robust error handling for API failures
+2. **Rate limiting**: Respect provider rate limits
+3. **Token tracking**: Track token usage for optimization
+4. **Streaming**: Support streaming for better user experience
+5. **Configuration**: Allow flexible configuration options
+
+## Next steps
+
+- Learn about [middleware](/api-reference/middleware)
+- See [examples](/essentials/examples)
+- Read about [advanced features](/essentials/advanced-features) 

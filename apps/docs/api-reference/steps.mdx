@@ -1,0 +1,250 @@
+---
+title: "Steps APIs"
+description: "Reference for steps in Agenite"
+---
+
+## Overview
+
+Steps in Agenite define the sequence of actions an agent takes to accomplish a task. Each step can include prompts, tool calls, and state management.
+
+## Interface
+
+```typescript
+interface Step {
+  name: string;
+  description?: string;
+  execute: (context: Context) => Promise<void>;
+}
+```
+
+## Built-in steps
+
+### Prompt step
+
+Sends a prompt to the LLM and processes the response.
+
+```typescript
+import { PromptStep } from '@agenite/steps';
+
+const greetingStep = new PromptStep({
+  name: 'greeting',
+  prompt: 'Hello! How can I help you today?',
+  onResponse: (response, context) => {
+    context.state.userIntent = response.content;
+  },
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  steps: [greetingStep],
+  // ... other options
+});
+```
+
+### Tool step
+
+Executes a specific tool and handles the result.
+
+```typescript
+import { ToolStep } from '@agenite/steps';
+
+const weatherStep = new ToolStep({
+  name: 'check-weather',
+  tool: 'weather',
+  input: (context) => ({
+    city: context.state.city,
+    country: context.state.country,
+  }),
+  onResult: (result, context) => {
+    context.state.temperature = result.temperature;
+  },
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  steps: [weatherStep],
+  // ... other options
+});
+```
+
+### Conditional step
+
+Executes different steps based on conditions.
+
+```typescript
+import { ConditionalStep } from '@agenite/steps';
+
+const temperatureStep = new ConditionalStep({
+  name: 'temperature-check',
+  condition: (context) => context.state.temperature > 25,
+  onTrue: new PromptStep({
+    name: 'hot-weather',
+    prompt: "It's quite hot today!",
+  }),
+  onFalse: new PromptStep({
+    name: 'cool-weather',
+    prompt: "It's a cool day today.",
+  }),
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  steps: [weatherStep, temperatureStep],
+  // ... other options
+});
+```
+
+### Loop step
+
+Repeats steps until a condition is met.
+
+```typescript
+import { LoopStep } from '@agenite/steps';
+
+const searchStep = new LoopStep({
+  name: 'search-refinement',
+  condition: (context) => !context.state.satisfactory,
+  steps: [
+    new PromptStep({
+      name: 'refine-search',
+      prompt: 'Would you like to refine your search?',
+    }),
+    new ToolStep({
+      name: 'search',
+      tool: 'search',
+      input: (context) => ({
+        query: context.state.refinedQuery,
+      }),
+    }),
+  ],
+  maxIterations: 3,
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  steps: [searchStep],
+  // ... other options
+});
+```
+
+### Parallel step
+
+Executes multiple steps concurrently.
+
+```typescript
+import { ParallelStep } from '@agenite/steps';
+
+const multiSearchStep = new ParallelStep({
+  name: 'multi-search',
+  steps: [
+    new ToolStep({
+      name: 'web-search',
+      tool: 'web-search',
+      input: { query: 'AI news' },
+    }),
+    new ToolStep({
+      name: 'image-search',
+      tool: 'image-search',
+      input: { query: 'AI news' },
+    }),
+  ],
+  onComplete: (results, context) => {
+    context.state.combinedResults = results;
+  },
+});
+
+const agent = new Agent({
+  name: 'my-agent',
+  steps: [multiSearchStep],
+  // ... other options
+});
+```
+
+## Custom steps
+
+You can create custom steps by implementing the `Step` interface:
+
+```typescript
+class ValidationStep implements Step {
+  name = 'validation';
+  description = 'Validates user input';
+
+  constructor(private config: {
+    validators: ((input: any) => boolean)[];
+    onInvalid: (context: Context) => Promise<void>;
+  }) {}
+
+  async execute(context: Context) {
+    const input = context.state.userInput;
+    const isValid = this.config.validators.every(v => v(input));
+
+    if (!isValid) {
+      await this.config.onInvalid(context);
+      throw new Error('Invalid input');
+    }
+  }
+}
+
+const agent = new Agent({
+  name: 'my-agent',
+  steps: [
+    new ValidationStep({
+      validators: [
+        input => input.length > 0,
+        input => !input.includes('invalid'),
+      ],
+      onInvalid: async (context) => {
+        context.state.error = 'Invalid input provided';
+      },
+    }),
+  ],
+  // ... other options
+});
+```
+
+### Example: Data transformation step
+
+```typescript
+class TransformStep implements Step {
+  name = 'transform';
+  description = 'Transforms data between steps';
+
+  constructor(private config: {
+    transform: (data: any) => any;
+    inputKey: string;
+    outputKey: string;
+  }) {}
+
+  async execute(context: Context) {
+    const input = context.state[this.config.inputKey];
+    const transformed = this.config.transform(input);
+    context.state[this.config.outputKey] = transformed;
+  }
+}
+
+const agent = new Agent({
+  name: 'my-agent',
+  steps: [
+    new TransformStep({
+      transform: (data) => data.toUpperCase(),
+      inputKey: 'rawText',
+      outputKey: 'processedText',
+    }),
+  ],
+  // ... other options
+});
+```
+
+## Best practices
+
+1. **Modularity**: Keep steps focused and reusable
+2. **State management**: Use context.state for data sharing
+3. **Error handling**: Implement proper error handling
+4. **Validation**: Validate inputs and outputs
+5. **Documentation**: Document step purpose and requirements
+
+## Next steps
+
+- Learn about [middleware](/api-reference/middleware)
+- See [examples](/essentials/examples)
+- Read about [advanced features](/essentials/advanced-features) 

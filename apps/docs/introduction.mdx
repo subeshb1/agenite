@@ -1,5 +1,5 @@
 ---
-title: "Agenite"
+title: "Introduction"
 description: "A modern, modular, and type-safe framework for building AI agents using typescript"
 ---
 
@@ -15,9 +15,85 @@ description: "A modern, modular, and type-safe framework for building AI agents 
   alt="Hero Dark"
 />
 
-## Introduction
+## What is Agenite?
 
-Agenite (Agen-ite) is 
+Agenite (pronounced as Agen-ite) is a powerful TypeScript framework designed for building sophisticated AI agents. It provides a modular, type-safe, and flexible architecture that makes it easy to create, compose, and control AI agents with advanced capabilities.
+
+### Key features
+
+- **Type safety**: Built from the ground up with TypeScript, ensuring robust type checking and excellent developer experience
+- **Tool integration**: First-class support for creating and using tools with built-in schema validation
+- **Provider agnostic**: Seamless integration with multiple LLM providers including OpenAI, Anthropic, AWS Bedrock, and Ollama
+- **Streaming support**: Real-time streaming of agent responses and tool executions
+- **State management**: Built-in state management with custom reducers for maintaining conversation context
+- **Multi-agent architecture**: Support for creating complex agent hierarchies and delegating tasks
+- **Middleware system**: Flexible middleware system for customizing agent behavior
+- **Token tracking**: Built-in token usage monitoring and optimization
+
+## Core concepts
+
+### Agents
+
+Agents are the central building blocks in Agenite. An agent:
+- Orchestrates interactions between LLMs and tools
+- Manages conversation state and context
+- Handles tool execution and results
+- Supports nested execution for complex workflows
+- Provides streaming capabilities for real-time interactions
+
+### Tools
+
+Tools extend agent capabilities by providing specific functionalities:
+- Strong type safety with TypeScript
+- JSON Schema validation for inputs
+- Flexible error handling
+- Easy API integration
+- Zero dependencies in core implementation
+
+### Providers
+
+LLM providers handle the actual language model interactions:
+- Support for major providers (OpenAI, Anthropic, Bedrock)
+- Local model support via Ollama
+- Consistent interface across providers
+- Easy extension for new providers
+
+### Execution flow
+
+Agenite uses a step-based execution model:
+1. LLM call - Process input and determine actions
+2. Tool call - Execute required tools
+3. Tool result - Process tool execution results
+4. Agent call - Handle nested agent executions
+
+## Getting started
+
+<CardGroup cols="2">
+  <Card title="Quick start guide" icon="rocket" href="/quickstart">
+    Get started with Agenite in minutes
+  </Card>
+  <Card title="Core concepts" icon="book" href="/essentials/core-concepts">
+    Learn about the fundamental concepts
+  </Card>
+  <Card title="API reference" icon="code" href="/api-reference/agent">
+    Explore the detailed API documentation
+  </Card>
+  <Card title="Examples" icon="lightbulb" href="/essentials/examples">
+    See Agenite in action with practical examples
+  </Card>
+</CardGroup>
+
+## Why Agenite?
+
+Agenite stands out for several reasons:
+
+1. **Developer experience**: Type safety and excellent IDE support make development a breeze
+2. **Flexibility**: Modular architecture allows for easy customization and extension
+3. **Performance**: Built with streaming and optimization in mind
+4. **Reliability**: Robust error handling and state management
+5. **Scalability**: From simple chatbots to complex multi-agent systems
+
+Whether you're building a simple chatbot or a complex AI system, Agenite provides the tools and flexibility you need to succeed.
 
 ## Setting up
 

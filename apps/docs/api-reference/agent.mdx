@@ -1,0 +1,288 @@
+---
+title: "Agent API"
+description: "Complete reference for the Agent class"
+---
+
+## Agent class
+
+The `Agent` class is the core class in Agenite that orchestrates interactions between LLMs and tools.
+
+### Constructor
+
+```typescript
+new Agent<TState extends Record<string, unknown> = Record<string, unknown>>({
+  name: string;
+  provider: LLMProvider;
+  tools?: Tool[];
+  instructions?: string;
+  description?: string;
+  agents?: Agent[];
+  stateReducer?: StateReducer<TState>;
+  initialState?: Partial<TState>;
+  steps?: Steps;
+  middlewares?: Middleware[];
+})
+```
+
+#### Parameters
+
+- `name` (required): Unique identifier for the agent
+- `provider` (required): LLM provider instance
+- `tools`: Array of tools available to the agent
+- `instructions`: System instructions for the agent
+- `description`: Description of the agent's purpose
+- `agents`: Sub-agents for delegation
+- `stateReducer`: Custom state management functions
+- `initialState`: Initial agent state
+- `steps`: Custom execution steps
+- `middlewares`: Behavior modifiers
+
+### Methods
+
+#### execute
+
+Execute the agent with a set of messages.
+
+```typescript
+execute(params: {
+  messages: Message[];
+  stream?: boolean;
+  context?: Record<string, unknown>;
+}): Promise<ExecutionResult>
+```
+
+##### Parameters
+
+- `messages` (required): Array of messages to process
+- `stream`: Enable streaming responses
+- `context`: Additional execution context
+
+##### Returns
+
+```typescript
+interface ExecutionResult {
+  messages: Message[];
+  state: TState;
+  tokenUsage?: {
+    total: number;
+    prompt: number;
+    completion: number;
+  };
+}
+```
+
+#### iterate
+
+Get an iterator for streaming responses.
+
+```typescript
+iterate(params: {
+  messages: Message[];
+  stream?: boolean;
+  context?: Record<string, unknown>;
+}): AsyncIterator<StreamChunk>
+```
+
+##### Parameters
+
+Same as `execute`
+
+##### Returns
+
+AsyncIterator yielding stream chunks:
+
+```typescript
+type StreamChunk =
+  | LLMCallChunk
+  | ToolCallChunk
+  | ToolResultChunk
+  | AgentCallChunk;
+```
+
+### Types
+
+#### Message
+
+```typescript
+interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: MessageContent[];
+}
+
+type MessageContent =
+  | { type: 'text'; text: string }
+  | { type: 'image'; url: string }
+  | { type: 'tool_call'; tool: string; input: unknown }
+  | { type: 'tool_result'; result: ToolResult };
+```
+
+#### StateReducer
+
+```typescript
+type StateReducer<T> = {
+  [K in keyof T]: (
+    newValue: T[K],
+    previousValue?: T[K]
+  ) => T[K] | Promise<T[K]>;
+};
+```
+
+#### Steps
+
+```typescript
+interface Steps {
+  [key: string]: Step<unknown, unknown, unknown, unknown>;
+}
+
+interface Step<
+  ReturnValue,
+  YieldValue,
+  NextValue,
+  Context
+> {
+  beforeExecute?: (context: Context) => Promise<Context>;
+  execute: (params: unknown, context: Context) => AsyncGenerator<
+    YieldValue,
+    ReturnValue,
+    NextValue
+  >;
+  afterExecute?: (
+    result: ReturnValue,
+    context: Context
+  ) => Promise<ReturnValue>;
+}
+```
+
+#### Middleware
+
+```typescript
+type Middleware<
+  YieldValue = unknown,
+  ReturnValue = unknown,
+  NextValue = unknown
+> = (
+  generator: AsyncGenerator<YieldValue, ReturnValue, NextValue>,
+  context: Context
+) => AsyncGenerator<YieldValue, ReturnValue, NextValue>;
+```
+
+### Events
+
+The agent emits various events during execution:
+
+#### LLM call
+
+```typescript
+interface LLMCallChunk {
+  type: 'agenite.llm-call.streaming';
+  content: string;
+  tokenUsage?: {
+    prompt: number;
+    completion: number;
+  };
+}
+```
+
+#### Tool call
+
+```typescript
+interface ToolCallChunk {
+  type: 'agenite.tool-call.params';
+  toolUseBlocks: {
+    name: string;
+    input: unknown;
+  }[];
+}
+```
+
+#### Tool result
+
+```typescript
+interface ToolResultChunk {
+  type: 'agenite.tool-result';
+  result: {
+    isError: boolean;
+    data: string;
+    error?: {
+      code: string;
+      message: string;
+    };
+  };
+}
+```
+
+### Examples
+
+#### Basic usage
+
+```typescript
+const agent = new Agent({
+  name: 'simple-agent',
+  provider: new OllamaProvider({ model: 'llama2' }),
+  tools: [calculatorTool],
+  instructions: 'You are a helpful assistant.',
+});
+
+const result = await agent.execute({
+  messages: [
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'Hello!' }],
+    },
+  ],
+});
+```
+
+#### With state
+
+```typescript
+interface ChatState {
+  messageCount: number;
+  lastMessage: string;
+}
+
+const agent = new Agent<ChatState>({
+  name: 'stateful-agent',
+  provider: new OllamaProvider({ model: 'llama2' }),
+  initialState: {
+    messageCount: 0,
+    lastMessage: '',
+  },
+  stateReducer: {
+    messageCount: (new, prev = 0) => prev + 1,
+    lastMessage: (new) => new,
+  },
+});
+```
+
+#### With middleware
+
+```typescript
+const agent = new Agent({
+  name: 'middleware-agent',
+  provider: new OllamaProvider({ model: 'llama2' }),
+  middlewares: [
+    loggingMiddleware(),
+    rateLimitMiddleware(10, 60000),
+  ],
+});
+```
+
+#### With custom steps
+
+```typescript
+const agent = new Agent({
+  name: 'custom-steps-agent',
+  provider: new OllamaProvider({ model: 'llama2' }),
+  steps: {
+    'custom.retry': createRetryStep(3, 1000),
+    'custom.cache': createCachingStep(cache, 3600),
+  },
+});
+```
+
+## Next steps
+
+- Learn about the [Tool API](/api-reference/tool)
+- Explore [provider APIs](/api-reference/providers)
+- Read about [middleware](/api-reference/middleware) 

@@ -1,0 +1,338 @@
+---
+title: "Tool API"
+description: "Complete reference for the Tool class"
+---
+
+## Tool class
+
+The `Tool` class provides a type-safe way to create tools that agents can use.
+
+### Constructor
+
+```typescript
+new Tool<TInput>({
+  name: string;
+  description: string;
+  version: string;
+  inputSchema: JSONSchema;
+  execute: (context: {
+    input: TInput;
+    executionId?: string;
+  }) => Promise<ToolResult>;
+})
+```
+
+#### Parameters
+
+- `name` (required): Unique identifier for the tool
+- `description` (required): Clear description of what the tool does
+- `version` (required): Semantic version number
+- `inputSchema` (required): JSON Schema for input validation
+- `execute` (required): Function that performs the tool's operation
+
+### Types
+
+#### ToolResult
+
+```typescript
+interface ToolResult {
+  isError: boolean;
+  data: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+```
+
+#### JSONSchema
+
+```typescript
+interface JSONSchema {
+  type: string;
+  properties?: Record<string, JSONSchema>;
+  required?: string[];
+  items?: JSONSchema;
+  enum?: unknown[];
+  // ... other JSON Schema properties
+}
+```
+
+### Examples
+
+#### Basic tool
+
+```typescript
+interface CalculatorInput {
+  operation: 'add' | 'subtract' | 'multiply' | 'divide';
+  a: number;
+  b: number;
+}
+
+const calculatorTool = new Tool<CalculatorInput>({
+  name: 'calculator',
+  description: 'Perform basic math operations',
+  version: '1.0.0',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      operation: {
+        type: 'string',
+        enum: ['add', 'subtract', 'multiply', 'divide'],
+      },
+      a: { type: 'number' },
+      b: { type: 'number' },
+    },
+    required: ['operation', 'a', 'b'],
+  },
+  execute: async ({ input }) => {
+    try {
+      let result: number;
+      switch (input.operation) {
+        case 'add': result = input.a + input.b; break;
+        case 'subtract': result = input.a - input.b; break;
+        case 'multiply': result = input.a * input.b; break;
+        case 'divide':
+          if (input.b === 0) throw new Error('Division by zero');
+          result = input.a / input.b;
+          break;
+      }
+      return {
+        isError: false,
+        data: result.toString(),
+      };
+    } catch (error) {
+      return {
+        isError: true,
+        data: error.message,
+      };
+    }
+  },
+});
+```
+
+#### API tool
+
+```typescript
+interface WeatherInput {
+  location: {
+    city: string;
+    country?: string;
+    coordinates?: {
+      lat: number;
+      lon: number;
+    };
+  };
+  units?: 'metric' | 'imperial';
+}
+
+const createWeatherTool = (apiKey: string) => {
+  const client = new WeatherAPI(apiKey);
+
+  return new Tool<WeatherInput>({
+    name: 'weather',
+    description: 'Get current weather for a location',
+    version: '1.0.0',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        location: {
+          type: 'object',
+          properties: {
+            city: { type: 'string' },
+            country: { type: 'string' },
+            coordinates: {
+              type: 'object',
+              properties: {
+                lat: { type: 'number' },
+                lon: { type: 'number' },
+              },
+              required: ['lat', 'lon'],
+            },
+          },
+          required: ['city'],
+        },
+        units: {
+          type: 'string',
+          enum: ['metric', 'imperial'],
+          default: 'metric',
+        },
+      },
+      required: ['location'],
+    },
+    execute: async ({ input }) => {
+      try {
+        const weather = await client.getWeather(
+          input.location,
+          input.units
+        );
+        return {
+          isError: false,
+          data: JSON.stringify(weather),
+        };
+      } catch (error) {
+        return {
+          isError: true,
+          data: 'Failed to get weather data',
+          error: {
+            code: 'WEATHER_ERROR',
+            message: error.message,
+          },
+        };
+      }
+    },
+  });
+};
+```
+
+#### File system tool
+
+```typescript
+interface FileSystemInput {
+  operation: 'read' | 'write' | 'delete';
+  path: string;
+  content?: string;
+}
+
+const fileSystemTool = new Tool<FileSystemInput>({
+  name: 'filesystem',
+  description: 'Perform file system operations',
+  version: '1.0.0',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      operation: {
+        type: 'string',
+        enum: ['read', 'write', 'delete'],
+      },
+      path: { type: 'string' },
+      content: { type: 'string' },
+    },
+    required: ['operation', 'path'],
+  },
+  execute: async ({ input }) => {
+    try {
+      switch (input.operation) {
+        case 'read':
+          const content = await fs.readFile(input.path, 'utf-8');
+          return {
+            isError: false,
+            data: content,
+          };
+        case 'write':
+          if (!input.content) {
+            throw new Error('Content required for write operation');
+          }
+          await fs.writeFile(input.path, input.content);
+          return {
+            isError: false,
+            data: 'File written successfully',
+          };
+        case 'delete':
+          await fs.unlink(input.path);
+          return {
+            isError: false,
+            data: 'File deleted successfully',
+          };
+      }
+    } catch (error) {
+      return {
+        isError: true,
+        data: `File system error: ${error.message}`,
+        error: {
+          code: 'FS_ERROR',
+          message: error.message,
+        },
+      };
+    }
+  },
+});
+```
+
+#### Database tool
+
+```typescript
+interface QueryInput {
+  type: 'select' | 'insert' | 'update' | 'delete';
+  table: string;
+  data?: Record<string, unknown>;
+  where?: Record<string, unknown>;
+}
+
+const createDatabaseTool = (db: Database) => {
+  return new Tool<QueryInput>({
+    name: 'database',
+    description: 'Execute database operations',
+    version: '1.0.0',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['select', 'insert', 'update', 'delete'],
+        },
+        table: { type: 'string' },
+        data: {
+          type: 'object',
+          additionalProperties: true,
+        },
+        where: {
+          type: 'object',
+          additionalProperties: true,
+        },
+      },
+      required: ['type', 'table'],
+    },
+    execute: async ({ input }) => {
+      try {
+        let result;
+        switch (input.type) {
+          case 'select':
+            result = await db.select(input.table, input.where);
+            break;
+          case 'insert':
+            result = await db.insert(input.table, input.data);
+            break;
+          case 'update':
+            result = await db.update(
+              input.table,
+              input.data,
+              input.where
+            );
+            break;
+          case 'delete':
+            result = await db.delete(input.table, input.where);
+            break;
+        }
+        return {
+          isError: false,
+          data: JSON.stringify(result),
+        };
+      } catch (error) {
+        return {
+          isError: true,
+          data: `Database error: ${error.message}`,
+          error: {
+            code: 'DB_ERROR',
+            message: error.message,
+          },
+        };
+      }
+    },
+  });
+};
+```
+
+## Best practices
+
+1. **Input validation**: Always define a comprehensive input schema
+2. **Error handling**: Use structured error responses with codes
+3. **Type safety**: Leverage TypeScript generics for input types
+4. **Documentation**: Provide clear descriptions and examples
+5. **Versioning**: Use semantic versioning for compatibility
+
+## Next steps
+
+- Learn about [providers](/api-reference/providers)
+- Explore [middleware](/api-reference/middleware)
+- See [examples](/essentials/examples) 
