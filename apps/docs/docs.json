@@ -3,8 +3,8 @@
   "theme": "mint",
   "name": "Agenite",
   "colors": {
-    "primary": "#2E3BFF",
-    "light": "#FF3D9A",
+    "primary": "#2563EB",
+    "light": "#569CFF",
     "dark": "#2563EB"
   },
   "favicon": "/favicon.ico",
