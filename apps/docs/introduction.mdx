@@ -17,18 +17,43 @@ description: "A modern, modular, and type-safe framework for building AI agents 
 
 ## What is Agenite?
 
-Agenite (pronounced as Agen-ite) is a powerful TypeScript framework designed for building sophisticated AI agents. It provides a modular, type-safe, and flexible architecture that makes it easy to create, compose, and control AI agents with advanced capabilities.
+Agenite is a powerful TypeScript framework designed for building sophisticated AI agents. It provides a modular, type-safe, and flexible architecture that makes it easy to create, compose, and control AI agents with advanced capabilities.
+
+<Note>
+The name Agenite (pronounced as Agen-ite) comes from combining "Agent" with the suffix "-ite", representing a framework that crystallizes best practices for building AI agents.
+</Note>
 
 ### Key features
 
-- **Type safety**: Built from the ground up with TypeScript, ensuring robust type checking and excellent developer experience
-- **Tool integration**: First-class support for creating and using tools with built-in schema validation
-- **Provider agnostic**: Seamless integration with multiple LLM providers including OpenAI, Anthropic, AWS Bedrock, and Ollama
-- **Streaming support**: Real-time streaming of agent responses and tool executions
-- **State management**: Built-in state management with custom reducers for maintaining conversation context
-- **Multi-agent architecture**: Support for creating complex agent hierarchies and delegating tasks
-- **Middleware system**: Flexible middleware system for customizing agent behavior
-- **Token tracking**: Built-in token usage monitoring and optimization
+<AccordionGroup>
+  <Accordion title="Type safety and developer experience" icon="shield-check">
+    - Built from the ground up with TypeScript
+    - Robust type checking for tools and agent configurations
+    - Excellent IDE support and autocompletion
+    - Zero dependencies in core implementation
+  </Accordion>
+  
+  <Accordion title="Tool integration" icon="wrench">
+    - First-class support for function calling
+    - Built-in JSON Schema validation
+    - Structured error handling
+    - Easy API integration
+  </Accordion>
+  
+  <Accordion title="Provider agnostic" icon="plug">
+    - Support for AWS Bedrock and Ollama
+    - Consistent interface across providers
+    - Easy extension for new providers
+    - Automatic credential management
+  </Accordion>
+  
+  <Accordion title="Advanced architecture" icon="cube">
+    - Bidirectional flow using JavaScript generators
+    - Step-based execution model
+    - Built-in state management with reducers
+    - Flexible middleware system
+  </Accordion>
+</AccordionGroup>
 
 ## Core concepts
 
@@ -52,77 +77,41 @@ Tools extend agent capabilities by providing specific functionalities:
 
 ### Providers
 
-LLM providers handle the actual language model interactions:
-- Support for major providers (OpenAI, Anthropic, Bedrock)
-- Local model support via Ollama
-- Consistent interface across providers
-- Easy extension for new providers
+Currently supported LLM providers:
+- AWS Bedrock with Claude models
+- Local models via Ollama
+- Consistent interface for easy provider switching
+- Built-in streaming support
 
-### Execution flow
+## Next steps
 
-Agenite uses a step-based execution model:
-1. LLM call - Process input and determine actions
-2. Tool call - Execute required tools
-3. Tool result - Process tool execution results
-4. Agent call - Handle nested agent executions
+<Steps>
+  <Step title="Install Agenite">
+    Start by installing the core packages and your preferred provider:
+    ```bash
+    npm install @agenite/agent @agenite/tool
+    npm install @agenite/bedrock # For AWS Bedrock
+    # OR
+    npm install @agenite/ollama  # For local models
+    ```
+  </Step>
+  <Step title="Learn the basics">
+    Follow our [Quick start guide](/quickstart) to create your first agent
+  </Step>
+  <Step title="Explore examples">
+    Check out our [Examples](/essentials/examples) to see Agenite in action
+  </Step>
+  <Step title="Build something amazing">
+    Use our [API reference](/api-reference/agent) to build your own AI agents
+  </Step>
+</Steps>
 
-## Getting started
-
-<CardGroup cols="2">
+<CardGroup cols={2}>
   <Card title="Quick start guide" icon="rocket" href="/quickstart">
-    Get started with Agenite in minutes
+    Create your first agent in minutes with our step-by-step guide
   </Card>
   <Card title="Core concepts" icon="book" href="/essentials/core-concepts">
-    Learn about the fundamental concepts
-  </Card>
-  <Card title="API reference" icon="code" href="/api-reference/agent">
-    Explore the detailed API documentation
-  </Card>
-  <Card title="Examples" icon="lightbulb" href="/essentials/examples">
-    See Agenite in action with practical examples
+    Deep dive into agents, tools, and the execution model
   </Card>
 </CardGroup>
 
-## Why Agenite?
-
-Agenite stands out for several reasons:
-
-1. **Developer experience**: Type safety and excellent IDE support make development a breeze
-2. **Flexibility**: Modular architecture allows for easy customization and extension
-3. **Performance**: Built with streaming and optimization in mind
-4. **Reliability**: Robust error handling and state management
-5. **Scalability**: From simple chatbots to complex multi-agent systems
-
-Whether you're building a simple chatbot or a complex AI system, Agenite provides the tools and flexibility you need to succeed.
-
-## Setting up
-
-🤖 Build powerful AI agents with TypeScript. Agenite makes it easy to create, compose, and control AI agents with first-class support for tools, streaming, and multi-agent architectures. Switch seamlessly between providers like OpenAI, Anthropic, AWS Bedrock, and Ollama.
-
-<CardGroup cols="2">
-  <Card title="Edit Your Docs" icon="pen-to-square" href="https://mintlify.com/docs/quickstart">
-    Get your docs set up locally for easy development
-  </Card>
-  <Card title="Preview Changes" icon="image" href="https://mintlify.com/docs/development">
-    Preview your changes before you push to make sure they're perfect
-  </Card>
-</CardGroup>
-
-## Make it yours
-
-Update your docs to your brand and add valuable content for the best user conversion.
-
-<CardGroup cols="2">
-  <Card title="Customize Style" icon="palette" href="https://mintlify.com/docs/settings/global">
-    Customize your docs to your company's colors and brands
-  </Card>
-  <Card title="Reference APIs" icon="code" href="https://mintlify.com/docs/api-playground/openapi">
-    Automatically generate endpoints from an OpenAPI spec
-  </Card>
-  <Card title="Add Components" icon="screwdriver-wrench" href="https://mintlify.com/docs/content/components/accordions">
-    Build interactive features and designs to guide your users
-  </Card>
-  <Card title="Get Inspiration" icon="stars" href="https://mintlify.com/customers">
-    Check out our showcase of our favorite documentation
-  </Card>
-</CardGroup>

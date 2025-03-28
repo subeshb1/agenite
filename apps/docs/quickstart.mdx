@@ -7,90 +7,80 @@ description: "Get started with Agenite in minutes"
 
 First, install Agenite's core packages:
 
-```bash
-# Using npm
+<CodeGroup>
+
+```bash npm
 npm install @agenite/agent @agenite/tool
+```
 
-# Using yarn
-yarn add @agenite/agent @agenite/tool
-
-# Using pnpm
+```bash pnpm
 pnpm add @agenite/agent @agenite/tool
 ```
 
+```bash yarn
+yarn add @agenite/agent @agenite/tool
+```
+
+</CodeGroup>
+
 Then install your preferred LLM provider:
 
-```bash
-# For OpenAI
-npm install @agenite/openai
+<CodeGroup>
 
-# For Anthropic
-npm install @agenite/anthropic
-
-# For AWS Bedrock
+```bash AWS Bedrock
 npm install @agenite/bedrock
+```
 
-# For Ollama (local models)
+```bash Ollama
 npm install @agenite/ollama
 ```
 
-## Basic example
+</CodeGroup>
 
-Here's a simple example that creates an agent with a calculator tool:
+<Note>
+For AWS Bedrock, make sure you have AWS credentials configured. For Ollama, ensure you have it [installed and running locally](https://ollama.ai).
+</Note>
 
-```typescript
+## Building tools
+
+Tools are the building blocks that give your agent abilities to perform tasks. While we'll start with a simple calculator example below, you can build much more meaningful tools like:
+
+- Database query tools for data analysis
+- API integration tools for external services
+- File system tools for document processing
+- Custom business logic tools for your domain
+
+Let's start with a basic example:
+
+<CodeGroup>
+
+```typescript AWS Bedrock
 import { Agent } from '@agenite/agent';
 import { Tool } from '@agenite/tool';
-import { OllamaProvider } from '@agenite/ollama';
-
-// Define calculator tool input type
-interface CalculatorInput {
-  operation: 'add' | 'subtract' | 'multiply' | 'divide';
-  a: number;
-  b: number;
-}
+import { BedrockProvider } from '@agenite/bedrock';
+import { prettyLogger } from '@agenite/pretty-logger';
 
 // Create a calculator tool
-const calculatorTool = new Tool<CalculatorInput>({
+const calculatorTool = new Tool<{ expression: string }>({
   name: 'calculator',
   description: 'Perform basic math operations',
-  version: '1.0.0',
   inputSchema: {
     type: 'object',
     properties: {
-      operation: { 
-        type: 'string',
-        enum: ['add', 'subtract', 'multiply', 'divide']
-      },
-      a: { type: 'number' },
-      b: { type: 'number' },
+      expression: { type: 'string' },
     },
-    required: ['operation', 'a', 'b'],
+    required: ['expression'],
   },
   execute: async ({ input }) => {
-    const { operation, a, b } = input;
-    
     try {
-      let result: number;
-      switch (operation) {
-        case 'add': result = a + b; break;
-        case 'subtract': result = a - b; break;
-        case 'multiply': result = a * b; break;
-        case 'divide': 
-          if (b === 0) throw new Error('Division by zero');
-          result = a / b; 
-          break;
-      }
-      
-      return {
-        isError: false,
-        data: result.toString(),
-      };
+      const result = new Function('return ' + input.expression)();
+      return { isError: false, data: result.toString() };
     } catch (error) {
-      return {
-        isError: true,
-        data: error.message,
-      };
+      if (error instanceof Error) {
+        return { isError: true, data: error.message };
+      }
+
+      return { isError: true, data: 'Unknown error' };
     }
   },
 });
@@ -98,97 +88,99 @@ const calculatorTool = new Tool<CalculatorInput>({
 // Create an agent
 const agent = new Agent({
   name: 'math-buddy',
-  provider: new OllamaProvider({ model: 'llama2' }),
+  provider: new BedrockProvider({
+    model: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
+  }),
   tools: [calculatorTool],
   instructions: 'You are a helpful math assistant.',
+  middlewares: [prettyLogger()],
 });
 
-// Use the agent
+// Example usage
 const result = await agent.execute({
   messages: [
-    { 
-      role: 'user', 
-      content: [
-        { 
-          type: 'text', 
-          text: 'What is 1234 * 5678?' 
-        }
-      ] 
-    }
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'What is 1234 * 5678?' }],
+    },
   ],
 });
 
-console.log(result);
 ```
 
-## Streaming responses
+```typescript Ollama
+iimport { Agent } from '@agenite/agent';
+import { Tool } from '@agenite/tool';
+import { OllamaProvider } from '@agenite/ollama';
+import { prettyLogger } from '@agenite/pretty-logger';
 
-To get real-time responses from the agent:
+// Create a calculator tool
+const calculatorTool = new Tool<{ expression: string }>({
+  name: 'calculator',
+  description: 'Perform basic math operations',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      expression: { type: 'string' },
+    },
+    required: ['expression'],
+  },
+  execute: async ({ input }) => {
+    try {
+      const result = new Function('return ' + input.expression)();
+      return { isError: false, data: result.toString() };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { isError: true, data: error.message };
+      }
 
-```typescript
-const iterator = agent.iterate({
-  messages: [
-    { 
-      role: 'user', 
-      content: [
-        { 
-          type: 'text', 
-          text: 'Calculate 1234 * 5678 and explain the process' 
-        }
-      ] 
+      return { isError: true, data: 'Unknown error' };
     }
-  ],
-  stream: true,
+  },
 });
 
-for await (const chunk of iterator) {
-  switch (chunk.type) {
-    case 'agenite.llm-call.streaming':
-      // LLM is generating a response
-      console.log('LLM:', chunk.content);
-      break;
-    case 'agenite.tool-call.params':
-      // Agent is using a tool
-      console.log('Tool:', chunk.toolUseBlocks);
-      break;
-    case 'agenite.tool-result':
-      // Tool execution result
-      console.log('Result:', chunk.result);
-      break;
-  }
-}
-```
-
-## Adding state
-
-Create a stateful agent that remembers previous calculations:
-
-```typescript
-interface CalculatorState {
-  history: string[];
-  total: number;
-}
-
-const agent = new Agent<CalculatorState>({
-  name: 'stateful-calculator',
-  provider: new OllamaProvider({ model: 'llama2' }),
+// Create an agent
+const agent = new Agent({
+  name: 'math-buddy',
+  provider: new OllamaProvider({
+    model: 'llama3.2',
+  }),
   tools: [calculatorTool],
-  initialState: {
-    history: [],
-    total: 0,
-  },
-  stateReducer: {
-    history: (newValue, previousValue = []) => [...previousValue, newValue],
-    total: (newValue, previousValue = 0) => previousValue + Number(newValue),
-  },
-  instructions: `You are a helpful math assistant that keeps track of calculations.
-    Use the history and running total in your responses.`,
+  instructions: 'You are a helpful math assistant.',
+  middlewares: [prettyLogger()],
 });
+
+// Example usage
+const result = await agent.execute({
+  messages: [
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'What is 1234 * 5678?' }],
+    },
+  ],
+});
+
 ```
+
+</CodeGroup>
+
+### Sample output
+
+When you run the code above, you'll see nicely formatted output in your console thanks to the prettyLogger:
+
+<img src="/images/quick-start/output.png" alt="Sample output" />
+
+<Note>
+The pretty logger is handy for debugging, but you can use any logger you want and or not use it at all.
+</Note>
 
 ## Next steps
 
-- Learn more about [core concepts](/essentials/core-concepts)
-- Explore the [API reference](/api-reference/agent)
-- Check out [examples](/essentials/examples)
-- Read about [advanced features](/essentials/advanced-features)
+<CardGroup cols={2}>
+  <Card title="Core concepts" icon="book" href="/essentials/core-concepts">
+    Learn about agents, tools, and providers in depth
+  </Card>
+  <Card title="Examples" icon="code" href="/essentials/examples">
+    Explore more complex examples and use cases
+  </Card>
+</CardGroup>
