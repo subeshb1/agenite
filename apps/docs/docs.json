@@ -69,12 +69,6 @@
     "dark": "/logo/dark.png"
   },
   "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:subeshb1@gmail.com"
-      }
-    ],
     "primary": {
       "type": "button",
       "label": "Github",
