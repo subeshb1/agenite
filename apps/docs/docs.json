@@ -16,10 +16,10 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Getting Started",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Introduction",
+            "group": "Getting Started",
             "pages": ["introduction", "quickstart"]
           },
           {
