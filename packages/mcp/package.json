@@ -1,6 +1,6 @@
 {
   "name": "@agenite/mcp",
-  "version": "0.1.1",
+  "version": "0.0.0",
   "description": "A MCP implementation for Agenite",
   "private": false,
   "type": "module",
@@ -21,7 +21,8 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@agenite/tool": "workspace:*"
+    "@agenite/tool": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.8.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

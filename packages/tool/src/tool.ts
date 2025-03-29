@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import zodToJsonSchema from 'zod-to-json-schema';
-import type { ErrorObject } from 'ajv';
 import { ToolDefinition } from '@agenite/llm';
 import {
   Tool as ToolInterface,
@@ -16,6 +15,7 @@ type ToolSchema = {
   properties: Record<string, unknown>;
   required?: string[];
 };
+import { JsonSchemaObject, jsonSchemaToZod } from '@n8n/json-schema-to-zod';
 
 export class Tool<TInput = unknown> implements ToolInterface<TInput> {
   public readonly name: string;
@@ -155,33 +155,25 @@ export class Tool<TInput = unknown> implements ToolInterface<TInput> {
 
   private async validateJsonSchema(input: TInput): Promise<ValidationResult> {
     try {
-      const { default: Ajv } = await import('ajv');
-      const ajv = new Ajv();
-      const validate = ajv.compile(this.jsonSchema!);
-      const valid = validate(input);
-
-      if (!valid) {
-        return {
-          isValid: false,
-          errors: validate.errors?.map((error: ErrorObject) => ({
-            field: error.instancePath.slice(1) || '*',
-            message: error.message || 'Validation failed',
-          })),
-        };
-      }
+      const zodSchema = jsonSchemaToZod(this.jsonSchema as JsonSchemaObject);
+      zodSchema.parse(input);
 
       return { isValid: true };
     } catch (error) {
-      return {
-        isValid: false,
-        errors: [
-          {
-            field: '*',
-            message:
-              error instanceof Error ? error.message : 'Validation failed',
-          },
-        ],
-      };
+      if (error instanceof z.ZodError) {
+        return {
+          isValid: false,
+          errors: error.errors.map((err) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        };
+      } else {
+        return {
+          isValid: false,
+          errors: [{ field: '*', message: 'Validation failed' }],
+        };
+      }
     }
   }
 }

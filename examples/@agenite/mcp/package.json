@@ -1,0 +1,27 @@
+{
+  "name": "@agenite/mcp-examples",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "ts-node --esm src/basic.ts",
+    "basic": "ts-node --esm src/basic.ts",
+    "build": "tsc",
+    "lint": "eslint --ext .ts ."
+  },
+  "dependencies": {
+    "@agenite/agent": "workspace:*",
+    "@agenite/llm": "workspace:*",
+    "@agenite/mcp": "workspace:*",
+    "@agenite/ollama": "workspace:*",
+    "@agenite/pretty-logger": "workspace:*",
+    "@agenite/tool": "workspace:*",
+    "@types/node": "^22.13.14"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*"
+  }
+}
