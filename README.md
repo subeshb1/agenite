@@ -1,7 +1,7 @@
 # 🤖 Agenite
 
 <div align="center">
-  <img src="./assets/agenite.png" alt="Agenite Logo" width="200" height="200"/>
+  <img src="./apps/docs/images/hero-dark.png" alt="Agenite Logo"  height="200"/>
   <p><strong>A modern, modular, and type-safe framework for building AI agents using typescript</strong></p>
 </div>
 
@@ -14,106 +14,160 @@
 
 </div>
 
-## ✨ Features
+## What is Agenite?
 
-- 🎯 **Provider Agnostic** - Support for multiple LLM providers (Ollama, AWS Bedrock)
-- 🔌 **Modular Architecture** - Plug-and-play components with clean interfaces
-- 🛠️ **Tool Integration** - First-class support for function calling and tool usage
-- 🤝 **Multi-Agent Systems** - Build complex agent hierarchies with delegation
-- 🔒 **Type Safety** - Full TypeScript support with strong typing
-- 🌊 **Streaming Support** - Real-time streaming responses across all providers
-- 🎨 **Flexible Design** - IoC (Inversion of Control) for maximum extensibility
-- 📊 **Token Usage Tracking** - Monitor and optimize token consumption
-- 🔄 **Step-Based Execution** - Fine-grained control over agent execution flow
+Agenite is a powerful TypeScript framework designed for building sophisticated AI agents. It provides a modular, type-safe, and flexible architecture that makes it easy to create, compose, and control AI agents with advanced capabilities.
 
-## 📦 Installation
+## ✨ Key features
+
+- **Type safety and developer experience**
+  - Built from the ground up with TypeScript
+  - Robust type checking for tools and agent configurations
+  - Excellent IDE support and autocompletion
+
+- **Tool integration**
+  - First-class support for function calling
+  - Built-in JSON Schema validation
+  - Structured error handling
+  - Easy API integration
+
+- **Provider agnostic**
+  - Support for OpenAI, Anthropic, AWS Bedrock, and Ollama
+  - Consistent interface across providers
+  - Easy extension for new providers
+
+- **Advanced architecture**
+  - Bidirectional flow using JavaScript generators
+  - Step-based execution model
+  - Built-in state management with reducers
+  - Flexible middleware system
+
+- **Model context protocol (MCP)**
+  - Standardized protocol for connecting LLMs to data sources
+  - Client implementation for interacting with MCP servers
+  - Access to web content, filesystem, databases, and more
+
+## 📦 Available packages
+
+| Package | Description | Installation |
+|---------|-------------|--------------|
+| **Core packages** | | |
+| `@agenite/agent` | Core agent orchestration framework for managing LLM interactions, tool execution, and state management | `npm install @agenite/agent` |
+| `@agenite/tool` | Tool definition framework with type safety, schema validation, and error handling | `npm install @agenite/tool` |
+| `@agenite/llm` | Base provider interface layer that enables abstraction across different LLM providers | `npm install @agenite/llm` |
+| **Provider packages** | | |
+| `@agenite/openai` | Integration with OpenAI's API for GPT models with function calling support | `npm install @agenite/openai` |
+| `@agenite/anthropic` | Integration with Anthropic's API for Claude models | `npm install @agenite/anthropic` |
+| `@agenite/bedrock` | AWS Bedrock integration supporting Claude and other models | `npm install @agenite/bedrock` |
+| `@agenite/ollama` | Integration with Ollama for running models locally | `npm install @agenite/ollama` |
+| **MCP package** | | |
+| `@agenite/mcp` | Model Context Protocol client for connecting to standardized data sources and tools | `npm install @agenite/mcp` |
+| **Middleware packages** | | |
+| `@agenite/pretty-logger` | Colorful console logging middleware for debugging agent execution | `npm install @agenite/pretty-logger` |
+
+For a typical setup, you'll need the core packages and at least one provider:
 
 ```bash
 # Install core packages
-npm install @agenite/agent @agenite/llm @agenite/tool
+npm install @agenite/agent @agenite/tool @agenite/llm
 
-# Install your preferred provider(s)
-npm install @agenite/bedrock   # For AWS Bedrock
-npm install @agenite/ollama    # For Ollama
+# Install your preferred provider
+npm install @agenite/openai
+# OR
+npm install @agenite/bedrock
 ```
 
-## 🚀 Quick Start
+## 🚀 Quick start
 
 ```typescript
 import { Agent } from '@agenite/agent';
-import { OllamaProvider } from '@agenite/ollama';
 import { Tool } from '@agenite/tool';
+import { BedrockProvider } from '@agenite/bedrock';
+import { prettyLogger } from '@agenite/pretty-logger';
 
-// Create a simple calculator tool
-const calculatorTool = new Tool({
+// Create a calculator tool
+const calculatorTool = new Tool<{ expression: string }>({
   name: 'calculator',
   description: 'Perform basic math operations',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      expression: { type: 'string' },
+    },
+    required: ['expression'],
+  },
   execute: async ({ input }) => {
-    // Tool implementation
-    return { isError: false, data: result.toString() };
+    try {
+      const result = new Function('return ' + input.expression)();
+      return { isError: false, data: result.toString() };
+    } catch (error) {
+      if (error instanceof Error) {
+        return { isError: true, data: error.message };
+      }
+      return { isError: true, data: 'Unknown error' };
+    }
   },
 });
 
-// Initialize the agent
+// Create an agent
 const agent = new Agent({
   name: 'math-buddy',
-  provider: new OllamaProvider({ model: 'llama2' }),
+  provider: new BedrockProvider({
+    model: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
+  }),
   tools: [calculatorTool],
   instructions: 'You are a helpful math assistant.',
+  middlewares: [prettyLogger()],
 });
 
-// Execute the agent
+// Example usage
 const result = await agent.execute({
-  messages: [{ role: 'user', content: [{ type: 'text', text: 'What is 1234 * 5678?' }] }],
-  stream: true, // Enable streaming
+  messages: [
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'What is 1234 * 5678?' }],
+    },
+  ],
 });
 ```
 
-## 🏗️ Architecture
+## 🏗️ Core concepts
 
-Agenite is built on three core packages:
+### Agents
 
-### @agenite/agent
+Agents are the central building blocks in Agenite. An agent:
+- Orchestrates interactions between LLMs and tools
+- Manages conversation state and context
+- Handles tool execution and results
+- Supports nested execution for complex workflows
+- Provides streaming capabilities for real-time interactions
 
-The main orchestrator that manages interactions between LLMs and tools. Supports:
+### Tools
 
-- Message processing and state management
-- Tool execution and result handling
-- Multi-agent composition with delegation
-- Step-based execution flow
-- Token usage tracking
-- Middleware support
+Tools extend agent capabilities by providing specific functionalities:
+- Strong type safety with TypeScript
+- JSON Schema validation for inputs
+- Flexible error handling
+- Easy API integration
 
-### @agenite/llm
+### Providers
 
-The provider interface layer that enables provider agnosticism:
+Currently supported LLM providers:
+- OpenAI API (GPT models)
+- Anthropic API (Claude models)
+- AWS Bedrock (Claude, Titan models)
+- Local models via Ollama
 
-- Common message format
-- Streaming support
-- Tool integration
-- Provider-specific optimizations
+### Model Context Protocol (MCP)
 
-### @agenite/tool
+MCP is a standardized protocol for connecting LLMs to data sources:
+- Client implementation for interacting with MCP servers
+- Access to web content, filesystem, databases, and more
+- Similar to how USB-C provides universal hardware connections
 
-The tool definition and execution framework:
+## 🔄 Advanced features
 
-- Type-safe tool definitions
-- Schema validation
-- Error handling
-- API integration
-
-## 🔌 Supported Providers
-
-Agenite supports multiple LLM providers out of the box:
-
-- **@agenite/bedrock** - AWS Bedrock integration
-- **@agenite/ollama** - Local Ollama integration
-
-## 🎯 Advanced Features
-
-### Multi-Agent Systems
-
-Build complex agent hierarchies with specialized agents:
+### Multi-agent systems
 
 ```typescript
 // Create specialist agents
@@ -136,71 +190,13 @@ const coordinatorAgent = new Agent({
   name: 'coordinator',
   provider,
   agents: [calculatorAgent, weatherAgent],
-  instructions:
-    'Coordinate between specialist agents to solve complex problems.',
+  instructions: 'Coordinate between specialist agents to solve complex problems.',
 });
 ```
 
-### Provider Agnostic Design
-
-Easily switch between providers or use multiple providers:
+### Step-based execution
 
 ```typescript
-// Use Ollama locally
-const ollamaAgent = new Agent({
-  provider: new OllamaProvider({ model: 'llama2' }),
-});
-
-// Use Bedrock
-const bedrockAgent = new Agent({
-  provider: new BedrockProvider({
-    region: 'us-west-2',
-    model: 'anthropic.claude-v2',
-  }),
-});
-```
-
-### Tool Integration
-
-Create powerful tools with type safety and schema validation:
-
-```typescript
-interface WeatherInput {
-  city: string;
-  units?: 'metric' | 'imperial';
-}
-
-const weatherTool = new Tool<WeatherInput>({
-  name: 'weather',
-  description: 'Get current weather for a city',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      city: { type: 'string' },
-      units: { type: 'string' },
-    },
-    required: ['city'],
-  },
-  execute: async ({ input }) => {
-    // Tool implementation
-    return { isError: false, data: weatherData };
-  },
-});
-```
-
-### Step-Based Execution
-
-Take full control of the agent execution flow:
-
-```typescript
-// Initialize agent with tools
-const agent = new Agent({
-  name: 'step-agent',
-  provider,
-  tools: [calculatorTool],
-  instructions: 'You are a math assistant.',
-});
-
 // Create an iterator for fine-grained control
 const iterator = agent.iterate({
   messages: [{ role: 'user', content: [{ type: 'text', text: 'Calculate 25 divided by 5, then multiply by 3' }] }],
@@ -223,223 +219,35 @@ for await (const chunk of iterator) {
 }
 ```
 
-## 📚 Examples
+## 📚 Documentation
 
-Check out our [examples](./examples) directory for more:
+For comprehensive documentation, visit [docs.agenite.com](https://docs.agenite.com):
 
-- Basic chat agents
-- Multi-agent systems
-- Tool integration
-- Streaming responses
-- Provider switching
-- State management
-- Step-based execution
+- [Introduction](https://docs.agenite.com/introduction)
+- [Quick start guide](https://docs.agenite.com/quickstart)
+- [Core concepts](https://docs.agenite.com/core-concepts/overview)
+- [Examples](https://docs.agenite.com/examples)
+- [API reference](https://docs.agenite.com/api-reference/agent)
+
+## 🤝 Community
+
+- [GitHub Discussions](https://github.com/subeshb1/agenite/discussions)
+- [Discord Community](https://discord.gg/v3TXcD6tUH)
 
 ## 🛠️ Development
-
-### Prerequisites
-
-- Node.js 18+
-- pnpm (we use pnpm workspaces)
-- TypeScript 5.x
-
-### Project Structure
-
-```bash
-packages/
-  ├── agent/        # Core agent package
-  ├── llm/          # Provider interface layer
-  ├── tool/         # Tool framework
-  ├── provider/     # LLM providers
-  │   ├── bedrock/
-  │   └── ollama/
-  └── examples/     # Example implementations
-```
-
-### Setup Development Environment
-
-1. Clone the repository:
 
 ```bash
 git clone https://github.com/subeshb1/agenite.git
 cd agenite
-```
-
-2. Install dependencies:
-
-```bash
 pnpm install
-```
-
-3. Build all packages:
-
-```bash
 pnpm build
 ```
-
-4. Run tests:
-
-```bash
-pnpm test
-```
-
-### Development Workflow
-
-1. Create a new branch:
-
-```bash
-git checkout -b feature/your-feature-name
-```
-
-2. Start development server:
-
-```bash
-pnpm dev
-```
-
-3. Make your changes and ensure:
-
-   - All tests pass: `pnpm test`
-   - Linting passes: `pnpm lint`
-   - Types check: `pnpm check-types`
-
-4. Commit using conventional commits:
-
-```bash
-git commit -m "feat: add new feature"
-git commit -m "fix: resolve issue"
-git commit -m "docs: update documentation"
-```
-
-### Using Changesets
-
-We use [Changesets](https://github.com/changesets/changesets) to manage versions and changelogs. Here's how to use it:
-
-1. After making your changes, create a changeset:
-
-```bash
-pnpm changeset
-```
-
-2. Select the packages you've modified:
-
-```bash
-🦋  Which packages would you like to include? ...
-✔  @agenite/agent
-✔  @agenite/tool
-```
-
-3. Choose the semver bump type:
-
-```bash
-🦋  Which type of change is this for @agenite/agent? ...
-✔  patch
-✔  minor
-✔  major
-```
-
-4. Write a summary of changes when prompted:
-
-```bash
-🦋  What changes should go in the changelog?
-🦋  Add your changes here
-```
-
-This will create a `.changeset` directory with a Markdown file containing your changes:
-
-```markdown
----
-'@agenite/agent': minor
-'@agenite/tool': patch
----
-
-Added new streaming capability to agent and fixed tool validation
-```
-
-5. Commit the changeset file:
-
-```bash
-git add .changeset/*.md
-git commit -m "chore: add changeset for streaming feature"
-```
-
-When your PR is merged, our GitHub Actions will:
-
-1. Collect all changesets
-2. Update versions
-3. Generate changelogs
-4. Create a release PR
-5. Publish to npm when the release PR is merged
-
-## 🤝 Contributing
-
-We love your input! We want to make contributing to Agenite as easy and transparent as possible.
-
-### Types of Contributions
-
-1. **Bug Reports**: Create an issue with the bug template
-2. **Feature Requests**: Use the feature request template
-3. **Code Contributions**: Submit a PR for:
-   - Bug fixes
-   - New features
-   - Documentation improvements
-   - Additional examples
-
-### Contribution Guidelines
-
-1. **Fork & Create Branch**
-
-   - Fork the repo
-   - Create a branch: `feature/amazing-feature`
-
-2. **Make Changes**
-
-   - Write clear, documented code
-   - Add tests for new features
-   - Update documentation as needed
-
-3. **Commit Changes**
-
-   - Use conventional commits
-   - Keep commits focused and atomic
-   - Reference issues in commit messages
-
-4. **Submit PR**
-   - Fill out the PR template
-   - Link related issues
-   - Request review from maintainers
-
-### Code Style
-
-- Follow TypeScript best practices
-- Use ESLint and Prettier configurations
-- Write clear comments and documentation
-- Maintain test coverage
-
-### Documentation
-
-- Update relevant README files
-- Add JSDoc comments to public APIs
-- Include examples for new features
-- Update API documentation
-
-### Release Process
-
-1. Main branch is always deployable
-2. Releases follow semantic versioning
-3. Changesets for version management
-4. Automated releases via GitHub Actions
-
-### Getting Help
-
-- Ask in GitHub Discussions
-- Reach out to maintainers
 
 ## 📄 License
 
 MIT
 
-## 🌟 Star History
+## 🌟 Star history
 
 [![Star History Chart](https://api.star-history.com/svg?repos=subeshb1/agenite&type=Date)](https://star-history.com/#subeshb1/agenite&Date)
 
