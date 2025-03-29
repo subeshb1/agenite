@@ -1,12 +1,12 @@
 # Agenite Documentation TODO
 
 ## Process Guidelines
-- [ ] Always reference actual codebase - no hallucination
-- [ ] Check existing code before documenting features
-- [ ] Update TODO after each task completion
-- [ ] Add requirements before starting each task
-- [ ] Cross-reference with implementation
-- [ ] Use mintlify native components. Example, CodeBlocks, CodeGroups, Tabs,Icons, Mermaid Diagrams, Cards, Callouts, Accordian, AccordianGroups, etc.
+- [x] Always reference actual codebase - no hallucination
+- [x] Check existing code before documenting features
+- [x] Update TODO after each task completion
+- [x] Add requirements before starting each task
+- [x] Cross-reference with implementation
+- [x] Use mintlify native components. Example, CodeBlocks, CodeGroups, Tabs,Icons, Mermaid Diagrams, Cards, Callouts, Accordian, AccordianGroups, etc.
 
 ## Documentation Structure
 - [ ] Review and analyze current codebase structure
@@ -26,39 +26,40 @@
 ## Next Steps
 
 ### 1. Getting Started Section
-- [ ] Introduction
-  - [ ] Requirements:
-    - [ ] Verify what Agenite actually is from codebase
-    - [ ] List only implemented key features
-    - [ ] Explain actual use cases
-  - [ ] Tasks:
-    - [ ] Update introduction.mdx
-    - [ ] Add verified features
-    - [ ] Add real examples
-    - [ ] Talk about main feature (DON"T include any fluff)
-    - [ ] Talk about architecure use of javacript generator and bidrectonal flow
+- [x] Introduction
+  - [x] Requirements:
+    - [x] Verify what Agenite actually is from codebase
+    - [x] List only implemented key features
+    - [x] Explain actual use cases
+  - [x] Tasks:
+    - [x] Update introduction.mdx
+    - [x] Add verified features
+    - [x] Add real examples
+    - [x] Talk about main feature (DON"T include any fluff)
+    - [x] Talk about architecure use of javacript generator and bidrectonal flow
 
-- [ ] Quick Start
-  - [ ] Requirements:
-    - [ ] Test actual installation process
-    - [ ] Create simple working example
-    - [ ] Verify all required dependencies
-  - [ ] Tasks:
-    - [ ] Write installation guide
-    - [ ] Show different provider using code gprips. Make the example a lot simpler please.
-    - [ ] Create basic agent example
-    - [ ] Use pretty logger for demo
-    - [ ] Document basic tool usage
+- [x] Quick Start
+  - [x] Requirements:
+    - [x] Test actual installation process
+    - [x] Create simple working example
+    - [x] Verify all required dependencies
+  - [x] Tasks:
+    - [x] Write installation guide
+    - [x] Show different provider using code groups
+    - [x] Create basic agent example
+    - [x] Use pretty logger for demo
+    - [x] Document basic tool usage
 
-- [ ] Integrate tools into agent
-  - [ ] Requirements:
-    - [ ] Create simple agent
-    - [ ] Use pretty logger for demo
-    - [ ] Document basic tool usage
-  - [ ] Tasks:
-    - [ ] Write installation guide
-    - [ ] Show basic tool integration
-    - [ ] Show how MCP integration
+- [x] Integrate tools into agent
+  - [x] Requirements:
+    - [x] Create simple agent
+    - [x] Use pretty logger for demo
+    - [x] Document basic tool usage
+    - [x] Show how MCP integration works
+  - [x] Tasks:
+    - [x] Write installation guide
+    - [x] Show basic tool integration
+    - [x] Show how MCP integration
 
 ### 2. Building Agents Section
 - [ ] Agent Overview
@@ -67,11 +68,11 @@
     - [ ] Identify core agent features
     - [ ] List actual configuration options
   - [ ] Tasks:
-    - [ ] Start with agent philosohy
-    - [ ] Agent is build with steps
+    - [ ] Start with agent philosophy
+    - [ ] Agent is built with steps
     - [ ] Show the default steps flow
-    - [ ] you can pass middlewares to intercept
-    - [ ] State mangement is done with reducers input / output structure
+    - [ ] Show how to pass middlewares to intercept
+    - [ ] Show state management with reducers input/output structure
     - [ ] Only cover high level and point each to related section
 
 - [ ] Agent Components

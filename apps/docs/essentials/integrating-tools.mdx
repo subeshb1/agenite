@@ -1,0 +1,316 @@
+---
+title: "Integrating tools"
+description: "Learn how to build and integrate tools with streaming support and advanced features"
+---
+
+## Understanding tools
+
+Tools are the building blocks that give your agent abilities to perform tasks. Each tool has:
+
+- A name and description
+- An input schema for validation
+- An execute function that performs the actual work
+- Optional metadata and configuration
+
+## Basic tool structure
+
+Here's the anatomy of a tool:
+
+```typescript
+import { Tool } from '@agenite/tool';
+
+const myTool = new Tool({
+  name: 'my-tool',
+  description: 'What this tool does',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      // Define expected inputs
+    },
+    required: ['requiredField'],
+  },
+  execute: async ({ input, context }) => {
+    // Tool implementation
+    return {
+      isError: false,
+      data: 'result',
+    };
+  },
+});
+```
+
+## Streaming with tools
+
+Agenite supports bidirectional streaming between agents and tools using JavaScript generators. Here's how to work with streams:
+
+<CodeGroup>
+
+```typescript Basic
+import { Agent } from '@agenite/agent';
+import { BedrockProvider } from '@agenite/bedrock';
+import { PrettyLogger } from '@agenite/pretty-logger';
+
+const agent = new Agent({
+  name: 'streaming-agent',
+  provider: new BedrockProvider({
+    region: 'us-west-2',
+    model: 'anthropic.claude-3-sonnet-20240229-v1:0',
+  }),
+  tools: [myTool],
+  middlewares: [PrettyLogger()],
+});
+
+// Get an iterator for streaming
+const iterator = agent.iterate({
+  messages: [{ 
+    role: 'user', 
+    content: [{ type: 'text', text: 'Your query here' }]
+  }],
+});
+
+// Process the stream
+for await (const chunk of iterator) {
+  switch (chunk.type) {
+    case 'agenite.llm-call.streaming':
+      if (chunk.content.type === 'text') {
+        // Agent is thinking/responding
+        process.stdout.write(chunk.content.text);
+      } else if (chunk.content.type === 'toolUse') {
+        // Agent is using a tool
+        console.log('Using tool:', chunk.content.toolUse);
+      }
+      break;
+    case 'agenite.tool-result':
+      // Tool has returned a result
+      console.log('Tool result:', chunk.result);
+      break;
+  }
+}
+```
+
+```typescript Advanced
+import { Agent } from '@agenite/agent';
+import { Tool } from '@agenite/tool';
+import { BedrockProvider } from '@agenite/bedrock';
+import { PrettyLogger } from '@agenite/pretty-logger';
+
+// Create a streaming-capable tool
+const streamingTool = new Tool({
+  name: 'file-processor',
+  description: 'Process files with streaming updates',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      filePath: { type: 'string' },
+      operation: { type: 'string' },
+    },
+    required: ['filePath', 'operation'],
+  },
+  execute: async function* ({ input }) {
+    // Yield progress updates
+    yield { type: 'progress', data: 'Starting file processing...' };
+    
+    // Do work in chunks
+    for (let i = 0; i < 5; i++) {
+      await new Promise(r => setTimeout(r, 1000)); // Simulate work
+      yield { 
+        type: 'progress', 
+        data: `Processing chunk ${i + 1}/5...` 
+      };
+    }
+    
+    // Return final result
+    return {
+      isError: false,
+      data: 'Processing complete!',
+    };
+  },
+});
+
+const agent = new Agent({
+  name: 'streaming-processor',
+  provider: new BedrockProvider({
+    region: 'us-west-2',
+    model: 'anthropic.claude-3-sonnet-20240229-v1:0',
+  }),
+  tools: [streamingTool],
+  middlewares: [PrettyLogger()],
+});
+
+// Process with progress updates
+const iterator = agent.iterate({
+  messages: [{ 
+    role: 'user',
+    content: [{ 
+      type: 'text', 
+      text: 'Process my-file.txt' 
+    }]
+  }],
+});
+
+for await (const chunk of iterator) {
+  switch (chunk.type) {
+    case 'agenite.tool-call.progress':
+      console.log('Progress:', chunk.data);
+      break;
+    // ... other cases
+  }
+}
+```
+
+</CodeGroup>
+
+## Real-world example: Coding assistant
+
+Let's look at a practical example of tool integration from the coding assistant agent:
+
+<CodeGroup>
+
+```typescript tools/file-system.ts
+import { Tool } from '@agenite/tool';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+
+export function createFileSystemTool() {
+  return new Tool({
+    name: 'file-system',
+    description: 'Perform file system operations',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        operation: {
+          type: 'string',
+          enum: ['read', 'write', 'list', 'exists', 'mkdir'],
+        },
+        path: { type: 'string' },
+        content: { type: 'string' },
+      },
+      required: ['operation', 'path'],
+    },
+    execute: async ({ input }) => {
+      const startTime = Date.now();
+      const fullPath = path.resolve(input.path);
+
+      try {
+        switch (input.operation) {
+          case 'read': {
+            const content = await fs.readFile(fullPath, 'utf-8');
+            return {
+              isError: false,
+              data: content,
+              duration: Date.now() - startTime,
+            };
+          }
+          case 'write': {
+            await fs.mkdir(path.dirname(fullPath), { recursive: true });
+            await fs.writeFile(fullPath, input.content || '');
+            return {
+              isError: false,
+              data: `File written to ${input.path}`,
+              duration: Date.now() - startTime,
+            };
+          }
+          // ... other operations
+        }
+      } catch (error) {
+        return {
+          isError: true,
+          data: error.message,
+          duration: Date.now() - startTime,
+        };
+      }
+    },
+  });
+}
+```
+
+```typescript agent.ts
+import { Agent } from '@agenite/agent';
+import { BedrockProvider } from '@agenite/bedrock';
+import { PrettyLogger } from '@agenite/pretty-logger';
+import { createFileSystemTool } from './tools/file-system';
+import { createCommandRunnerTool } from './tools/command-runner';
+
+export async function runAgent(userInput: string) {
+  const systemPrompt = `You are an expert coding assistant. Your task is to help users with coding tasks by:
+1. Reading and analyzing code files
+2. Finding functions and imports
+3. Making code modifications when requested
+4. Providing explanations and suggestions
+
+Always explain your thought process before taking actions.
+`;
+
+  const agent = new Agent({
+    name: 'CodingAgent',
+    description: 'An AI agent specialized in coding tasks',
+    provider: new BedrockProvider({
+      region: 'us-west-2',
+      model: 'anthropic.claude-3-sonnet-20240229-v1:0',
+    }),
+    instructions: systemPrompt,
+    tools: [
+      createFileSystemTool(),
+      createCommandRunnerTool(),
+    ],
+    middlewares: [PrettyLogger()],
+  });
+
+  const response = await agent.execute({
+    messages: [{ 
+      role: 'user', 
+      content: [{ type: 'text', text: userInput }]
+    }],
+  });
+
+  return response;
+}
+```
+
+</CodeGroup>
+
+## Tool fields explained
+
+When creating a tool, each field serves a specific purpose:
+
+<AccordionGroup>
+  <Accordion title="Name and description">
+    - `name`: Unique identifier for the tool
+    - `description`: Helps the agent understand when and how to use the tool
+  </Accordion>
+
+  <Accordion title="Input schema">
+    JSON Schema that defines:
+    - Expected input fields
+    - Field types and validation
+    - Required vs optional fields
+  </Accordion>
+
+  <Accordion title="Execute function">
+    The main implementation that:
+    - Receives validated input
+    - Has access to context
+    - Can be synchronous or async
+    - Can yield progress updates
+    - Returns a standardized result
+  </Accordion>
+
+  <Accordion title="Context and state">
+    Tools have access to:
+    - Agent state
+    - Execution context
+    - Parent execution info
+    - Custom metadata
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Agent components" icon="puzzle" href="/essentials/agent-components">
+    Learn about steps, middleware, and state management
+  </Card>
+  <Card title="Examples" icon="code" href="/essentials/examples">
+    Explore more complex examples and use cases
+  </Card>
+</CardGroup> 

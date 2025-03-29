@@ -20,7 +20,11 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["introduction", "quickstart"]
+            "pages": [
+              "introduction",
+              "quickstart",
+              "deep-dive-building-coding-agent"
+            ]
           },
           {
             "group": "Essentials",
