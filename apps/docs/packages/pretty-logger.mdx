@@ -1,0 +1,291 @@
+---
+title: 'Pretty Logger'
+description: 'A colorful console logging middleware for Agenite agents'
+---
+
+
+The `@agenite/pretty-logger` package provides a beautiful, structured console logging middleware for Agenite agents. It enhances the development experience by making agent interactions, tool usage, and execution flow easy to follow in the terminal.
+
+## What is Pretty Logger?
+
+Pretty Logger is a middleware that intercepts the agent execution flow and produces formatted, colorful terminal output. It helps developers:
+
+- Track agent interactions and tool usage
+- Follow the streaming output from LLMs
+- Visualize nested agent hierarchies
+- Monitor token usage for LLM calls
+
+Key features include:
+
+- Color-coded output for different message types
+- Boxed formatting for structured content
+- Clear separation between different agents in a workflow
+- Nested agent prefix display
+- Support for streaming LLM output
+- Token usage summary at the end of execution
+
+## Installation
+
+```bash
+npm install @agenite/pretty-logger
+```
+
+## Basic usage
+
+To use the Pretty Logger with Agenite agents:
+
+```typescript
+import { Agent } from '@agenite/agent';
+import { prettyLogger } from '@agenite/pretty-logger';
+import { OllamaProvider } from '@agenite/ollama';
+
+// Create an agent with pretty logging
+const agent = new Agent({
+  name: 'my-agent',
+  provider: new OllamaProvider({
+    model: 'llama3',
+    baseURL: 'http://localhost:11434',
+  }),
+  middlewares: [
+    prettyLogger()
+  ],
+  // ...other agent configuration
+});
+
+// Use the agent as normal
+const result = await agent.execute({
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Tell me a joke about programming' },
+      ],
+    },
+  ],
+});
+```
+
+## Output format
+
+Pretty Logger produces console output with the following formatting:
+
+### User input
+
+```
+◇────────────────────────────────────────────────────────────────◇
+
+👤 User input
+╭────────────────────────────────────────────────────────────────╮
+│ Tell me a joke about programming                               │
+╰────────────────────────────────────────────────────────────────╯
+```
+
+### Agent thinking
+
+```
+◇────────────────────────────────────────────────────────────────◇
+
+🧠 Thinking [my-agent]
+╭────────────────────────────────────────────────────────────────╮
+│ I should come up with a programming joke that's clever but     │
+│ accessible. Maybe something about debugging or a play on       │
+│ programming terms...                                           │
+╰────────────────────────────────────────────────────────────────╯
+```
+
+### Agent response
+
+```
+◇────────────────────────────────────────────────────────────────◇
+
+💡 Agent response [my-agent]
+╭────────────────────────────────────────────────────────────────╮
+│ Why do programmers prefer dark mode?                          │
+│                                                               │
+│ Because light attracts bugs!                                  │
+╰────────────────────────────────────────────────────────────────╯
+```
+
+### Tool usage
+
+```
+◇────────────────────────────────────────────────────────────────◇
+
+⚙️ Tool use: [web_search]
+╭────────────────────────────────────────────────────────────────╮
+│ {                                                              │
+│   "query": "latest programming languages 2024"                 │
+│ }                                                              │
+╰────────────────────────────────────────────────────────────────╯
+
+✅ Result: [web_search]
+╭────────────────────────────────────────────────────────────────╮
+│ {                                                              │
+│   "results": [                                                 │
+│     {                                                          │
+│       "title": "Top Programming Languages for 2024",           │
+│       "url": "https://example.com/languages",                  │
+│       "snippet": "Python, JavaScript, and Rust continue to..."│
+│     }                                                          │
+│   ]                                                            │
+│ }                                                              │
+╰────────────────────────────────────────────────────────────────╯
+```
+
+### Token usage summary
+
+```
+◇────────────────────────────────────────────────────────────────◇
+
+📊 Token Usage
+╭────────────────────────────────────────────────────────────────╮
+│ Input: 125 tokens                                              │
+│ Output: 87 tokens                                              │
+│ Total: 212 tokens                                              │
+╰────────────────────────────────────────────────────────────────╯
+```
+
+## Nested agent display
+
+For workflows with multiple nested agents, Pretty Logger shows the hierarchy in the output:
+
+```
+◇────────────────────────────────────────────────────────────────◇
+
+supervisor> researcher> 🧠 Thinking [researcher]
+╭────────────────────────────────────────────────────────────────╮
+│ I need to find information about the topic...                  │
+╰────────────────────────────────────────────────────────────────╯
+```
+
+The prefix indicates the agent hierarchy, with `supervisor> researcher>` showing that the researcher agent is nested under a supervisor agent.
+
+## API reference
+
+### prettyLogger
+
+The main function that creates the logging middleware.
+
+```typescript
+function prettyLogger(): AsyncGeneratorMiddleware
+```
+
+#### Usage
+
+```typescript
+import { Agent } from '@agenite/agent';
+import { prettyLogger } from '@agenite/pretty-logger';
+
+const agent = new Agent({
+  // ...
+  middlewares: [
+    prettyLogger()
+  ],
+});
+```
+
+## How it works
+
+The Pretty Logger middleware:
+
+1. Intercepts execution events from the agent's generator
+2. Formats and displays different message types with appropriate styling
+3. Tracks agent context to display nested agent relationships
+4. Manages streaming output for thinking and response text
+5. Creates structured boxes for input and output data
+6. Summarizes token usage at the end of execution
+
+## Integration with other middleware
+
+Pretty Logger works well with other middleware. Place it early in the middleware chain for best results:
+
+```typescript
+import { Agent } from '@agenite/agent';
+import { prettyLogger } from '@agenite/pretty-logger';
+import { someOtherMiddleware } from '@agenite/some-other-package';
+
+const agent = new Agent({
+  // ...
+  middlewares: [
+    prettyLogger(),
+    someOtherMiddleware()
+  ],
+});
+```
+
+## Example: multi-agent workflow
+
+This example shows how Pretty Logger displays a workflow with multiple agents:
+
+```typescript
+import { Agent } from '@agenite/agent';
+import { prettyLogger } from '@agenite/pretty-logger';
+import { OpenAIProvider } from '@agenite/openai';
+
+// Create a child agent
+const researchAgent = new Agent({
+  name: 'researcher',
+  provider: new OpenAIProvider({
+    model: 'gpt-3.5-turbo',
+  }),
+  instructions: 'You research information about topics.'
+});
+
+// Create a parent agent that uses the research agent
+const supervisorAgent = new Agent({
+  name: 'supervisor',
+  provider: new OpenAIProvider({
+    model: 'gpt-4',
+  }),
+  middlewares: [
+    prettyLogger()
+  ],
+  tools: [
+    {
+      name: 'research',
+      description: 'Research a topic in depth',
+      parameters: {
+        type: 'object',
+        properties: {
+          topic: {
+            type: 'string',
+            description: 'The topic to research'
+          }
+        },
+        required: ['topic']
+      },
+      handler: async ({ topic }) => {
+        return researchAgent.execute({
+          messages: [
+            {
+              role: 'user',
+              content: [{ type: 'text', text: `Research the topic: ${topic}` }]
+            }
+          ]
+        });
+      }
+    }
+  ],
+  instructions: 'You are a supervisor that delegates research tasks.'
+});
+
+// Execute the supervisor agent
+const result = await supervisorAgent.execute({
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'I need information about quantum computing.' }
+      ],
+    },
+  ],
+});
+```
+
+In this example, the Pretty Logger will show the hierarchy of agents with appropriate prefixes and format all interactions, including those between the supervisor and researcher agents.
+
+## Conclusion
+
+The `@agenite/pretty-logger` package significantly improves the development experience when working with Agenite agents. By providing clear, structured, and colorful console output, it makes it easier to understand agent behavior, debug issues, and demonstrate agent capabilities.
+
+To see the Pretty Logger in action, check out the [examples](https://github.com/subeshb1/agenite/tree/main/examples) in the GitHub repository. 

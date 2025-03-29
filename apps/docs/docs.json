@@ -23,8 +23,8 @@
             "pages": [
               "introduction",
               "quickstart",
-              "examples",
-              "deep-dive-building-coding-agent"
+              "deep-dive-building-coding-agent",
+              "deep-dive-building-web-research-agent"
             ]
           },
           {
@@ -36,6 +36,14 @@
               "core-concepts/llm",
               "core-concepts/providers"
             ]
+          },
+          {
+            "group": "Packages",
+            "pages": ["packages/mcp", "packages/pretty-logger"]
+          },
+          {
+            "group": "Examples",
+            "pages": ["examples"]
           }
         ]
       },
@@ -52,6 +60,10 @@
               "api-reference/steps",
               "api-reference/llm"
             ]
+          },
+          {
+            "group": "Package APIs",
+            "pages": ["api-reference/mcp"]
           }
         ]
       }

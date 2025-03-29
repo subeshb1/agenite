@@ -53,6 +53,13 @@ The name Agenite (pronounced as Agen-ite) comes from combining "Agent" with the 
     - Built-in state management with reducers
     - Flexible middleware system
   </Accordion>
+
+  <Accordion title="Model context protocol (MCP)" icon="brain">
+    - Standardized protocol for connecting LLMs to data sources
+    - Client implementation for interacting with MCP servers
+    - Access to web content, filesystem, databases, and more
+    - Similar to how USB-C provides universal hardware connections
+  </Accordion>
 </AccordionGroup>
 
 ## Core concepts
@@ -142,21 +149,28 @@ Choose one or more provider packages based on the LLMs you want to use.
   </Card>
 </CardGroup>
 
+### MCP package
+
+Integration with the Model Context Protocol (MCP) for standardized data access.
+
+<CardGroup cols={1}>
+  <Card title="@agenite/mcp">
+    Client implementation for interacting with MCP servers to access external data sources
+    ```bash
+    npm install @agenite/mcp
+    ```
+  </Card>
+</CardGroup>
+
 ### Middleware packages
 
 Optional packages for enhancing agent functionality.
 
-<CardGroup cols={2}>
-  <Card title="@agenite/pretty-logger">
+<CardGroup cols={1}>
+  <Card title="@agenite/pretty-logger" href="/packages/pretty-logger">
     Colorful console logging for agent execution
     ```bash
     npm install @agenite/pretty-logger
-    ```
-  </Card>
-  <Card title="@agenite/mcp">
-    Model Context Protocol implementation
-    ```bash
-    npm install @agenite/mcp
     ```
   </Card>
 </CardGroup>
@@ -202,7 +216,7 @@ npm install @agenite/agent @agenite/tool @agenite/llm @agenite/bedrock @agenite/
   <Card title="Quick start guide" icon="rocket" href="/quickstart">
     Create your first agent in minutes with our step-by-step guide
   </Card>
-  <Card title="Core concepts" icon="book" href="/core-concepts/introduction">
+  <Card title="Core concepts" icon="book" href="/core-concepts/overview">
     Deep dive into agents, tools, and the execution model
   </Card>
 </CardGroup>

@@ -1,0 +1,285 @@
+---
+title: 'MCP API'
+description: 'API reference for the Model Context Protocol (MCP) integration'
+---
+
+# MCP API reference
+
+The `@agenite/mcp` package provides a client implementation for the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction), enabling Agenite agents to access external data sources and tools through a standardized interface.
+
+## MCPClient
+
+The main class for interacting with MCP servers.
+
+### Constructor
+
+```typescript
+constructor(config: {
+  mcpServers: {
+    [name: string]: MCPServerConfig;
+  };
+  name?: string;
+  version?: string;
+})
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config.mcpServers` | `{ [name: string]: MCPServerConfig }` | Configuration for MCP servers |
+| `config.name` | `string` | Optional client name (defaults to 'mcp-client') |
+| `config.version` | `string` | Optional client version (defaults to '1.0.0') |
+
+#### Example
+
+```typescript
+const mcpClient = new MCPClient({
+  name: 'my-client',
+  version: '1.0.0',
+  mcpServers: {
+    fetch: {
+      url: 'https://router.mcp.so/sse/your-server-id',
+    },
+    filesystem: {
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', './data'],
+    },
+  },
+});
+```
+
+### Methods
+
+#### getTools
+
+Retrieves tools from a specific MCP server.
+
+```typescript
+async getTools(serverName: string): Promise<Tool[]>
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `serverName` | `string` | Name of the server to get tools from |
+
+**Returns:** A promise that resolves to an array of `Tool` instances.
+
+#### getAllTools
+
+Retrieves tools from all connected MCP servers as a flat array.
+
+```typescript
+async getAllTools(): Promise<Tool[]>
+```
+
+**Returns:** A promise that resolves to an array of `Tool` instances from all servers.
+
+#### getAllToolsByServer
+
+Retrieves tools from all connected MCP servers, organized by server.
+
+```typescript
+async getAllToolsByServer(): Promise<{[serverName: string]: Tool[]}>
+```
+
+**Returns:** A promise that resolves to an object mapping server names to arrays of `Tool` instances.
+
+#### getServerNames
+
+Returns the names of all configured servers.
+
+```typescript
+getServerNames(): string[]
+```
+
+**Returns:** An array of server name strings.
+
+## Interfaces
+
+### MCPServerConfig
+
+Represents the configuration for an MCP server. This is a union type of `MCPSSEConfig` and `MCPStdioConfig`.
+
+```typescript
+type MCPServerConfig = MCPSSEConfig | MCPStdioConfig;
+```
+
+### MCPSSEConfig
+
+Configuration for connecting to an MCP server via Server-Sent Events (SSE).
+
+```typescript
+interface MCPSSEConfig {
+  /**
+   * URL for SSE transport
+   */
+  url: string;
+}
+```
+
+### MCPStdioConfig
+
+Configuration for launching and connecting to an MCP server as a local process via standard I/O.
+
+```typescript
+interface MCPStdioConfig {
+  /**
+   * Command to execute the MCP server
+   */
+  command: string;
+
+  /**
+   * Arguments for the command
+   */
+  args?: string[];
+
+  /**
+   * Environment variables for the command
+   */
+  env?: Record<string, string>;
+
+  /**
+   * Working directory for the command
+   */
+  cwd?: string;
+}
+```
+
+### MCPToolCallResult
+
+Represents the result of a tool call from an MCP server.
+
+```typescript
+interface MCPToolCallResult {
+  /**
+   * Whether the call resulted in an error
+   */
+  isError: boolean;
+
+  /**
+   * Data returned from the tool call
+   */
+  data: string;
+}
+```
+
+## Usage examples
+
+### Basic usage
+
+```typescript
+import { MCPClient } from '@agenite/mcp';
+import { Agent } from '@agenite/agent';
+
+// Create an MCP client
+const mcpClient = new MCPClient({
+  mcpServers: {
+    fetch: {
+      url: 'https://router.mcp.so/sse/your-server-id',
+    },
+  },
+});
+
+// Get all tools from all servers
+const tools = await mcpClient.getAllTools();
+
+// Use tools in an agent
+const agent = new Agent({
+  // ...agent configuration
+  tools: tools,
+});
+
+// Execute the agent
+const result = await agent.execute({
+  messages: [/* messages */],
+});
+```
+
+### Using multiple servers
+
+```typescript
+const mcpClient = new MCPClient({
+  mcpServers: {
+    fetch: {
+      url: 'https://router.mcp.so/sse/fetch-server-id',
+    },
+    filesystem: {
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', './data'],
+    },
+    sqlite: {
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-sqlite', './database.db'],
+    },
+  },
+});
+
+// Get tools by server
+const toolsByServer = await mcpClient.getAllToolsByServer();
+
+// Get only tools from specific servers
+const fetchTools = toolsByServer['fetch'] || [];
+const filesystemTools = toolsByServer['filesystem'] || [];
+
+console.log(`Fetch tools: ${fetchTools.length}`);
+console.log(`Filesystem tools: ${filesystemTools.length}`);
+```
+
+### Getting server names
+
+```typescript
+const mcpClient = new MCPClient({
+  mcpServers: {
+    fetch: { url: 'https://router.mcp.so/sse/fetch-server-id' },
+    filesystem: { command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', './data'] },
+  },
+});
+
+// Get all configured server names
+const serverNames = mcpClient.getServerNames();
+console.log(`Configured servers: ${serverNames.join(', ')}`);
+```
+
+## Integration with Agenite
+
+The tools returned by the MCP client are standard `@agenite/tool` instances and can be used directly with any Agenite agent:
+
+```typescript
+import { MCPClient } from '@agenite/mcp';
+import { Agent } from '@agenite/agent';
+import { OllamaProvider } from '@agenite/ollama';
+
+// Create MCP client and get tools
+const mcpClient = new MCPClient({
+  mcpServers: {
+    fetch: { url: 'https://router.mcp.so/sse/fetch-server-id' },
+  },
+});
+const mcpTools = await mcpClient.getAllTools();
+
+// Create an agent with MCP tools
+const agent = new Agent({
+  name: 'web-research-agent',
+  provider: new OllamaProvider({
+    model: 'llama3',
+    baseURL: 'http://localhost:11434',
+  }),
+  tools: mcpTools,
+  instructions: 'You are a helpful assistant with access to web content.',
+});
+
+// Use the agent as normal
+const result = await agent.execute({
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Look up the latest information about AI safety' },
+      ],
+    },
+  ],
+});
+```
+
+For more detailed usage examples and guidance, see the [MCP package documentation](/packages/mcp) and the [building a web research agent](/deep-dive-building-web-research-agent) guide. 
