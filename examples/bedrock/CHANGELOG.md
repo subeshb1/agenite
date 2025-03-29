@@ -1,5 +1,12 @@
 # @agenite-examples/bedrock
 
+## 1.1.2
+
+### Patch Changes
+
+- @agenite/agent@0.4.2
+- @agenite/pretty-logger@0.1.2
+
 ## 1.1.1
 
 ### Patch Changes

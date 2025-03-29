@@ -1,8 +1,8 @@
 {
-  "name": "@agenite/mcp-examples",
+  "name": "@agenite-examples/mcp",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "scripts": {
     "start": "ts-node --esm src/basic.ts",
     "basic": "ts-node --esm src/basic.ts",

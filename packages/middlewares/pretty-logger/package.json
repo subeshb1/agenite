@@ -1,6 +1,6 @@
 {
   "name": "@agenite/pretty-logger",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A middleware to pretty print the logs for Agenite",
   "private": false,
   "type": "module",

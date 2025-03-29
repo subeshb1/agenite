@@ -1,5 +1,12 @@
 # @agenite/agent
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [1e9123d]
+  - @agenite/tool@0.4.0
+
 ## 0.4.1
 
 ### Patch Changes

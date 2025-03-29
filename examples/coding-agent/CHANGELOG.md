@@ -1,5 +1,14 @@
 # coding-agent
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [1e9123d]
+  - @agenite/tool@0.4.0
+  - @agenite/agent@0.4.2
+  - @agenite/pretty-logger@0.1.2
+
 ## 1.1.1
 
 ### Patch Changes

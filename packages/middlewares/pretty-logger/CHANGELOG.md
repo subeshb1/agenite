@@ -1,5 +1,11 @@
 # @agenite/bedrock
 
+## 0.1.2
+
+### Patch Changes
+
+- @agenite/agent@0.4.2
+
 ## 0.1.1
 
 ### Patch Changes

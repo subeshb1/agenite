@@ -1,5 +1,11 @@
 # @agenite/tool
 
+## 0.4.0
+
+### Minor Changes
+
+- 1e9123d: Introduce mcp support
+
 ## 0.3.0
 
 ### Minor Changes
