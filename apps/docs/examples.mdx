@@ -1,0 +1,123 @@
+---
+title: "Examples"
+description: "Explore real-world examples of Agenite in action"
+---
+
+# Examples
+
+This page contains examples demonstrating how to use Agenite for various use cases. Each example showcases different features and capabilities of the framework.
+
+## Example repository
+
+All examples are available in our GitHub repository:
+
+<Card title="Agenite Examples" icon="github" href="https://github.com/agenite/agenite/tree/main/examples">
+  Browse the full collection of examples on GitHub
+</Card>
+
+## Featured examples
+
+### Basic agent with calculator tool
+
+This example demonstrates a simple agent that uses a calculator tool to perform math operations.
+
+```typescript
+import { Agent } from '@agenite/agent';
+import { Tool } from '@agenite/tool';
+import { BedrockProvider } from '@agenite/bedrock';
+
+// Create a calculator tool
+const calculatorTool = new Tool<{ expression: string }>({
+  name: 'calculator',
+  description: 'Perform basic math operations',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      expression: { type: 'string' },
+    },
+    required: ['expression'],
+  },
+  execute: async ({ input }) => {
+    try {
+      const result = new Function('return ' + input.expression)();
+      return { isError: false, data: result.toString() };
+    } catch (error) {
+      return { isError: true, data: 'Error calculating expression' };
+    }
+  },
+});
+
+// Create an agent
+const agent = new Agent({
+  name: 'math-buddy',
+  provider: new BedrockProvider({
+    model: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
+  }),
+  tools: [calculatorTool],
+  instructions: 'You are a helpful math assistant.',
+});
+
+// Example usage
+const result = await agent.execute({
+  messages: [
+    {
+      role: 'user',
+      content: [{ type: 'text', text: 'What is 1234 * 5678?' }],
+    },
+  ],
+});
+```
+
+### Multi-tool agent
+
+This example shows an agent using multiple tools to provide a more comprehensive service.
+
+<Card title="Multi-tool Agent Example" icon="code" href="https://github.com/agenite/agenite/tree/main/examples/@agenite/agent/src/custom-steps.ts">
+  View on GitHub
+</Card>
+
+### Custom steps implementation
+
+Learn how to create custom steps for more complex agent workflows.
+
+<Card title="Custom Steps Example" icon="code" href="https://github.com/agenite/agenite/tree/main/examples/@agenite/agent/src/custom-steps.ts">
+  View on GitHub
+</Card>
+
+### Streaming responses
+
+This example demonstrates how to stream responses from an agent in real-time.
+
+<Card title="Streaming Example" icon="code" href="https://github.com/agenite/agenite/tree/main/examples/@agenite/agent/src/old-examples/advanced/streaming-agent.ts">
+  View on GitHub
+</Card>
+
+## Categories
+
+Browse examples by category:
+
+<CardGroup cols={2}>
+  <Card title="Basic examples" icon="wand-magic-sparkles" href="https://github.com/agenite/agenite/tree/main/examples/@agenite/agent/src">
+    Start with these simple examples to learn the basics of Agenite
+  </Card>
+  <Card title="Advanced examples" icon="rocket" href="https://github.com/agenite/agenite/tree/main/examples/@agenite/agent/src/old-examples/advanced">
+    Complex examples showcasing advanced features
+  </Card>
+  <Card title="Provider examples" icon="plug" href="https://github.com/agenite/agenite/tree/main/examples/@agenite/agent/src">
+    Examples using different LLM providers
+  </Card>
+  <Card title="Tool examples" icon="toolbox" href="https://github.com/agenite/agenite/tree/main/examples/@agenite/agent/src">
+    Various tool implementations
+  </Card>
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="API reference" icon="book" href="/api-reference/agent">
+    Explore the detailed API documentation
+  </Card>
+  <Card title="Core concepts" icon="lightbulb" href="/core-concepts/overview">
+    Learn about the fundamental concepts
+  </Card>
+</CardGroup> 

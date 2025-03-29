@@ -23,6 +23,7 @@
             "pages": [
               "introduction",
               "quickstart",
+              "examples",
               "deep-dive-building-coding-agent"
             ]
           },

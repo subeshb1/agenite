@@ -21,7 +21,7 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@agenite/tools": "workspace:*"
+    "@agenite/tool": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
