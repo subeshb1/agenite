@@ -61,19 +61,38 @@
     - [x] Show basic tool integration
     - [x] Show how MCP integration
 
-### 2. Building Agents Section
-- [ ] Agent Overview
-  - [ ] Requirements:
-    - [ ] Review agent implementation in codebase
-    - [ ] Identify core agent features
-    - [ ] List actual configuration options
+## Building the Core concepts section
+- [ ] Requirements:
+  - [ ] Find out core concepts implemented in codebase
+    - [x] Agents
+    - [ ] Tools
+    - [ ] Providers
+  - [] We're gonna keep the details not too deep but enough as we are going to talk about them in other sections
+  - [x] Create outline for core concepts
+  - [ ] Get approval on outline
   - [ ] Tasks:
-    - [ ] Start with agent philosophy
-    - [ ] Agent is built with steps
-    - [ ] Show the default steps flow
-    - [ ] Show how to pass middlewares to intercept
-    - [ ] Show state management with reducers input/output structure
-    - [ ] Only cover high level and point each to related section
+    - [ ] Write core concepts section
+    - [ ] Thinkgs to higligh
+      - [x] User of generators 
+      - [x] Bidirectional flow
+      - [x] Agent
+      - [ ] Tool
+      - [ ] Providers
+      - [ ] LLM
+
+### 1. Building Agents Section
+- [x] Agent Overview
+  - [x] Requirements:
+    - [x] Review agent implementation in codebase
+    - [x] Identify core agent features
+    - [x] List actual configuration options
+  - [x] Tasks:
+    - [x] Start with agent philosophy
+    - [x] Agent is built with steps
+    - [x] Show the default steps flow
+    - [x] Show how to pass middlewares to intercept
+    - [x] Show state management with reducers input/output structure
+    - [x] Only cover high level and point each to related section
 
 - [ ] Agent Components
   - [ ] Requirements:
@@ -86,7 +105,7 @@
     - [ ] Show how they integrate with agents
     - [ ] Provide real examples
 
-### 3. Tools Section
+### 2. Tools Section
 - [ ] Requirements:
   - [ ] Review tool implementation
   - [ ] List supported tool types
@@ -96,7 +115,7 @@
   - [ ] Explain schema system
   - [ ] Show real tool examples
 
-### 4. Providers Section
+### 3. Providers Section
 - [ ] Requirements:
   - [ ] List actually implemented providers
   - [ ] Check provider-specific features
@@ -106,7 +125,7 @@
   - [ ] Show provider configuration
   - [ ] Add usage examples
 
-### 5. Examples Section
+## Examples Section
 - [ ] Requirements:
   - [ ] Review existing examples in codebase
   - [ ] Test each example
@@ -116,7 +135,7 @@
   - [ ] Create advanced examples
   - [ ] Add real-world use cases
 
-### 6. API Reference
+##  API Reference
 - [ ] Requirements:
   - [ ] Extract actual TypeScript interfaces
   - [ ] Verify implemented methods
