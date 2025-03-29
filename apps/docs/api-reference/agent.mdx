@@ -10,17 +10,24 @@ The `Agent` class is the core class in Agenite that orchestrates interactions be
 ### Constructor
 
 ```typescript
-new Agent<TState extends Record<string, unknown> = Record<string, unknown>>({
+new Agent<
+  Reducer extends AnyStateReducer = typeof defaultStateReducer,
+  Steps extends BaseSteps = typeof defaultStepConfig,
+  Middlewares extends BaseMiddlewares = [],
+  Extensions extends Record<string, unknown> | undefined = undefined
+>({
   name: string;
   provider: LLMProvider;
   tools?: Tool[];
   instructions?: string;
   description?: string;
   agents?: Agent[];
-  stateReducer?: StateReducer<TState>;
-  initialState?: Partial<TState>;
+  stateReducer?: Reducer;
+  initialState?: Partial<StateFromReducer<Reducer>>;
   steps?: Steps;
-  middlewares?: Middleware[];
+  startStep?: string;
+  middlewares?: Middlewares;
+  extensions?: Extensions;
 })
 ```
 
@@ -29,58 +36,57 @@ new Agent<TState extends Record<string, unknown> = Record<string, unknown>>({
 - `name` (required): Unique identifier for the agent
 - `provider` (required): LLM provider instance
 - `tools`: Array of tools available to the agent
-- `instructions`: System instructions for the agent
+- `instructions`: System instructions for the agent (default: "You are a helpful assistant.")
 - `description`: Description of the agent's purpose
-- `agents`: Sub-agents for delegation
+- `agents`: Sub-agents that can be called by this agent
 - `stateReducer`: Custom state management functions
 - `initialState`: Initial agent state
 - `steps`: Custom execution steps
-- `middlewares`: Behavior modifiers
+- `startStep`: First step to execute (default: "agenite.llm-call")
+- `middlewares`: Array of middleware functions to modify agent behavior
+- `extensions`: Additional custom functionality
 
 ### Methods
 
 #### execute
 
-Execute the agent with a set of messages.
+Execute the agent with a set of inputs.
 
 ```typescript
-execute(params: {
-  messages: Message[];
-  stream?: boolean;
-  context?: Record<string, unknown>;
-}): Promise<ExecutionResult>
+execute(
+  input: Partial<StateFromReducer<Reducer>>,
+  options?: ExecutionOptions
+): Promise<{
+  messages: BaseMessage[];
+  tokenUsage: TokenUsage;
+  [key: string]: unknown;
+}>
 ```
 
 ##### Parameters
 
-- `messages` (required): Array of messages to process
-- `stream`: Enable streaming responses
-- `context`: Additional execution context
+- `input` (required): Input state, typically containing messages
+- `options`: Additional execution options
+  - `stream`: Enable streaming responses
+  - `context`: Additional execution context
+  - `parentExecution`: Context from a parent execution (for nested agents)
 
 ##### Returns
 
-```typescript
-interface ExecutionResult {
-  messages: Message[];
-  state: TState;
-  tokenUsage?: {
-    total: number;
-    prompt: number;
-    completion: number;
-  };
-}
-```
+Returns the final state object containing:
+- `messages`: Array of messages from the conversation
+- `tokenUsage`: Token usage statistics
+- Additional properties from the state
 
 #### iterate
 
 Get an iterator for streaming responses.
 
 ```typescript
-iterate(params: {
-  messages: Message[];
-  stream?: boolean;
-  context?: Record<string, unknown>;
-}): AsyncIterator<StreamChunk>
+iterate(
+  input: Partial<StateFromReducer<Reducer>>,
+  options?: ExecutionOptions
+): AsyncGenerator<YieldValue, ReturnValue, NextValue>
 ```
 
 ##### Parameters
@@ -89,59 +95,64 @@ Same as `execute`
 
 ##### Returns
 
-AsyncIterator yielding stream chunks:
+An AsyncGenerator that yields various events during execution:
 
 ```typescript
-type StreamChunk =
-  | LLMCallChunk
-  | ToolCallChunk
-  | ToolResultChunk
-  | AgentCallChunk;
+// Example yield types
+{ type: 'agenite.start', executionContext: StepContext }
+{ type: 'agenite.llm-call.input', content: { messages, instructions, tools } }
+{ type: 'agenite.llm-call.streaming', content: PartialReturn }
+{ type: 'agenite.tool-call.params', toolUseBlocks: ToolUseBlock[], hasAgentCall: boolean }
+{ type: 'agenite.end', executionContext: StepContext }
 ```
 
-### Types
+### State and Messages
 
-#### Message
+#### State Structure
+
+The agent maintains state which typically includes at minimum:
 
 ```typescript
-interface Message {
+interface DefaultState {
+  messages: BaseMessage[];
+  [key: string]: unknown;
+}
+```
+
+#### Message Structure
+
+Messages follow the structure defined in the LLM package:
+
+```typescript
+interface BaseMessage {
   role: 'user' | 'assistant' | 'system';
-  content: MessageContent[];
+  content: ContentBlock[];
 }
 
-type MessageContent =
-  | { type: 'text'; text: string }
-  | { type: 'image'; url: string }
-  | { type: 'tool_call'; tool: string; input: unknown }
-  | { type: 'tool_result'; result: ToolResult };
+type ContentBlock =
+  | TextBlock        // { type: 'text', text: string }
+  | ImageBlock       // { type: 'image', source: { type: 'url', url: string } | { type: 'base64', ... } }
+  | ToolUseBlock     // { type: 'toolUse', id: string, name: string, input: unknown }
+  | ToolResultBlock  // { type: 'toolResult', toolUseId: string, toolName: string, content?: string | Array<...> }
+  | DocumentBlock    // { type: 'document', source: { ... } }
+  | ThinkingBlock    // { type: 'thinking', thinking: string }
+  | RedactedThinkingBlock; // { type: 'redactedThinking', redactedThinking: string }
 ```
 
-#### StateReducer
+### Step Interface
+
+Custom steps implement the Step interface:
 
 ```typescript
-type StateReducer<T> = {
-  [K in keyof T]: (
-    newValue: T[K],
-    previousValue?: T[K]
-  ) => T[K] | Promise<T[K]>;
-};
-```
-
-#### Steps
-
-```typescript
-interface Steps {
-  [key: string]: Step<unknown, unknown, unknown, unknown>;
-}
-
 interface Step<
   ReturnValue,
   YieldValue,
-  NextValue,
+  Params,
   Context
 > {
-  beforeExecute?: (context: Context) => Promise<Context>;
-  execute: (params: unknown, context: Context) => AsyncGenerator<
+  name: string;
+  beforeExecute?: (context: Context) => Promise<Params>;
+  execute: (params: Params, context: Context) => AsyncGenerator<
     YieldValue,
     ReturnValue,
     NextValue
@@ -153,7 +164,9 @@ interface Step<
 }
 ```
 
-#### Middleware
+### Middleware Interface
+
+Middlewares wrap the generator function:
 
 ```typescript
 type Middleware<
@@ -162,53 +175,8 @@ type Middleware<
   NextValue = unknown
 > = (
   generator: AsyncGenerator<YieldValue, ReturnValue, NextValue>,
-  context: Context
+  context: StepContext<AnyStateReducer>
 ) => AsyncGenerator<YieldValue, ReturnValue, NextValue>;
-```
-
-### Events
-
-The agent emits various events during execution:
-
-#### LLM call
-
-```typescript
-interface LLMCallChunk {
-  type: 'agenite.llm-call.streaming';
-  content: string;
-  tokenUsage?: {
-    prompt: number;
-    completion: number;
-  };
-}
-```
-
-#### Tool call
-
-```typescript
-interface ToolCallChunk {
-  type: 'agenite.tool-call.params';
-  toolUseBlocks: {
-    name: string;
-    input: unknown;
-  }[];
-}
-```
-
-#### Tool result
-
-```typescript
-interface ToolResultChunk {
-  type: 'agenite.tool-result';
-  result: {
-    isError: boolean;
-    data: string;
-    error?: {
-      code: string;
-      message: string;
-    };
-  };
-}
 ```
 
 ### Examples
@@ -216,10 +184,14 @@ interface ToolResultChunk {
 #### Basic usage
 
 ```typescript
+import { Agent } from '@agenite/agent';
+import { Ollama } from '@agenite/provider-ollama';
+import { Calculator } from '@agenite/tool';
+
 const agent = new Agent({
   name: 'simple-agent',
-  provider: new OllamaProvider({ model: 'llama2' }),
-  tools: [calculatorTool],
+  provider: new Ollama({ model: 'llama3.2' }),
+  tools: [new Calculator()],
   instructions: 'You are a helpful assistant.',
 });
 
@@ -227,30 +199,37 @@ const result = await agent.execute({
   messages: [
     {
       role: 'user',
-      content: [{ type: 'text', text: 'Hello!' }],
+      content: [{ type: 'text', text: 'What is 137 * 456?' }],
     },
   ],
 });
+
+console.log(result.messages[result.messages.length - 1].content);
 ```
 
-#### With state
+#### With custom state
 
 ```typescript
 interface ChatState {
+  messages: BaseMessage[];
   messageCount: number;
   lastMessage: string;
 }
 
-const agent = new Agent<ChatState>({
+const agent = new Agent<{
+  messageCount: (newValue: number, prevValue?: number) => number;
+  lastMessage: (newValue: string) => string;
+}>({
   name: 'stateful-agent',
-  provider: new OllamaProvider({ model: 'llama2' }),
+  provider: new Ollama({ model: 'llama3.2' }),
   initialState: {
+    messages: [],
     messageCount: 0,
     lastMessage: '',
   },
   stateReducer: {
-    messageCount: (new, prev = 0) => prev + 1,
-    lastMessage: (new) => new,
+    messageCount: (_, prev = 0) => prev + 1,
+    lastMessage: (newValue) => newValue,
   },
 });
 ```
@@ -258,12 +237,23 @@ const agent = new Agent<ChatState>({
 #### With middleware
 
 ```typescript
+import { prettyLogger } from '@agenite/middleware-pretty-logger';
+
 const agent = new Agent({
   name: 'middleware-agent',
-  provider: new OllamaProvider({ model: 'llama2' }),
+  provider: new Ollama({ model: 'llama3.2' }),
   middlewares: [
-    loggingMiddleware(),
-    rateLimitMiddleware(10, 60000),
+    prettyLogger(),
+    // Custom middleware example
+    (generator, context) => {
+      return (async function* () {
+        for await (const value of generator) {
+          // Do something with each yielded value
+          console.log(`Event: ${value.type}`);
+          yield value;
+        }
+      })();
+    }
   ],
 });
 ```
@@ -273,11 +263,29 @@ const agent = new Agent({
 ```typescript
 const agent = new Agent({
   name: 'custom-steps-agent',
-  provider: new OllamaProvider({ model: 'llama2' }),
+  provider: new Ollama({ model: 'llama3.2' }),
   steps: {
-    'custom.retry': createRetryStep(3, 1000),
-    'custom.cache': createCachingStep(cache, 3600),
+    'custom.confirmation': {
+      name: 'custom.confirmation',
+      execute: async function* (params, context) {
+        const response = yield {
+          type: 'custom.needs-confirmation',
+          message: 'Do you want to proceed?',
+        };
+        
+        if (response?.confirmed) {
+          return { next: 'agenite.llm-call', state: {} };
+        } else {
+          return { next: 'agenite.end', state: {} };
+        }
+      }
+    },
+    // Include default steps here if needed
+    'agenite.llm-call': LLMStep,
+    'agenite.tool-call': ToolStep,
   },
+  // Start with the custom step instead of the default
+  startStep: 'custom.confirmation',
 });
 ```
 

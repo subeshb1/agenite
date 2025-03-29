@@ -48,3 +48,5 @@ const result = await agent.execute({
     },
   ],
 });
+
+console.log(result);

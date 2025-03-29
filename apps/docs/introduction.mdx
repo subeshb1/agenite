@@ -20,7 +20,9 @@ description: "A modern, modular, and type-safe framework for building AI agents 
 Agenite is a powerful TypeScript framework designed for building sophisticated AI agents. It provides a modular, type-safe, and flexible architecture that makes it easy to create, compose, and control AI agents with advanced capabilities.
 
 <Note>
+{/* cspell:disable */}
 The name Agenite (pronounced as Agen-ite) comes from combining "Agent" with the suffix "-ite", representing a framework that crystallizes best practices for building AI agents.
+{/* cspell:enable */}
 </Note>
 
 ### Key features
@@ -30,7 +32,6 @@ The name Agenite (pronounced as Agen-ite) comes from combining "Agent" with the 
     - Built from the ground up with TypeScript
     - Robust type checking for tools and agent configurations
     - Excellent IDE support and autocompletion
-    - Zero dependencies in core implementation
   </Accordion>
   
   <Accordion title="Tool integration" icon="wrench">
@@ -44,7 +45,6 @@ The name Agenite (pronounced as Agen-ite) comes from combining "Agent" with the 
     - Support for AWS Bedrock and Ollama
     - Consistent interface across providers
     - Easy extension for new providers
-    - Automatic credential management
   </Accordion>
   
   <Accordion title="Advanced architecture" icon="cube">
@@ -73,7 +73,6 @@ Tools extend agent capabilities by providing specific functionalities:
 - JSON Schema validation for inputs
 - Flexible error handling
 - Easy API integration
-- Zero dependencies in core implementation
 
 ### Providers
 
@@ -82,6 +81,99 @@ Currently supported LLM providers:
 - Local models via Ollama
 - Consistent interface for easy provider switching
 - Built-in streaming support
+
+## Available packages
+
+Agenite is organized into several modules that you can install based on your needs:
+
+### Core packages
+
+These are the essential packages for building agents with Agenite.
+
+<CardGroup cols={3}>
+  <Card title="@agenite/agent">
+    Core agent library for orchestrating LLMs and tools
+    ```bash
+    npm install @agenite/agent
+    ```
+  </Card>
+  <Card title="@agenite/tool">
+    Tool interface for extending agent capabilities
+    ```bash
+    npm install @agenite/tool
+    ```
+  </Card>
+  <Card title="@agenite/llm">
+    LLM abstraction layer and utilities
+    ```bash
+    npm install @agenite/llm
+    ```
+  </Card>
+</CardGroup>
+
+### Provider packages
+
+Choose one or more provider packages based on the LLMs you want to use.
+
+<CardGroup cols={2}>
+  <Card title="@agenite/openai">
+    OpenAI API provider (GPT models)
+    ```bash
+    npm install @agenite/openai
+    ```
+  </Card>
+  <Card title="@agenite/anthropic">
+    Anthropic API provider (Claude models)
+    ```bash
+    npm install @agenite/anthropic
+    ```
+  </Card>
+  <Card title="@agenite/bedrock">
+    AWS Bedrock provider (Claude, Titan models)
+    ```bash
+    npm install @agenite/bedrock
+    ```
+  </Card>
+  <Card title="@agenite/ollama">
+    Ollama provider for local models
+    ```bash
+    npm install @agenite/ollama
+    ```
+  </Card>
+</CardGroup>
+
+### Middleware packages
+
+Optional packages for enhancing agent functionality.
+
+<CardGroup cols={2}>
+  <Card title="@agenite/pretty-logger">
+    Colorful console logging for agent execution
+    ```bash
+    npm install @agenite/pretty-logger
+    ```
+  </Card>
+  <Card title="@agenite/mcp">
+    Model Context Protocol implementation
+    ```bash
+    npm install @agenite/mcp
+    ```
+  </Card>
+</CardGroup>
+
+## Typical installation
+
+For a basic setup with OpenAI:
+
+```bash
+npm install @agenite/agent @agenite/tool @agenite/llm @agenite/openai
+```
+
+For AWS Bedrock with optional pretty logging:
+
+```bash
+npm install @agenite/agent @agenite/tool @agenite/llm @agenite/bedrock @agenite/pretty-logger
+```
 
 ## Next steps
 
@@ -99,7 +191,7 @@ Currently supported LLM providers:
     Follow our [Quick start guide](/quickstart) to create your first agent
   </Step>
   <Step title="Explore examples">
-    Check out our [Examples](/essentials/examples) to see Agenite in action
+    Check out our [Examples](/examples) to see Agenite in action
   </Step>
   <Step title="Build something amazing">
     Use our [API reference](/api-reference/agent) to build your own AI agents
@@ -110,7 +202,7 @@ Currently supported LLM providers:
   <Card title="Quick start guide" icon="rocket" href="/quickstart">
     Create your first agent in minutes with our step-by-step guide
   </Card>
-  <Card title="Core concepts" icon="book" href="/essentials/core-concepts">
+  <Card title="Core concepts" icon="book" href="/core-concepts/introduction">
     Deep dive into agents, tools, and the execution model
   </Card>
 </CardGroup>

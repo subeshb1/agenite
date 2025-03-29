@@ -5,36 +5,59 @@ description: "Reference for LLM providers in Agenite"
 
 ## Overview
 
-Agenite supports multiple LLM providers through a consistent interface. Each provider implements the `LLMProvider` interface.
+Agenite supports multiple LLM providers through a consistent interface. Each provider implements the `LLMProvider` interface from the `@agenite/llm` package.
 
 ## Common interface
 
 ```typescript
 interface LLMProvider {
-  generateResponse(params: {
-    messages: Message[];
-    stream?: boolean;
-    options?: ProviderOptions;
-  }): Promise<Response>;
+  name: string;
+  version?: string;
+
+  /**
+   * Simple text generation with full response
+   */
+  generate(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse>;
+
+  /**
+   * Simple streaming with partial returns
+   */
+  stream(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown>;
+
+  /**
+   * Low-level generation API with full control
+   */
+  iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown>;
 }
 ```
+
+Most providers extend the `BaseLLMProvider` class, which implements the `iterate` method for you, so you only need to implement `generate` and `stream`.
 
 ## OpenAI provider
 
 ### Installation
 
 ```bash
-npm install @agenite/openai
+npm install @agenite/provider-openai
 ```
 
 ### Usage
 
 ```typescript
-import { OpenAIProvider } from '@agenite/openai';
+import { OpenAI } from '@agenite/provider-openai';
 
-const provider = new OpenAIProvider({
+const provider = new OpenAI({
   apiKey: 'your-api-key',
-  model: 'gpt-4', // or 'gpt-3.5-turbo'
+  model: 'gpt-4-turbo-preview',
   temperature: 0.7,
   maxTokens: 1000,
 });
@@ -49,16 +72,29 @@ const agent = new Agent({
 ### Configuration
 
 ```typescript
-interface OpenAIConfig {
+interface OpenAIConfig extends BaseLLMConfig {
   apiKey: string;
-  model: string;
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  frequencyPenalty?: number;
-  presencePenalty?: number;
-  stop?: string[];
+  model?: OpenAIModel;
+  responseFormat?: "text" | "json_object";
+  tools?: ToolDefinition[];
+  forceTool?: string;
+  systemPrompt?: string;
+}
+
+type OpenAIModel =
+  | "gpt-4-turbo-preview"
+  | "gpt-4-0125-preview"
+  | "gpt-4-1106-preview"
+  | "gpt-4"
+  | "gpt-4-32k"
+  | "gpt-3.5-turbo"
+  | "gpt-3.5-turbo-16k";
+
+interface BaseLLMConfig {
   organization?: string;
+  baseURL?: string;
+  maxRetries?: number;
+  timeout?: number;
 }
 ```
 
@@ -67,18 +103,17 @@ interface OpenAIConfig {
 ### Installation
 
 ```bash
-npm install @agenite/anthropic
+npm install @agenite/provider-anthropic
 ```
 
 ### Usage
 
 ```typescript
-import { AnthropicProvider } from '@agenite/anthropic';
+import { Anthropic } from '@agenite/provider-anthropic';
 
-const provider = new AnthropicProvider({
+const provider = new Anthropic({
   apiKey: 'your-api-key',
-  model: 'claude-2',
-  maxTokens: 1000,
+  model: 'claude-3-sonnet-20240229',
 });
 
 const agent = new Agent({
@@ -91,14 +126,12 @@ const agent = new Agent({
 ### Configuration
 
 ```typescript
-interface AnthropicConfig {
+interface AnthropicConfig extends BaseLLMConfig {
   apiKey: string;
-  model: string;
-  maxTokens?: number;
+  model?: string;
   temperature?: number;
-  topP?: number;
-  topK?: number;
-  stop?: string[];
+  maxTokens?: number;
+  stopSequences?: string[];
 }
 ```
 
@@ -107,21 +140,21 @@ interface AnthropicConfig {
 ### Installation
 
 ```bash
-npm install @agenite/bedrock
+npm install @agenite/provider-bedrock
 ```
 
 ### Usage
 
 ```typescript
-import { BedrockProvider } from '@agenite/bedrock';
+import { Bedrock } from '@agenite/provider-bedrock';
 
-const provider = new BedrockProvider({
+const provider = new Bedrock({
   credentials: {
     accessKeyId: 'your-access-key',
     secretAccessKey: 'your-secret-key',
   },
   region: 'us-west-2',
-  model: 'anthropic.claude-v2',
+  model: 'anthropic.claude-3-sonnet-20240229-v1:0',
 });
 
 const agent = new Agent({
@@ -134,7 +167,7 @@ const agent = new Agent({
 ### Configuration
 
 ```typescript
-interface BedrockConfig {
+interface BedrockConfig extends BaseLLMConfig {
   credentials: {
     accessKeyId: string;
     secretAccessKey: string;
@@ -144,6 +177,7 @@ interface BedrockConfig {
   temperature?: number;
   maxTokens?: number;
   topP?: number;
+  stopSequences?: string[];
 }
 ```
 
@@ -152,16 +186,16 @@ interface BedrockConfig {
 ### Installation
 
 ```bash
-npm install @agenite/ollama
+npm install @agenite/provider-ollama
 ```
 
 ### Usage
 
 ```typescript
-import { OllamaProvider } from '@agenite/ollama';
+import { Ollama } from '@agenite/provider-ollama';
 
-const provider = new OllamaProvider({
-  model: 'llama2',
+const provider = new Ollama({
+  model: 'llama3.2',
   baseUrl: 'http://localhost:11434',
 });
 
@@ -175,7 +209,7 @@ const agent = new Agent({
 ### Configuration
 
 ```typescript
-interface OllamaConfig {
+interface OllamaConfig extends BaseLLMConfig {
   model: string;
   baseUrl?: string;
   temperature?: number;
@@ -183,124 +217,108 @@ interface OllamaConfig {
   topK?: number;
   repeatPenalty?: number;
   seed?: number;
-  stop?: string[];
+  stopSequences?: string[];
 }
 ```
 
-## Custom providers
+## Creating custom providers
 
-You can create custom providers by implementing the `LLMProvider` interface:
-
-```typescript
-class CustomProvider implements LLMProvider {
-  constructor(private config: CustomConfig) {}
-
-  async generateResponse({
-    messages,
-    stream,
-    options,
-  }: {
-    messages: Message[];
-    stream?: boolean;
-    options?: ProviderOptions;
-  }): Promise<Response> {
-    // Implementation
-  }
-}
-```
-
-### Example: Azure OpenAI
+You can create custom providers by extending the `BaseLLMProvider` class:
 
 ```typescript
-class AzureOpenAIProvider implements LLMProvider {
-  constructor(private config: AzureOpenAIConfig) {}
+import { BaseLLMProvider, GenerateOptions, GenerateResponse, PartialReturn } from '@agenite/llm';
 
-  async generateResponse({
-    messages,
-    stream,
-    options,
-  }: {
-    messages: Message[];
-    stream?: boolean;
-    options?: ProviderOptions;
-  }): Promise<Response> {
-    const endpoint = `${this.config.endpoint}/openai/deployments/${this.config.deploymentId}/chat/completions?api-version=${this.config.apiVersion}`;
+class CustomProvider extends BaseLLMProvider {
+  readonly name = 'CustomProvider';
+  readonly version = '1.0.0';
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': this.config.apiKey,
-      },
-      body: JSON.stringify({
-        messages,
-        stream,
-        temperature: options?.temperature ?? this.config.temperature,
-        max_tokens: options?.maxTokens ?? this.config.maxTokens,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Azure OpenAI request failed');
-    }
-
-    if (stream) {
-      return this.handleStream(response);
-    }
-
-    const data = await response.json();
-    return this.formatResponse(data);
+  constructor(private config: MyCustomConfig) {
+    super();
   }
 
-  private async *handleStream(
-    response: Response
-  ): AsyncGenerator<string> {
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error('No response body');
-
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = JSON.parse(line.slice(6));
-          yield data.choices[0].delta.content;
-        }
-      }
-    }
-  }
-
-  private formatResponse(data: any): Response {
+  async generate(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse> {
+    // 1. Convert input to standard format using convertStringToMessages
+    const messages = convertStringToMessages(input);
+    
+    // 2. Transform to your API's format
+    // 3. Call your API
+    // 4. Transform the response to Agenite's format
+    
     return {
-      content: data.choices[0].message.content,
-      tokenUsage: {
-        prompt: data.usage.prompt_tokens,
-        completion: data.usage.completion_tokens,
-        total: data.usage.total_tokens,
-      },
+      content: [{ type: 'text', text: 'Response from custom LLM' }],
+      tokens: [{ modelId: 'my-model', inputTokens: 10, outputTokens: 20 }],
+      duration: 500,
+      stopReason: 'endTurn'
     };
   }
+
+  async *stream(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    // 1. Convert input to standard format
+    // 2. Set up streaming from your API
+    
+    // 3. Yield chunks as they arrive
+    yield { type: 'text', text: 'Partial response...' };
+    yield { type: 'text', text: 'More text...' };
+    
+    // 4. Return final response similar to generate
+    return {
+      content: [{ type: 'text', text: 'Complete response' }],
+      tokens: [{ modelId: 'my-model', inputTokens: 10, outputTokens: 20 }],
+      duration: 500,
+      stopReason: 'endTurn'
+    };
+  }
+  
+  // The iterate method is already implemented by BaseLLMProvider
 }
+```
+
+## Response formats
+
+All providers return responses in a standardized format:
+
+```typescript
+interface GenerateResponse {
+  content: Array<ContentBlock>;
+  tokens: TokenUsage[];
+  duration: number;
+  stopReason?: StopReason;
+}
+
+type ContentBlock =
+  | TextBlock          // { type: 'text', text: string }
+  | ImageBlock         // { type: 'image', source: ... }
+  | ToolUseBlock       // { type: 'toolUse', id: string, name: string, input: unknown }
+  | ToolResultBlock    // { type: 'toolResult', toolUseId: string, ... }
+  | DocumentBlock      // { type: 'document', source: ... }
+  | ThinkingBlock      // { type: 'thinking', thinking: string }
+  | RedactedThinkingBlock;
+
+interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  modelId: string;
+}
+
+type StopReason = 'toolUse' | 'maxTokens' | 'stopSequence' | 'endTurn';
 ```
 
 ## Best practices
 
 1. **Error handling**: Implement robust error handling for API failures
 2. **Rate limiting**: Respect provider rate limits
-3. **Token tracking**: Track token usage for optimization
-4. **Streaming**: Support streaming for better user experience
-5. **Configuration**: Allow flexible configuration options
+3. **Token tracking**: Always include accurate token usage metrics
+4. **Streaming**: Implement efficient streaming to minimize latency
+5. **Content mapping**: Properly map provider-specific responses to Agenite's standard format
 
 ## Next steps
 
-- Learn about [middleware](/api-reference/middleware)
-- See [examples](/essentials/examples)
-- Read about [advanced features](/essentials/advanced-features) 
+- Learn about the [Agent API](/api-reference/agent)
+- Explore the [Tool API](/api-reference/tool)
+- Read about [middleware](/api-reference/middleware) 

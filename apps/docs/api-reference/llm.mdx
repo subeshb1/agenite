@@ -5,234 +5,346 @@ description: "Reference for LLM utilities in Agenite"
 
 ## Overview
 
-The LLM package in Agenite provides utilities for working with language models, including prompt management, response parsing, and token counting.
+The LLM package in Agenite provides utilities for working with language models, including message formatting, content types, and provider interfaces.
 
-## Prompt templates
+## Message types
 
-### Basic templates
+### Base message
 
 ```typescript
-import { PromptTemplate } from '@agenite/llm';
+interface BaseMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: ContentBlock[];
+}
 
-const template = new PromptTemplate({
-  template: 'Hello {name}! How can I help you with {topic}?',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      name: { type: 'string' },
-      topic: { type: 'string' },
-    },
-    required: ['name', 'topic'],
-  },
-});
-
-const prompt = template.format({
-  name: 'Alice',
-  topic: 'TypeScript',
-});
+// Helper to create a simple text message
+export const userTextMessage = (message: string): BaseMessage => {
+  return {
+    role: 'user',
+    content: [
+      {
+        type: 'text',
+        text: message,
+      },
+    ],
+  };
+};
 ```
 
-### Conditional templates
+### Content blocks
+
+Messages can contain different types of content:
 
 ```typescript
-import { ConditionalTemplate } from '@agenite/llm';
+type ContentBlock =
+  | TextBlock
+  | ImageBlock
+  | ToolUseBlock
+  | ToolResultBlock
+  | DocumentBlock
+  | ThinkingBlock
+  | RedactedThinkingBlock;
 
-const template = new ConditionalTemplate({
-  conditions: [
-    {
-      condition: (vars) => vars.temperature > 25,
-      template: "It's quite hot at {temperature}°C!",
-    },
-    {
-      condition: (vars) => vars.temperature <= 25,
-      template: "It's a pleasant {temperature}°C today.",
-    },
-  ],
-  inputSchema: {
-    type: 'object',
-    properties: {
-      temperature: { type: 'number' },
-    },
-    required: ['temperature'],
-  },
-});
+interface TextBlock {
+  type: 'text';
+  text: string;
+  [key: string]: unknown;
+}
 
-const prompt = template.format({
-  temperature: 28,
-});
+interface ImageBlock {
+  type: 'image';
+  source: ImageSource;
+  [key: string]: unknown;
+}
+
+interface ToolUseBlock {
+  type: 'toolUse';
+  id: string;
+  name: string;
+  input: unknown;
+  [key: string]: unknown;
+}
+
+interface ToolResultBlock {
+  type: 'toolResult';
+  toolUseId: string;
+  toolName: string;
+  content?: string | Array<ToolResponseBlock>;
+  isError: boolean;
+  [key: string]: unknown;
+}
 ```
 
-### Template composition
+## Provider interface
+
+The core LLM Provider interface:
 
 ```typescript
-import { CompositeTemplate } from '@agenite/llm';
+interface LLMProvider {
+  name: string;
+  version?: string;
 
-const headerTemplate = new PromptTemplate({
-  template: '# {title}\n\n',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      title: { type: 'string' },
-    },
-    required: ['title'],
-  },
-});
+  /**
+   * Simple text generation with full response
+   */
+  generate(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse>;
 
-const bodyTemplate = new PromptTemplate({
-  template: '{content}\n\n',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      content: { type: 'string' },
-    },
-    required: ['content'],
-  },
-});
+  /**
+   * Simple streaming with partial returns
+   */
+  stream(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown>;
 
-const footerTemplate = new PromptTemplate({
-  template: '---\nBy {author}',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      author: { type: 'string' },
-    },
-    required: ['author'],
-  },
-});
-
-const documentTemplate = new CompositeTemplate({
-  templates: [headerTemplate, bodyTemplate, footerTemplate],
-  inputSchema: {
-    type: 'object',
-    properties: {
-      title: { type: 'string' },
-      content: { type: 'string' },
-      author: { type: 'string' },
-    },
-    required: ['title', 'content', 'author'],
-  },
-});
-
-const prompt = documentTemplate.format({
-  title: 'My document',
-  content: 'This is the content.',
-  author: 'Alice',
-});
+  /**
+   * Low-level generation API with full control
+   */
+  iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown>;
+}
 ```
 
-## Response parsing
-
-### Basic parsing
+### Generate options
 
 ```typescript
-import { ResponseParser } from '@agenite/llm';
+interface GenerateOptions {
+  tools?: ToolDefinition[];
+  temperature?: number;
+  maxTokens?: number;
+  stopSequences?: string[];
+  systemPrompt?: string;
+}
 
-const parser = new ResponseParser({
-  schema: {
-    type: 'object',
-    properties: {
-      name: { type: 'string' },
-      age: { type: 'number' },
-      hobbies: { type: 'array', items: { type: 'string' } },
-    },
-    required: ['name', 'age'],
-  },
+interface IterateGenerateOptions extends GenerateOptions {
+  stream: boolean;
+}
+```
+
+### Response types
+
+```typescript
+interface GenerateResponse {
+  content: Array<ContentBlock>;
+  tokens: TokenUsage[];
+  duration: number;
+  stopReason?: StopReason;
+}
+
+interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  modelId: string;
+}
+
+type StopReason = 'toolUse' | 'maxTokens' | 'stopSequence' | 'endTurn';
+```
+
+## Base provider implementation
+
+The `BaseLLMProvider` class provides a base implementation of the LLM provider interface:
+
+```typescript
+abstract class BaseLLMProvider implements LLMProvider {
+  abstract name: string;
+  abstract version?: string;
+
+  abstract generate(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse>;
+
+  abstract stream(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown>;
+
+  async *iterate(
+    input: string | BaseMessage[],
+    options: IterateGenerateOptions
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    return yield* iterateFromMethods(this, input, options);
+  }
+}
+```
+
+## Utility functions
+
+### String to message conversion
+
+```typescript
+function convertStringToMessages(
+  message: string | BaseMessage[]
+): BaseMessage[] {
+  if (typeof message === 'string') {
+    return [
+      {
+        role: 'user',
+        content: [{ type: 'text', text: message }],
+      },
+    ];
+  }
+  return message;
+}
+```
+
+### Tool definition
+
+```typescript
+interface ToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: JSONSchema;
+}
+
+interface JSONSchema {
+  type: string;
+  properties?: Record<string, unknown>;
+  required?: string[];
+  [key: string]: unknown;
+}
+```
+
+## Example usage
+
+### Simple generation
+
+```typescript
+import { OpenAI } from '@agenite/provider-openai';
+
+const provider = new OpenAI({
+  apiKey: 'your-api-key',
+  model: 'gpt-4-turbo',
 });
 
-const response = await parser.parse(
-  'Name: Alice\nAge: 25\nHobbies: reading, coding'
+// Simple text input
+const response = await provider.generate('Hello, how are you?');
+console.log(response.content);
+
+// Structured message input
+const response2 = await provider.generate([
+  {
+    role: 'user',
+    content: [{ type: 'text', text: 'Tell me about AI' }],
+  },
+]);
+```
+
+### Streaming responses
+
+```typescript
+const generator = provider.stream('Explain quantum computing');
+
+for await (const chunk of generator) {
+  if (chunk.type === 'text') {
+    process.stdout.write(chunk.text);
+  }
+}
+```
+
+### Tool usage
+
+```typescript
+const toolDefinition = {
+  name: 'calculator',
+  description: 'Perform basic math operations',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      operation: {
+        type: 'string',
+        enum: ['add', 'subtract', 'multiply', 'divide'],
+      },
+      a: { type: 'number' },
+      b: { type: 'number' },
+    },
+    required: ['operation', 'a', 'b'],
+  },
+};
+
+const response = await provider.generate(
+  'What is 25 × 16?',
+  {
+    tools: [toolDefinition],
+    temperature: 0,
+  }
 );
+
+// Check if the response includes a tool use
+const toolUse = response.content.find(
+  (block) => block.type === 'toolUse'
+);
+
+if (toolUse) {
+  console.log('Tool called:', toolUse.name);
+  console.log('Input:', toolUse.input);
+}
 ```
 
-### Custom parsers
+## Creating a custom provider
 
 ```typescript
-import { CustomParser } from '@agenite/llm';
+import { BaseLLMProvider, GenerateOptions, GenerateResponse } from '@agenite/llm';
 
-const dateParser = new CustomParser({
-  parse: (text) => {
-    const match = text.match(/(\d{4})-(\d{2})-(\d{2})/);
-    if (!match) throw new Error('Invalid date format');
-    return new Date(match[0]);
-  },
-});
-
-const response = await dateParser.parse('2024-03-15');
-```
-
-## Token counting
-
-### Basic counting
-
-```typescript
-import { TokenCounter } from '@agenite/llm';
-
-const counter = new TokenCounter();
-
-const count = counter.count('Hello, how are you?');
-console.log(`Token count: ${count}`);
-```
-
-### Model-specific counting
-
-```typescript
-import { ModelTokenCounter } from '@agenite/llm';
-
-const gpt4Counter = new ModelTokenCounter({
-  model: 'gpt-4',
-});
-
-const claudeCounter = new ModelTokenCounter({
-  model: 'claude-2',
-});
-
-const text = 'Hello, how are you?';
-console.log(`GPT-4 tokens: ${gpt4Counter.count(text)}`);
-console.log(`Claude tokens: ${claudeCounter.count(text)}`);
-```
-
-## Message formatting
-
-### Chat messages
-
-```typescript
-import { ChatMessage } from '@agenite/llm';
-
-const message = new ChatMessage({
-  role: 'user',
-  content: 'Hello!',
-  name: 'Alice',
-});
-
-const formatted = message.format();
-```
-
-### System messages
-
-```typescript
-import { SystemMessage } from '@agenite/llm';
-
-const message = new SystemMessage({
-  content: 'You are a helpful assistant.',
-  metadata: {
-    version: '1.0',
-    capabilities: ['coding', 'math'],
-  },
-});
-
-const formatted = message.format();
+class CustomProvider extends BaseLLMProvider {
+  name = 'custom-provider';
+  version = '1.0.0';
+  
+  constructor(private apiKey: string) {
+    super();
+  }
+  
+  async generate(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse> {
+    // Convert input to standard messages format
+    const messages = convertStringToMessages(input);
+    
+    // Make API call to your custom LLM service
+    // ...
+    
+    // Return standardized response
+    return {
+      content: [{ type: 'text', text: 'Response from custom LLM' }],
+      tokens: [{ modelId: 'custom-model', inputTokens: 10, outputTokens: 20 }],
+      duration: 500,
+    };
+  }
+  
+  async *stream(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    // Stream implementation
+    // ...
+    
+    yield { type: 'text', text: 'Partial response...' };
+    
+    return {
+      content: [{ type: 'text', text: 'Complete response' }],
+      tokens: [{ modelId: 'custom-model', inputTokens: 10, outputTokens: 20 }],
+      duration: 500,
+    };
+  }
+}
 ```
 
 ## Best practices
 
-1. **Template validation**: Use input schemas for validation
-2. **Error handling**: Handle parsing errors gracefully
-3. **Token optimization**: Monitor and optimize token usage
-4. **Message structure**: Use appropriate message types
-5. **Documentation**: Document templates and parsers
+1. **Message formatting**: Use the standard message format for consistent behavior
+2. **Error handling**: Implement robust error handling in custom providers
+3. **Streaming**: Support streaming for better user experience with long responses
+4. **Token tracking**: Track token usage for monitoring and rate limiting
+5. **Content typing**: Use the appropriate content block types for rich responses
 
 ## Next steps
 
 - Learn about [providers](/api-reference/providers)
-- See [examples](/essentials/examples)
-- Read about [advanced features](/essentials/advanced-features) 
+- See [examples](/examples)
+- Read about [core concepts](/core-concepts/agents) 

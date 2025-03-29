@@ -13,12 +13,13 @@ The `Tool` class provides a type-safe way to create tools that agents can use.
 new Tool<TInput>({
   name: string;
   description: string;
-  version: string;
-  inputSchema: JSONSchema;
-  execute: (context: {
+  version?: string;
+  inputSchema?: z.ZodType<TInput> | JSONSchema;
+  execute: (params: {
     input: TInput;
-    executionId?: string;
-  }) => Promise<ToolResult>;
+    context?: ToolContext;
+  }) => Promise<ToolResponse>;
+  validate?: (input: TInput) => Promise<ValidationResult>;
 })
 ```
 
@@ -26,22 +27,48 @@ new Tool<TInput>({
 
 - `name` (required): Unique identifier for the tool
 - `description` (required): Clear description of what the tool does
-- `version` (required): Semantic version number
-- `inputSchema` (required): JSON Schema for input validation
+- `version`: Semantic version number
+- `inputSchema`: Schema for input validation (Zod schema or JSON Schema)
 - `execute` (required): Function that performs the tool's operation
+- `validate`: Custom validation function
 
 ### Types
 
-#### ToolResult
+#### ToolResponse
 
 ```typescript
-interface ToolResult {
+interface ToolResponse {
   isError: boolean;
-  data: string;
+  data: string | Array<ToolResponseBlock>;
   error?: {
     code: string;
     message: string;
+    details?: unknown;
   };
+  duration?: number;
+  tokenUsage?: TokenUsage;
+}
+
+interface ToolResponseBlock {
+  type: 'text' | 'image';
+  text?: string;
+  image?: {
+    type: 'base64';
+    media_type: string;
+    data: string;
+  };
+}
+```
+
+#### ToolContext
+
+```typescript
+interface ToolContext {
+  agentId?: string;
+  executionId?: string;
+  parentToolExecutionId?: string;
+  extraContext?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 ```
 
@@ -50,19 +77,33 @@ interface ToolResult {
 ```typescript
 interface JSONSchema {
   type: string;
-  properties?: Record<string, JSONSchema>;
+  properties?: Record<string, unknown>;
   required?: string[];
-  items?: JSONSchema;
-  enum?: unknown[];
-  // ... other JSON Schema properties
+  [k: string]: unknown;
+}
+```
+
+#### ValidationResult
+
+```typescript
+interface ValidationResult {
+  isValid: boolean;
+  errors?: ValidationError[];
+}
+
+interface ValidationError {
+  field: string;
+  message: string;
 }
 ```
 
 ### Examples
 
-#### Basic tool
+#### Basic tool with JSON Schema
 
 ```typescript
+import { Tool } from '@agenite/tool';
+
 interface CalculatorInput {
   operation: 'add' | 'subtract' | 'multiply' | 'divide';
   a: number;
@@ -105,26 +146,35 @@ const calculatorTool = new Tool<CalculatorInput>({
       return {
         isError: true,
         data: error.message,
+        error: {
+          code: 'CALC_ERROR',
+          message: error.message,
+        },
       };
     }
   },
 });
 ```
 
-#### API tool
+#### Tool with Zod schema
 
 ```typescript
-interface WeatherInput {
-  location: {
-    city: string;
-    country?: string;
-    coordinates?: {
-      lat: number;
-      lon: number;
-    };
-  };
-  units?: 'metric' | 'imperial';
-}
+import { Tool } from '@agenite/tool';
+import { z } from 'zod';
+
+const weatherSchema = z.object({
+  location: z.object({
+    city: z.string(),
+    country: z.string().optional(),
+    coordinates: z.object({
+      lat: z.number(),
+      lon: z.number(),
+    }).optional(),
+  }),
+  units: z.enum(['metric', 'imperial']).default('metric'),
+});
+
+type WeatherInput = z.infer<typeof weatherSchema>;
 
 const createWeatherTool = (apiKey: string) => {
   const client = new WeatherAPI(apiKey);
@@ -133,33 +183,7 @@ const createWeatherTool = (apiKey: string) => {
     name: 'weather',
     description: 'Get current weather for a location',
     version: '1.0.0',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        location: {
-          type: 'object',
-          properties: {
-            city: { type: 'string' },
-            country: { type: 'string' },
-            coordinates: {
-              type: 'object',
-              properties: {
-                lat: { type: 'number' },
-                lon: { type: 'number' },
-              },
-              required: ['lat', 'lon'],
-            },
-          },
-          required: ['city'],
-        },
-        units: {
-          type: 'string',
-          enum: ['metric', 'imperial'],
-          default: 'metric',
-        },
-      },
-      required: ['location'],
-    },
+    inputSchema: weatherSchema,
     execute: async ({ input }) => {
       try {
         const weather = await client.getWeather(
@@ -185,62 +209,69 @@ const createWeatherTool = (apiKey: string) => {
 };
 ```
 
-#### File system tool
+#### Tool with rich response format
 
 ```typescript
-interface FileSystemInput {
-  operation: 'read' | 'write' | 'delete';
+import { Tool } from '@agenite/tool';
+import { readFile } from 'fs/promises';
+
+interface FileReadInput {
   path: string;
-  content?: string;
+  format?: 'text' | 'base64';
 }
 
-const fileSystemTool = new Tool<FileSystemInput>({
-  name: 'filesystem',
-  description: 'Perform file system operations',
+const fileReaderTool = new Tool<FileReadInput>({
+  name: 'file-reader',
+  description: 'Read the contents of a file',
   version: '1.0.0',
   inputSchema: {
     type: 'object',
     properties: {
-      operation: {
-        type: 'string',
-        enum: ['read', 'write', 'delete'],
-      },
       path: { type: 'string' },
-      content: { type: 'string' },
+      format: { 
+        type: 'string',
+        enum: ['text', 'base64'],
+        default: 'text',
+      },
     },
-    required: ['operation', 'path'],
+    required: ['path'],
   },
   execute: async ({ input }) => {
     try {
-      switch (input.operation) {
-        case 'read':
-          const content = await fs.readFile(input.path, 'utf-8');
-          return {
-            isError: false,
-            data: content,
-          };
-        case 'write':
-          if (!input.content) {
-            throw new Error('Content required for write operation');
-          }
-          await fs.writeFile(input.path, input.content);
-          return {
-            isError: false,
-            data: 'File written successfully',
-          };
-        case 'delete':
-          await fs.unlink(input.path);
-          return {
-            isError: false,
-            data: 'File deleted successfully',
-          };
+      const content = await readFile(input.path);
+      
+      if (input.format === 'base64' && content.toString().endsWith('.jpg')) {
+        // Return image data for JPG files when base64 format is requested
+        return {
+          isError: false,
+          data: [
+            {
+              type: 'image',
+              image: {
+                type: 'base64',
+                media_type: 'image/jpeg',
+                data: content.toString('base64'),
+              },
+            },
+            {
+              type: 'text',
+              text: 'File read successfully',
+            },
+          ],
+        };
       }
+      
+      // Default to text response
+      return {
+        isError: false,
+        data: content.toString('utf-8'),
+      };
     } catch (error) {
       return {
         isError: true,
-        data: `File system error: ${error.message}`,
+        data: `Could not read file: ${error.message}`,
         error: {
-          code: 'FS_ERROR',
+          code: 'FILE_ERROR',
           message: error.message,
         },
       };
@@ -249,61 +280,54 @@ const fileSystemTool = new Tool<FileSystemInput>({
 });
 ```
 
-#### Database tool
+#### Tool with custom validation
 
 ```typescript
+import { Tool } from '@agenite/tool';
+
 interface QueryInput {
-  type: 'select' | 'insert' | 'update' | 'delete';
-  table: string;
-  data?: Record<string, unknown>;
-  where?: Record<string, unknown>;
+  sql: string;
+  parameters?: Record<string, unknown>;
 }
 
 const createDatabaseTool = (db: Database) => {
   return new Tool<QueryInput>({
-    name: 'database',
-    description: 'Execute database operations',
+    name: 'database-query',
+    description: 'Execute SQL queries against the database',
     version: '1.0.0',
     inputSchema: {
       type: 'object',
       properties: {
-        type: {
-          type: 'string',
-          enum: ['select', 'insert', 'update', 'delete'],
-        },
-        table: { type: 'string' },
-        data: {
-          type: 'object',
-          additionalProperties: true,
-        },
-        where: {
+        sql: { type: 'string' },
+        parameters: {
           type: 'object',
           additionalProperties: true,
         },
       },
-      required: ['type', 'table'],
+      required: ['sql'],
+    },
+    // Custom validation to prevent dangerous SQL operations
+    validate: async (input) => {
+      const dangerousKeywords = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER'];
+      const sql = input.sql.toUpperCase();
+      
+      for (const keyword of dangerousKeywords) {
+        if (sql.includes(keyword)) {
+          return {
+            isValid: false,
+            errors: [{
+              field: 'sql',
+              message: `Dangerous operation detected: ${keyword} is not allowed`,
+            }],
+          };
+        }
+      }
+      
+      return { isValid: true };
     },
     execute: async ({ input }) => {
       try {
-        let result;
-        switch (input.type) {
-          case 'select':
-            result = await db.select(input.table, input.where);
-            break;
-          case 'insert':
-            result = await db.insert(input.table, input.data);
-            break;
-          case 'update':
-            result = await db.update(
-              input.table,
-              input.data,
-              input.where
-            );
-            break;
-          case 'delete':
-            result = await db.delete(input.table, input.where);
-            break;
-        }
+        const result = await db.query(input.sql, input.parameters);
         return {
           isError: false,
           data: JSON.stringify(result),
@@ -325,14 +349,15 @@ const createDatabaseTool = (db: Database) => {
 
 ## Best practices
 
-1. **Input validation**: Always define a comprehensive input schema
-2. **Error handling**: Use structured error responses with codes
-3. **Type safety**: Leverage TypeScript generics for input types
-4. **Documentation**: Provide clear descriptions and examples
-5. **Versioning**: Use semantic versioning for compatibility
+1. **Type safety**: Leverage TypeScript generics and Zod schemas for input validation
+2. **Error handling**: Use structured error responses with codes and details
+3. **Schema validation**: Use either JSON Schema or Zod for input validation
+4. **Rich responses**: Utilize text and image responses when appropriate
+5. **Performance tracking**: Monitor execution times and token usage
+6. **Context utilization**: Pass relevant context to tools for better integration
 
 ## Next steps
 
-- Learn about [providers](/api-reference/providers)
-- Explore [middleware](/api-reference/middleware)
-- See [examples](/essentials/examples) 
+- Learn about [Agent API](/api-reference/agent)
+- Explore [provider APIs](/api-reference/providers)
+- Read about [middleware](/api-reference/middleware) 

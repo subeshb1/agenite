@@ -7,157 +7,216 @@ description: "Reference for steps in Agenite"
 
 Steps in Agenite define the sequence of actions an agent takes to accomplish a task. Each step can include prompts, tool calls, and state management.
 
-## Interface
+## Step interface
 
 ```typescript
-interface Step {
+interface Step<
+  ReturnValues extends BaseReturnValues<Record<string, unknown>>,
+  YieldValues,
+  StepParams,
+  NextValues extends BaseNextValue | undefined,
+  State extends StateReducer<Record<string, unknown>> = StateReducer<
+    Record<string, unknown>
+  >,
+> {
+  /**
+   * The name of the executor
+   */
   name: string;
-  description?: string;
-  execute: (context: Context) => Promise<void>;
+  
+  /**
+   * The beforeExecute function. Used to prepare the state for the Step.
+   */
+  beforeExecute: (params: StepContext<State>) => Promise<StepParams>;
+  
+  /**
+   * The execute function. Used to execute the Step.
+   */
+  execute: (
+    params: StepParams,
+    context: StepContext<State>
+  ) => AsyncGenerator<YieldValues, ReturnValues, NextValues>;
+  
+  /**
+   * The afterExecute function. Used to update the state after the Step.
+   */
+  afterExecute: (
+    params: ReturnValues,
+    context: StepContext<State>
+  ) => Promise<ReturnValues>;
+}
+```
+
+## Return values
+
+Steps should return a BaseReturnValues object that includes the next step to execute and state updates:
+
+```typescript
+interface BaseReturnValues<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> {
+  next: DefaultStepType | (string & {});
+  state: T;
+  tokenUsage?: AgentTokenUsage;
+}
+
+type DefaultStepType =
+  | 'agenite.llm-call'
+  | 'agenite.tool-call'
+  | 'agenite.agent-call'
+  | 'agenite.tool-result'
+  | 'agenite.end';
+```
+
+## Step context
+
+The step context provides access to the agent's state and execution details:
+
+```typescript
+interface StepContext<
+  Reducer extends StateReducer<Record<string, unknown>>,
+> {
+  state: StateFromReducer<Reducer>;
+  context: Record<string, unknown>;
+  agent: Agent<Reducer, any, any, any>;
+  parentExecution?: StepContext<any>;
+  isNestedExecution?: boolean;
+  provider: LLMProvider;
+  instructions: string;
+  stream: boolean;
+  tokenUsage: AgentTokenUsage;
 }
 ```
 
 ## Built-in steps
 
-### Prompt step
+### LLM call step
 
-Sends a prompt to the LLM and processes the response.
+Sends messages to the LLM and processes the response.
 
 ```typescript
-import { PromptStep } from '@agenite/steps';
-
-const greetingStep = new PromptStep({
-  name: 'greeting',
-  prompt: 'Hello! How can I help you today?',
-  onResponse: (response, context) => {
-    context.state.userIntent = response.content;
+// Built-in LLM step implementation
+export const LLMStep: Step<
+  BaseReturnValues<{
+    messages: BaseMessage[];
+  }>,
+  LLMCallYieldValues,
+  LLMCallParams,
+  undefined
+> = {
+  name: 'agenite.llm-call',
+  beforeExecute: async (params) => {
+    const tools = params.agent.agentConfig.tools || [];
+    const agents =
+      params.agent.agentConfig.agents?.map((agent) => {
+        return {
+          name: agent.agentConfig.name,
+          description: agent.agentConfig.description || '',
+        };
+      }) || [];
+    return {
+      provider: params.provider,
+      messages: params.state.messages,
+      instructions: params.instructions,
+      tools: transformToToolDefinitions([...tools, ...agents]),
+      stream: params.stream,
+    };
   },
-});
-
-const agent = new Agent({
-  name: 'my-agent',
-  steps: [greetingStep],
-  // ... other options
-});
-```
-
-### Tool step
-
-Executes a specific tool and handles the result.
-
-```typescript
-import { ToolStep } from '@agenite/steps';
-
-const weatherStep = new ToolStep({
-  name: 'check-weather',
-  tool: 'weather',
-  input: (context) => ({
-    city: context.state.city,
-    country: context.state.country,
-  }),
-  onResult: (result, context) => {
-    context.state.temperature = result.temperature;
+  execute: async function* (params: LLMCallParams) {
+    // Call LLM provider and yield streaming responses
+    // ...
   },
-});
-
-const agent = new Agent({
-  name: 'my-agent',
-  steps: [weatherStep],
-  // ... other options
-});
-```
-
-### Conditional step
-
-Executes different steps based on conditions.
-
-```typescript
-import { ConditionalStep } from '@agenite/steps';
-
-const temperatureStep = new ConditionalStep({
-  name: 'temperature-check',
-  condition: (context) => context.state.temperature > 25,
-  onTrue: new PromptStep({
-    name: 'hot-weather',
-    prompt: "It's quite hot today!",
-  }),
-  onFalse: new PromptStep({
-    name: 'cool-weather',
-    prompt: "It's a cool day today.",
-  }),
-});
-
-const agent = new Agent({
-  name: 'my-agent',
-  steps: [weatherStep, temperatureStep],
-  // ... other options
-});
-```
-
-### Loop step
-
-Repeats steps until a condition is met.
-
-```typescript
-import { LoopStep } from '@agenite/steps';
-
-const searchStep = new LoopStep({
-  name: 'search-refinement',
-  condition: (context) => !context.state.satisfactory,
-  steps: [
-    new PromptStep({
-      name: 'refine-search',
-      prompt: 'Would you like to refine your search?',
-    }),
-    new ToolStep({
-      name: 'search',
-      tool: 'search',
-      input: (context) => ({
-        query: context.state.refinedQuery,
-      }),
-    }),
-  ],
-  maxIterations: 3,
-});
-
-const agent = new Agent({
-  name: 'my-agent',
-  steps: [searchStep],
-  // ... other options
-});
-```
-
-### Parallel step
-
-Executes multiple steps concurrently.
-
-```typescript
-import { ParallelStep } from '@agenite/steps';
-
-const multiSearchStep = new ParallelStep({
-  name: 'multi-search',
-  steps: [
-    new ToolStep({
-      name: 'web-search',
-      tool: 'web-search',
-      input: { query: 'AI news' },
-    }),
-    new ToolStep({
-      name: 'image-search',
-      tool: 'image-search',
-      input: { query: 'AI news' },
-    }),
-  ],
-  onComplete: (results, context) => {
-    context.state.combinedResults = results;
+  afterExecute: async (params) => {
+    return params;
   },
-});
+};
+```
 
-const agent = new Agent({
-  name: 'my-agent',
-  steps: [multiSearchStep],
-  // ... other options
-});
+### Tool call step
+
+Executes tools called by the LLM and handles the results.
+
+```typescript
+export const ToolStep: Step<
+  BaseReturnValues<{
+    messages: BaseMessage[];
+  }>,
+  ToolCallYieldValues,
+  ToolCallParams,
+  BaseNextValue
+> = {
+  name: 'agenite.tool-call',
+  beforeExecute: async (params) => {
+    // Extract tool call information from messages
+    // ...
+  },
+  execute: async function* (params, context) {
+    // Execute the tool and process results
+    // ...
+  },
+  afterExecute: async (params) => {
+    return params;
+  },
+};
+```
+
+### Agent call step
+
+Executes nested agent calls and integrates the results.
+
+```typescript
+export const AgentStep: Step<
+  BaseReturnValues<Record<string, unknown>>,
+  | AgentCallYieldValues
+  | LLMCallYieldValues
+  | ToolCallYieldValues
+  | YieldAgeniteEnd
+  | YieldAgeniteStart
+  | ToolResultYieldValues,
+  AgentCallParams,
+  BaseNextValue
+> = {
+  name: 'agenite.agent-call',
+  beforeExecute: async (params) => {
+    // Extract agent call information
+    // ...
+  },
+  execute: async function* (params, context) {
+    // Execute nested agent and process results
+    // ...
+  },
+  afterExecute: async (params) => {
+    return params;
+  },
+};
+```
+
+### Tool result step
+
+Processes tool execution results.
+
+```typescript
+export const ToolResultStep: Step<
+  BaseReturnValues<{
+    messages: BaseMessage[];
+  }>,
+  ToolResultYieldValues,
+  ToolResultParams,
+  BaseNextValue
+> = {
+  name: 'agenite.tool-result',
+  beforeExecute: async (params) => {
+    // Prepare tool results 
+    // ...
+  },
+  execute: async function* (params) {
+    // Process tool results
+    // ...
+  },
+  afterExecute: async (params) => {
+    return params;
+  },
+};
 ```
 
 ## Custom steps
@@ -165,86 +224,118 @@ const agent = new Agent({
 You can create custom steps by implementing the `Step` interface:
 
 ```typescript
-class ValidationStep implements Step {
-  name = 'validation';
-  description = 'Validates user input';
-
-  constructor(private config: {
-    validators: ((input: any) => boolean)[];
-    onInvalid: (context: Context) => Promise<void>;
-  }) {}
-
-  async execute(context: Context) {
-    const input = context.state.userInput;
-    const isValid = this.config.validators.every(v => v(input));
-
-    if (!isValid) {
-      await this.config.onInvalid(context);
-      throw new Error('Invalid input');
+// Example custom step for data validation
+const ValidationStep: Step<
+  BaseReturnValues<{
+    isValid: boolean;
+    errors?: string[];
+  }>,
+  { type: 'validation.checking'; field: string },
+  { data: Record<string, unknown>; rules: ValidationRule[] },
+  undefined
+> = {
+  name: 'validation',
+  beforeExecute: async (context) => {
+    return {
+      data: context.state.formData,
+      rules: context.state.validationRules,
+    };
+  },
+  execute: async function* (params, context) {
+    const { data, rules } = params;
+    const errors: string[] = [];
+    
+    for (const rule of rules) {
+      yield { type: 'validation.checking', field: rule.field };
+      
+      if (!rule.validate(data[rule.field])) {
+        errors.push(`${rule.field}: ${rule.message}`);
+      }
     }
-  }
-}
-
-const agent = new Agent({
-  name: 'my-agent',
-  steps: [
-    new ValidationStep({
-      validators: [
-        input => input.length > 0,
-        input => !input.includes('invalid'),
-      ],
-      onInvalid: async (context) => {
-        context.state.error = 'Invalid input provided';
+    
+    return {
+      next: errors.length ? 'validation-failed' : 'validation-passed',
+      state: {
+        isValid: errors.length === 0,
+        errors: errors.length ? errors : undefined,
       },
-    }),
-  ],
-  // ... other options
-});
+    };
+  },
+  afterExecute: async (result) => {
+    // Perform any cleanup or logging
+    return result;
+  },
+};
 ```
 
 ### Example: Data transformation step
 
 ```typescript
-class TransformStep implements Step {
-  name = 'transform';
-  description = 'Transforms data between steps';
+// Example custom step for data transformation
+const TransformStep: Step<
+  BaseReturnValues<{
+    transformedData: unknown;
+  }>,
+  { type: 'transform.processing' },
+  { data: unknown; transformFn: (data: unknown) => unknown },
+  undefined
+> = {
+  name: 'transform',
+  beforeExecute: async (context) => {
+    return {
+      data: context.state.rawData,
+      transformFn: context.state.transformFunction,
+    };
+  },
+  execute: async function* ({ data, transformFn }) {
+    yield { type: 'transform.processing' };
+    
+    const transformedData = transformFn(data);
+    
+    return {
+      next: 'agenite.llm-call',
+      state: {
+        transformedData,
+      },
+    };
+  },
+  afterExecute: async (result) => {
+    return result;
+  },
+};
+```
 
-  constructor(private config: {
-    transform: (data: any) => any;
-    inputKey: string;
-    outputKey: string;
-  }) {}
+## Using custom steps with an agent
 
-  async execute(context: Context) {
-    const input = context.state[this.config.inputKey];
-    const transformed = this.config.transform(input);
-    context.state[this.config.outputKey] = transformed;
-  }
-}
-
+```typescript
 const agent = new Agent({
-  name: 'my-agent',
-  steps: [
-    new TransformStep({
-      transform: (data) => data.toUpperCase(),
-      inputKey: 'rawText',
-      outputKey: 'processedText',
-    }),
-  ],
-  // ... other options
+  name: 'custom-steps-agent',
+  provider: new OpenAI({ apiKey: 'YOUR_API_KEY' }),
+  steps: {
+    // Include custom steps
+    'validation': ValidationStep,
+    'transform': TransformStep,
+    // Include default steps
+    'agenite.llm-call': LLMStep,
+    'agenite.tool-call': ToolStep,
+    'agenite.agent-call': AgentStep,
+    'agenite.tool-result': ToolResultStep,
+  },
+  // Specify the starting step
+  startStep: 'validation',
 });
 ```
 
 ## Best practices
 
-1. **Modularity**: Keep steps focused and reusable
-2. **State management**: Use context.state for data sharing
-3. **Error handling**: Implement proper error handling
-4. **Validation**: Validate inputs and outputs
-5. **Documentation**: Document step purpose and requirements
+1. **Step chaining**: Design steps that can be chained together through the `next` property
+2. **State management**: Use the `state` object in return values to share data between steps
+3. **Proper typing**: Use TypeScript generics for type safety
+4. **Error handling**: Implement proper error handling in each step
+5. **Reusability**: Design steps to be reusable across different agents
 
 ## Next steps
 
 - Learn about [middleware](/api-reference/middleware)
-- See [examples](/essentials/examples)
-- Read about [advanced features](/essentials/advanced-features) 
+- See [examples](/examples)
+- Read about [core concepts](/core-concepts/agents)

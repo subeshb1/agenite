@@ -20,14 +20,21 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["introduction", "quickstart"]
+            "pages": [
+              "introduction",
+              "quickstart",
+              "examples",
+              "deep-dive-building-coding-agent"
+            ]
           },
           {
-            "group": "Essentials",
+            "group": "Core concepts",
             "pages": [
-              "essentials/core-concepts",
-              "essentials/examples",
-              "essentials/advanced-features"
+              "core-concepts/overview",
+              "core-concepts/agents",
+              "core-concepts/tools",
+              "core-concepts/llm",
+              "core-concepts/providers"
             ]
           }
         ]
