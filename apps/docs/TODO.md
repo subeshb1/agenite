@@ -9,10 +9,10 @@
 - [x] Use mintlify native components. Example, CodeBlocks, CodeGroups, Tabs,Icons, Mermaid Diagrams, Cards, Callouts, Accordian, AccordianGroups, etc.
 
 ## Documentation Structure
-- [ ] Review and analyze current codebase structure
-- [ ] Map out actual implemented features
-- [ ] Create documentation outline based on implemented features
-- [ ] Get approval on documentation structure
+- [x] Review and analyze current codebase structure
+- [x] Map out actual implemented features
+- [x] Create documentation outline based on implemented features
+- [x] Get approval on documentation structure
 
 ## Current Documentation Status
 - [x] Created initial API documentation files
@@ -62,23 +62,25 @@
     - [x] Show how MCP integration
 
 ## Building the Core concepts section
-- [ ] Requirements:
-  - [ ] Find out core concepts implemented in codebase
+- [x] Requirements:
+  - [x] Find out core concepts implemented in codebase
     - [x] Agents
-    - [ ] Tools
-    - [ ] Providers
-  - [] We're gonna keep the details not too deep but enough as we are going to talk about them in other sections
+    - [x] Tools
+    - [x] Providers
+    - [x] LLM
+  - [x] We're gonna keep the details not too deep but enough as we are going to talk about them in other sections
   - [x] Create outline for core concepts
-  - [ ] Get approval on outline
-  - [ ] Tasks:
-    - [ ] Write core concepts section
-    - [ ] Thinkgs to higligh
+  - [x] Get approval on outline
+  - [x] Tasks:
+    - [x] Write core concepts section
+    - [x] Things to highlight
       - [x] User of generators 
       - [x] Bidirectional flow
       - [x] Agent
-      - [ ] Tool
-      - [ ] Providers
-      - [ ] LLM
+      - [x] Tool
+      - [x] Providers
+      - [x] LLM
+    - [x] Merge overview and architecture pages
 
 ### 1. Building Agents Section
 - [x] Agent Overview
@@ -106,24 +108,36 @@
     - [ ] Provide real examples
 
 ### 2. Tools Section
-- [ ] Requirements:
-  - [ ] Review tool implementation
-  - [ ] List supported tool types
-  - [ ] Check schema validation features
-- [ ] Tasks:
-  - [ ] Document tool creation
-  - [ ] Explain schema system
-  - [ ] Show real tool examples
+- [x] Requirements:
+  - [x] Review tool implementation
+  - [x] List supported tool types
+  - [x] Check schema validation features
+- [x] Tasks:
+  - [x] Document tool creation
+  - [x] Explain schema system
+  - [x] Show real tool examples
 
 ### 3. Providers Section
-- [ ] Requirements:
-  - [ ] List actually implemented providers
-  - [ ] Check provider-specific features
-  - [ ] Verify provider interfaces
-- [ ] Tasks:
-  - [ ] Document each provider
-  - [ ] Show provider configuration
-  - [ ] Add usage examples
+- [x] Requirements:
+  - [x] List actually implemented providers
+  - [x] Check provider-specific features
+  - [x] Verify provider interfaces
+- [x] Tasks:
+  - [x] Document each provider
+  - [x] Show provider configuration
+  - [x] Add usage examples
+
+### 4. LLM Section
+- [x] Requirements:
+  - [x] Review LLM abstraction implementation
+  - [x] Understand integration with providers
+  - [x] Verify message structure and content types
+- [x] Tasks:
+  - [x] Document LLM architecture
+  - [x] Explain message structure
+  - [x] Show provider integration
+  - [x] Demonstrate use with agents
+  - [x] Document utility functions exposed by LLM
 
 ## Examples Section
 - [ ] Requirements:

@@ -32,9 +32,8 @@
               "core-concepts/overview",
               "core-concepts/agents",
               "core-concepts/tools",
-              "core-concepts/providers",
               "core-concepts/llm",
-              "core-concepts/architecture"
+              "core-concepts/providers"
             ]
           }
         ]

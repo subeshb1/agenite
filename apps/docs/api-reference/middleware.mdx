@@ -10,221 +10,175 @@ Middleware in Agenite allows you to intercept and modify agent behavior at vario
 ## Interface
 
 ```typescript
-interface Middleware {
-  onStart?: (context: Context) => Promise<void>;
-  onMessage?: (context: Context, message: Message) => Promise<void>;
-  onToolCall?: (context: Context, tool: Tool) => Promise<void>;
-  onToolResult?: (context: Context, result: ToolResult) => Promise<void>;
-  onError?: (context: Context, error: Error) => Promise<void>;
-  onComplete?: (context: Context) => Promise<void>;
-}
+type AsyncGeneratorMiddleware<
+  Yield extends MiddlewareBaseYieldValue = MiddlewareBaseYieldValue,
+  Return = unknown,
+  Next extends MiddlewareBaseNextValue = MiddlewareBaseNextValue,
+  Generator extends AsyncGenerator<
+    BaseYieldValue & {
+      executionContext: StepContext<any>;
+    },
+    unknown,
+    BaseNextValue
+  > = BaseAgeniteIterateGenerator,
+> = (
+  generator: Generator,
+  context: StepContext<any>
+) => AsyncGenerator<
+  Yield | GeneratorYieldType<Generator>,
+  Return,
+  Next | GeneratorNextType<Generator>
+>;
 ```
 
-## Context object
+The middleware wraps the agent's execution generator, allowing you to:
+- Intercept and modify values yielded by the generator
+- Process the final return value
+- Handle next values passed into the generator
+- Access the execution context
 
-The context object provides access to the agent's state and execution details:
+## Middleware Types
 
 ```typescript
-interface Context {
-  agent: Agent;
-  state: Record<string, any>;
-  messages: Message[];
-  tools: Tool[];
-  currentStep?: number;
-  startTime: number;
-  endTime?: number;
-  error?: Error;
-}
+export type MiddlewareBaseYieldValue = {
+  type: `middleware.${string}`;
+  [key: string]: unknown;
+};
+
+export type MiddlewareBaseNextValue = {
+  type: `middleware.${string}`;
+  [key: string]: unknown;
+};
 ```
 
-## Built-in middleware
-
-### Logger middleware
-
-Logs agent execution details to console or custom logger.
+## Using middleware with an agent
 
 ```typescript
-import { LoggerMiddleware } from '@agenite/middleware';
-
-const logger = new LoggerMiddleware({
-  level: 'info',
-  format: 'json',
-  destination: 'console',
-});
-
 const agent = new Agent({
   name: 'my-agent',
-  middleware: [logger],
-  // ... other options
-});
-```
-
-### State middleware
-
-Manages persistent state across agent executions.
-
-```typescript
-import { StateMiddleware } from '@agenite/middleware';
-
-const state = new StateMiddleware({
-  initialState: {
-    counter: 0,
-    history: [],
-  },
-  persist: true,
-});
-
-const agent = new Agent({
-  name: 'my-agent',
-  middleware: [state],
-  // ... other options
-});
-```
-
-### Timeout middleware
-
-Enforces execution time limits.
-
-```typescript
-import { TimeoutMiddleware } from '@agenite/middleware';
-
-const timeout = new TimeoutMiddleware({
-  limit: 30000, // 30 seconds
-  onTimeout: (context) => {
-    console.log('Agent execution timed out');
-  },
-});
-
-const agent = new Agent({
-  name: 'my-agent',
-  middleware: [timeout],
-  // ... other options
-});
-```
-
-### Retry middleware
-
-Automatically retries failed operations.
-
-```typescript
-import { RetryMiddleware } from '@agenite/middleware';
-
-const retry = new RetryMiddleware({
-  maxAttempts: 3,
-  delay: 1000,
-  backoff: 'exponential',
-});
-
-const agent = new Agent({
-  name: 'my-agent',
-  middleware: [retry],
-  // ... other options
-});
-```
-
-### Cache middleware
-
-Caches tool results for improved performance.
-
-```typescript
-import { CacheMiddleware } from '@agenite/middleware';
-
-const cache = new CacheMiddleware({
-  ttl: 3600, // 1 hour
-  maxSize: 1000,
-  storage: 'memory',
-});
-
-const agent = new Agent({
-  name: 'my-agent',
-  middleware: [cache],
-  // ... other options
-});
-```
-
-## Custom middleware
-
-You can create custom middleware by implementing the `Middleware` interface:
-
-```typescript
-class MetricsMiddleware implements Middleware {
-  private metrics: Record<string, number> = {
-    toolCalls: 0,
-    errors: 0,
-    totalTime: 0,
-  };
-
-  async onStart(context: Context) {
-    this.metrics.startTime = Date.now();
-  }
-
-  async onToolCall(context: Context, tool: Tool) {
-    this.metrics.toolCalls++;
-  }
-
-  async onError(context: Context, error: Error) {
-    this.metrics.errors++;
-  }
-
-  async onComplete(context: Context) {
-    this.metrics.totalTime = Date.now() - this.metrics.startTime;
-    console.log('Execution metrics:', this.metrics);
-  }
-}
-
-const agent = new Agent({
-  name: 'my-agent',
-  middleware: [new MetricsMiddleware()],
-  // ... other options
-});
-```
-
-### Example: Rate limiting middleware
-
-```typescript
-class RateLimitMiddleware implements Middleware {
-  private requests: number = 0;
-  private lastReset: number = Date.now();
-
-  constructor(private config: {
-    limit: number;
-    window: number;
-  }) {}
-
-  async onToolCall(context: Context, tool: Tool) {
-    const now = Date.now();
-    if (now - this.lastReset > this.config.window) {
-      this.requests = 0;
-      this.lastReset = now;
-    }
-
-    if (this.requests >= this.config.limit) {
-      throw new Error('Rate limit exceeded');
-    }
-
-    this.requests++;
-  }
-}
-
-const agent = new Agent({
-  name: 'my-agent',
-  middleware: [
-    new RateLimitMiddleware({
-      limit: 10,
-      window: 60000, // 1 minute
-    }),
+  provider: new OpenAI({ apiKey: 'YOUR_API_KEY' }),
+  middlewares: [
+    // Your middleware functions
+    loggingMiddleware(),
+    errorHandlingMiddleware()
   ],
   // ... other options
 });
 ```
 
+## Custom middleware examples
+
+### Logging middleware
+
+```typescript
+function loggingMiddleware(): AsyncGeneratorMiddleware {
+  return async function* (generator, context) {
+    console.log('Agent execution started');
+    
+    let nextValue = undefined;
+    try {
+      while (true) {
+        const { value, done } = await generator.next(nextValue);
+        
+        if (done) {
+          console.log('Agent execution completed');
+          return value;
+        }
+        
+        // Log each yielded value
+        console.log('Event:', value.type);
+        
+        // Pass through to the caller
+        nextValue = yield value;
+      }
+    } catch (error) {
+      console.error('Agent execution error:', error);
+      throw error;
+    }
+  };
+}
+```
+
+### Metrics middleware
+
+```typescript
+function metricsMiddleware(): AsyncGeneratorMiddleware {
+  return async function* (generator, context) {
+    const metrics = {
+      startTime: Date.now(),
+      yields: 0,
+      toolCalls: 0,
+    };
+    
+    let nextValue = undefined;
+    try {
+      while (true) {
+        const { value, done } = await generator.next(nextValue);
+        
+        if (done) {
+          const duration = Date.now() - metrics.startTime;
+          console.log('Execution metrics:', {
+            ...metrics,
+            duration,
+          });
+          return value;
+        }
+        
+        metrics.yields++;
+        if (value.type === 'agenite.tool-call.params') {
+          metrics.toolCalls++;
+        }
+        
+        nextValue = yield value;
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+}
+```
+
+### State persistence middleware
+
+```typescript
+function persistenceMiddleware(storage: Storage): AsyncGeneratorMiddleware {
+  return async function* (generator, context) {
+    // Load persisted state if exists
+    const persistedState = await storage.get(`agent:${context.agent.agentConfig.name}`);
+    if (persistedState) {
+      Object.assign(context.state, JSON.parse(persistedState));
+    }
+    
+    let nextValue = undefined;
+    try {
+      while (true) {
+        const { value, done } = await generator.next(nextValue);
+        
+        if (done) {
+          // Save final state
+          await storage.set(
+            `agent:${context.agent.agentConfig.name}`,
+            JSON.stringify(value)
+          );
+          return value;
+        }
+        
+        nextValue = yield value;
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+}
+```
+
 ## Best practices
 
-1. **Order matters**: Middleware executes in the order specified
+1. **Order matters**: Middlewares execute in the order specified in the array, with each wrapping the ones that come after it
 2. **Keep it focused**: Each middleware should have a single responsibility
-3. **Error handling**: Implement error handling in middleware
-4. **State management**: Use state middleware for persistence
-5. **Performance**: Consider caching and optimization
+3. **Error handling**: Implement proper error handling within the middleware
+4. **Performance**: Be mindful of performance impacts, especially in middleware that runs for every yield
+5. **Typing**: Use proper TypeScript types for your custom middleware
 
 ## Next steps
 

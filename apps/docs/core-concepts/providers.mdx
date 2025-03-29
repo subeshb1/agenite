@@ -1,0 +1,243 @@
+---
+title: 'Providers'
+description: 'Understanding LLM providers and how they integrate with Agenite'
+---
+
+# What are providers?
+
+**Providers** in Agenite are implementations of the `LLMProvider` interface that connect your agents to specific large language model services. They translate the standardized Agenite messaging format into provider-specific API calls and handle the response processing back into the Agenite format.
+
+This provider abstraction allows your agents to:
+- Switch between different LLM services without changing your core agent code
+- Take advantage of specialized capabilities of different providers
+- Maintain a consistent development experience across different LLMs
+
+<Callout type="info">
+  **Key aspects of providers**
+  
+  * **Implementation of the LLM interface**: Each provider implements the standard `LLMProvider` interface
+  * **Provider-specific configuration**: Handle authentication, model selection, and service-specific options
+  * **Consistent usage pattern**: All providers are used in the same way within agent definitions
+  * **Easy switching**: Agents can be reconfigured to use different providers with minimal code changes
+  * **Specialized optimizations**: Providers can implement optimizations for their specific LLM service
+</Callout>
+
+## Supported providers
+
+Agenite includes official support for several popular LLM providers:
+
+### OpenAI
+
+The OpenAI provider connects to OpenAI's GPT models, including GPT-3.5 Turbo and GPT-4.
+
+```typescript
+import { OpenAI } from '@agenite/provider-openai';
+
+const provider = new OpenAI({
+  apiKey: 'your-api-key',
+  model: 'gpt-4-turbo',
+  temperature: 0.7
+});
+```
+
+### Anthropic
+
+The Anthropic provider connects to Anthropic's Claude models.
+
+```typescript
+import { Anthropic } from '@agenite/provider-anthropic';
+
+const provider = new Anthropic({
+  apiKey: 'your-api-key',
+  model: 'claude-3-sonnet-20240229',
+  temperature: 0.5
+});
+```
+
+### AWS Bedrock
+
+The AWS Bedrock provider connects to various models available on the AWS Bedrock service, including Claude, Llama, and more.
+
+```typescript
+import { Bedrock } from '@agenite/provider-bedrock';
+
+const provider = new Bedrock({
+  credentials: {
+    accessKeyId: 'your-access-key',
+    secretAccessKey: 'your-secret-key'
+  },
+  region: 'us-west-2',
+  model: 'anthropic.claude-3-sonnet-20240229',
+  temperature: 0.5
+});
+```
+
+### Ollama
+
+The Ollama provider connects to locally-hosted open-source models using Ollama.
+
+```typescript
+import { Ollama } from '@agenite/provider-ollama';
+
+const provider = new Ollama({
+  model: 'llama3.2',
+  baseUrl: 'http://localhost:11434',
+  temperature: 0.7
+});
+```
+
+## Provider configuration
+
+Each provider has its own configuration options, but they typically include:
+
+1. **Authentication credentials**: API keys or other authentication methods
+2. **Model selection**: Which specific model to use
+3. **Generation parameters**: Temperature, max tokens, etc.
+4. **Endpoint configuration**: Custom endpoints or regions
+
+Here's an example of the configuration options for the OpenAI provider:
+
+```typescript
+interface OpenAIConfig {
+  apiKey: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  stop?: string[];
+  organization?: string;
+}
+```
+
+## Using providers with agents
+
+Providers are passed to agents during initialization:
+
+```typescript
+import { Agent } from '@agenite/agent';
+import { OpenAI } from '@agenite/provider-openai';
+import { Calculator } from '@agenite/tool';
+
+const agent = new Agent({
+  name: 'math-assistant',
+  provider: new OpenAI({ 
+    apiKey: 'your-api-key', 
+    model: 'gpt-4-turbo' 
+  }),
+  tools: [new Calculator()],
+  instructions: 'You are a helpful math assistant.',
+});
+
+const result = await agent.execute({
+  messages: [{ role: 'user', content: 'What is 137 * 456?' }]
+});
+```
+
+The agent uses the provider to handle all LLM communication, making it easy to switch providers:
+
+```typescript
+// Switch to Anthropic's Claude
+const agent = new Agent({
+  name: 'math-assistant',
+  provider: new Anthropic({ 
+    apiKey: 'your-api-key', 
+    model: 'claude-3-sonnet-20240229' 
+  }),
+  tools: [new Calculator()],
+  instructions: 'You are a helpful math assistant.',
+});
+
+// Or use a locally-hosted model with Ollama
+const agent = new Agent({
+  name: 'math-assistant',
+  provider: new Ollama({ 
+    model: 'llama3.2' 
+  }),
+  tools: [new Calculator()],
+  instructions: 'You are a helpful math assistant.',
+});
+```
+
+## Creating custom providers
+
+You can create custom providers by implementing the `LLMProvider` interface. This allows you to:
+
+1. Support proprietary or internal LLM services
+2. Add support for new public LLM services
+3. Create advanced wrappers around existing providers
+
+Here's a simplified example of implementing a custom provider:
+
+```typescript
+import { BaseLLMProvider, GenerateOptions, GenerateResponse, PartialReturn } from '@agenite/llm';
+
+class CustomProvider extends BaseLLMProvider {
+  name = 'custom-provider';
+  version = '1.0.0';
+  
+  constructor(private config: CustomConfig) {
+    super();
+  }
+
+  async generate(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): Promise<GenerateResponse> {
+    // Convert Agenite input format to your provider's format
+    // Make API call to your LLM service
+    // Convert provider response to Agenite GenerateResponse format
+    // Handle errors appropriately
+  }
+
+  async *stream(
+    input: string | BaseMessage[],
+    options?: Partial<GenerateOptions>
+  ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
+    // Similar to generate, but with streaming implementation
+  }
+}
+```
+
+By extending `BaseLLMProvider`, you only need to implement the `generate` and `stream` methods - the `iterate` method will be handled for you.
+
+## Provider best practices
+
+When working with providers, follow these best practices:
+
+1. **Store API keys securely**: Never hardcode API keys or credentials. Use environment variables or secure secret management.
+
+2. **Handle rate limits**: Implement appropriate retry logic and respects rate limits of the LLM service.
+
+3. **Implement timeouts**: Set reasonable timeouts to handle slow or non-responsive API calls.
+
+4. **Configure for your use case**: Adjust provider configuration options to match your specific use case:
+   - Lower temperatures (0.0-0.3) for more deterministic responses
+   - Higher temperatures (0.7-1.0) for more creative responses
+   - Appropriate max tokens based on expected response length
+
+5. **Implement error handling**: Always handle errors from the LLM service gracefully.
+
+```typescript
+try {
+  const result = await agent.execute({
+    messages: [{ role: 'user', content: userQuery }]
+  });
+  // Process result
+} catch (error) {
+  if (error.code === 'RATE_LIMIT_EXCEEDED') {
+    // Implement backoff strategy
+  } else if (error.code === 'CONTEXT_LENGTH_EXCEEDED') {
+    // Handle too much input
+  } else {
+    // Handle other errors
+  }
+}
+```
+
+## Conclusion
+
+Providers are a key component of Agenite's flexibility. By implementing a common interface for different LLM services, providers enable your agents to use the best model for the job without being locked into a single vendor or technology.
+
+In the next section, we'll explore the concept of tools in Agenite and how they extend the capabilities of your agents.

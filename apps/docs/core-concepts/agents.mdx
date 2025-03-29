@@ -3,23 +3,23 @@ title: 'Agents'
 description: 'Understanding Agenite agents - the central orchestrators of AI interactions.'
 ---
 
-# What is an Agent?
+# What is an agent?
 
 An **agent** in AI systems is an autonomous entity that can perceive its environment, make decisions, and take actions to achieve specific goals. In the context of Agenite, an agent combines the reasoning capabilities of Large Language Models (LLMs) with the ability to use tools and interact with its environment.
 
 Think of an agent as an AI assistant that can not only understand and generate text but also perform actions in the real world through its available tools – like searching the web, querying databases, making calculations, or even calling other specialized agents.
 
 <Callout type="info">
-  **Key Aspects of an Agent**
+  **Key aspects of an agent**
   
-  * **Autonomous Decision-Making**: Agents use LLMs to reason about tasks and decide what actions to take
-  * **Tool Usage**: Agents can extend their capabilities by using tools to interact with external systems
-  * **Memory & State**: Agents maintain context through state management
-  * **Sequential Processing**: Agents follow well-defined execution steps
+  * **Autonomous decision-making**: Agents use LLMs to reason about tasks and decide what actions to take
+  * **Tool usage**: Agents can extend their capabilities by using tools to interact with external systems
+  * **Memory & state**: Agents maintain context through state management
+  * **Sequential processing**: Agents follow well-defined execution steps
   * **Composability**: Agents can work together in hierarchical structures
 </Callout>
 
-### Example: A Research Assistant Agent
+### Example: A research assistant agent
 
 To make this concrete, imagine a research assistant agent:
 
@@ -36,24 +36,24 @@ This illustrates the agent's ability to:
 - Process and integrate information from multiple sources
 - Deliver a coherent response that meets the user's need
 
-## Agenite Agents
+## Agenite agents
 
 In Agenite, an **Agent** is the central orchestrator that manages interactions between language models (LLMs), tools, and possibly other agents. It implements a step-based execution model with state management and extensibility through middlewares.
 
 
-## Basic Structure
+## Basic structure
 
 An agent consists of:
 
-**Core Components:**
-- An LLM **Provider** (like OpenAI, Anthropic, etc.) that handles model interactions
-- A collection of **Tools** the agent can use to perform tasks
+**Core components:**
+- An LLM **provider** (like OpenAI, Anthropic, etc.) that handles model interactions
+- A collection of **tools** the agent can use to perform tasks
 - A system **instructions** string that guides the agent's behavior
 - A state management system using **reducers**
 
-**Execution Components:**
-- A sequence of **Steps** that determine the execution flow
-- Optional **Middlewares** that can intercept and modify the execution flow
+**Execution components:**
+- A sequence of **steps** that determine the execution flow
+- Optional **middlewares** that can intercept and modify the execution flow
 - Methods for running the agent: `iterate()` and `execute()`
 
 ```mermaid
@@ -85,7 +85,7 @@ flowchart TD
 
 ```
 
-## Creating an Agent
+## Creating an agent
 
 ```typescript
 import { Agent } from '@agenite/agent';
@@ -101,7 +101,7 @@ const agent = new Agent({
 });
 ```
 
-### Important Agent Configuration Properties
+### Important agent configuration properties
 
 The `Agent` constructor accepts a configuration object with these key properties:
 
@@ -119,11 +119,11 @@ The `Agent` constructor accepts a configuration object with these key properties
 | `middlewares` | `Middleware[]` | Functions that intercept execution | Optional |
 | `description` | `string` | Used when this agent is called by others | Optional |
 
-## Running an Agent
+## Running an agent
 
 Agenite provides two methods to run agents:
 
-### 1. `execute()` - Simple Run
+### 1. `execute()` - Simple run
 
 The simplest way to run an agent to completion:
 
@@ -138,7 +138,7 @@ console.log(result.messages[result.messages.length - 1].content); // Final answe
 console.log(result.tokenUsage); // Token usage statistics
 ```
 
-### 2. `iterate()` - Step-by-Step Control
+### 2. `iterate()` - Step-by-step control
 
 For fine-grained control over execution, use `iterate()` to access the underlying generator:
 
@@ -217,30 +217,30 @@ Common use cases for `iterate()` include:
 - Advanced logging and monitoring
 - Human-in-the-loop workflows where users can intervene
 
-## Steps: The Agent Execution Flow
+## Steps: The agent execution flow
 
 Agents in Agenite operate through a sequence of well-defined **Steps**. Each step is a discrete piece of functionality that yields control at key points.
 
-### Core Steps
+### Core steps
 
 Agenite provides these built-in steps:
 
-1. **LLM Call** (`agenite.llm-call`) 
+1. **LLM call** (`agenite.llm-call`) 
    - Sends messages to the LLM provider
    - Handles streaming responses
    - Determines whether to proceed to tool calling or end
 
-2. **Tool Call** (`agenite.tool-call`)
+2. **Tool call** (`agenite.tool-call`)
    - Processes tool use requests from the LLM
    - Yields control to let the application execute tools
    - Routes to either Tool Result or Agent Call based on tool type
 
-3. **Tool Result** (`agenite.tool-result`) 
+3. **Tool result** (`agenite.tool-result`) 
    - Executes standard tools (like calculators, APIs)
    - Processes tool results
    - Prepares results to send back to the LLM
 
-4. **Agent Call** (`agenite.agent-call`)
+4. **Agent call** (`agenite.agent-call`)
    - Handles delegation to sub-agents
    - Manages nested execution
    - Returns sub-agent results back to the main agent
@@ -249,7 +249,7 @@ Agenite provides these built-in steps:
    - Terminates the execution flow
    - Returns the final state
 
-### Step Flow Visualization
+### Step flow visualization
 
 ```mermaid
 flowchart TD
@@ -273,7 +273,7 @@ flowchart TD
     class Decision,ToolTypeDecision decision;
 
 ```
-### Step Implementation
+### Step implementation
 
 Each step in Agenite has a standard structure:
 
@@ -585,7 +585,7 @@ By adding custom steps, you can create more sophisticated agent behavior that be
 
 
 
-## State Management
+## State management
 
 Agents maintain state throughout their execution. The primary state is the message history, but you can add custom state fields with reducers:
 
@@ -610,7 +610,7 @@ const agent = new Agent({
 
 The reducer pattern allows you to control how new state is merged with existing state during execution.
 
-### State Flow Visualization
+### State flow visualization
 
 ```mermaid
 flowchart TB
@@ -660,7 +660,7 @@ flowchart TB
 
 As an agent executes, each step produces state changes that are processed through reducers:
 
-1. **Step Execution**: Each step (LLM Call, Tool Call, etc.) runs and returns an object:
+1. **Step execution**: Each step (LLM Call, Tool Call, etc.) runs and returns an object:
    ```typescript
    {
      next: 'name-of-next-step', // Which step to run next
@@ -668,12 +668,12 @@ As an agent executes, each step produces state changes that are processed throug
    }
    ```
 
-2. **State Processing**: For each field in the returned state object:
+2. **State processing**: For each field in the returned state object:
    - Find the matching reducer function
    - Apply the reducer to merge new values with existing state
    - Create an updated state that includes these changes
 
-3. **Execution Flow**: Move to the next step specified in the `next` field, using the updated state
+3. **Execution flow**: Move to the next step specified in the `next` field, using the updated state
 
 This cycle repeats for each step in the agent's execution, creating a chain where each step builds on the state from previous steps.
 
@@ -711,7 +711,7 @@ The updated state becomes:
 
 Then, execution continues with the `agenite.tool-call` step.
 
-### The State as Agent Output
+### The state as agent output
 
 An important aspect of Agenite's state management is that **the final state becomes the agent's output**. When an agent completes execution (reaching the `agenite.end` step), the accumulated state is returned as the result:
 
@@ -768,11 +768,11 @@ const result = await agent.execute(input);
 console.log(result.summary); // Access the accumulated summary
 ```
 
-## Extending with Middlewares
+## Extending with middlewares
 
 Middlewares are powerful wrappers around the agent's execution generator that enable you to intercept, modify, or enhance the execution flow. They work by forming a chain that surrounds the main generator.
 
-### How Middlewares Work
+### How middlewares work
 
 Each middleware is an async generator function that:
 1. Receives the inner generator and context as parameters
@@ -808,9 +808,9 @@ const myMiddleware = () => {
 };
 ```
 
-### Middleware Examples
+### Middleware examples
 
-#### 1. Logger Middleware
+#### 1. Logger middleware
 
 A simple logger that records all events and responses:
 
@@ -862,7 +862,7 @@ const agent = new Agent({
 });
 ```
 
-#### 2. Human-in-the-Loop (HITL) Middleware
+#### 2. Human-in-the-loop (HITL) middleware
 
 Allows a human to review and approve agent actions before execution:
 
@@ -927,7 +927,7 @@ const humanApprovalMiddleware = () => {
 
 This simple middleware integrates at the tool call level, allowing a human to approve or reject each tool call the agent tries to make. When a tool call is rejected, the agent receives an error response that it must handle appropriately.
 
-### Combining Multiple Middlewares
+### Combining multiple middlewares
 
 Middlewares are applied in the order provided, with the first middleware in the array being the outermost wrapper:
 
@@ -950,7 +950,7 @@ In this example:
 
 The execution flow travels inward through all middlewares, then outward again as values are yielded back up the chain.
 
-### Custom Events and Return Values
+### Custom events and return values
 
 Middlewares can also yield custom events and modify the final return value, enabling powerful integration patterns:
 
@@ -1055,7 +1055,7 @@ These capabilities allow middlewares to:
 
 By combining custom events and return values with the core middleware functionality, you can extend Agenite agents in virtually unlimited ways.
 
-### Visualizing Middleware Flow with Custom Events
+### Visualizing middleware flow with custom events
 
 ```mermaid
 sequenceDiagram
@@ -1127,17 +1127,17 @@ By combining custom events and return values with this chained middleware patter
 
 
 
-### Custom Middleware Tips
+### Custom middleware tips
 
 When creating custom middlewares:
 
-1. **Error Handling**: Always include try/catch blocks to prevent errors from breaking the agent
+1. **Error handling**: Always include try/catch blocks to prevent errors from breaking the agent
 2. **Types**: Consider what event types you need to handle - most middlewares only need to process specific events
 3. **Performance**: Be mindful of performance, especially for events that occur frequently like streaming chunks
 4. **Chaining**: Test your middleware with others to ensure they work well together
 5. **State**: Avoid shared state between middleware instances unless explicitly designed for it
 
-## Multi-Agent Architecture
+## Multi-agent architecture
 
 Agents can be composed into hierarchies, with coordinator agents delegating to specialist agents:
 
@@ -1178,7 +1178,7 @@ const result = await coordinatorAgent.execute({
 
 When the coordinator receives a question, it can choose to delegate to the appropriate specialist using the Agent Call step.
 
-### Multi-Agent Flow
+### Multi-agent flow
 
 ```mermaid
 sequenceDiagram
