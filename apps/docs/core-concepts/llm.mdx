@@ -123,11 +123,10 @@ This rich structure allows agents to handle multimodal content and tool interact
 The simplest way to use the LLM component is for basic text generation:
 
 ```typescript
-import { OpenAI } from '@agenite/provider-openai';
+import { BedrockProvider } from '@agenite/bedrock';
 
-const provider = new OpenAI({ 
-  apiKey: 'your-api-key',
-  model: 'gpt-4-turbo-preview' 
+const provider = new BedrockProvider({ 
+  model: 'anthropic.claude-3-5-sonnet-20240620-v1:0'
 });
 
 // Generate a response
@@ -218,13 +217,13 @@ The key aspect of this integration is that agents work with the abstract `LLMPro
 
 ```typescript
 import { Agent } from '@agenite/agent';
-import { OpenAI } from '@agenite/provider-openai';
+import { BedrockProvider } from '@agenite/bedrock';
 import { Calculator } from '@agenite/tool';
 
 // The agent uses the LLM provider, not directly working with OpenAI's API
 const agent = new Agent({
   name: 'math-assistant',
-  provider: new OpenAI({ apiKey: 'your-key', model: 'gpt-4-turbo' }),
+  provider: new BedrockProvider({ model: 'anthropic.claude-3-5-sonnet-20240620-v1:0' }),
   tools: [new Calculator()],
   instructions: 'You are a helpful math assistant.',
 });

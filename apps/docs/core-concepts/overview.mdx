@@ -39,9 +39,9 @@ At the heart of Agenite, an agent's execution is managed by an Async Generator. 
 
 ```typescript
 import { Agent } from '@agenite/agent';
-import { OpenAI } from '@agenite/provider-openai';
+import { BedrockProvider } from '@agenite/bedrock';
 
-const agent = new Agent({ provider: new OpenAI() });
+const agent = new Agent({ provider: new BedrockProvider() });
 
 // Calling iterate returns the generator, but doesn't run it yet
 const generator = agent.iterate({ messages: [{ role: 'user', content: 'Hello!' }] });

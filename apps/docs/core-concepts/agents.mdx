@@ -89,14 +89,17 @@ flowchart TD
 
 ```typescript
 import { Agent } from '@agenite/agent';
-import { OpenAI } from '@agenite/provider-openai';
-import { Calculator } from '@agenite/tool';
+import { BedrockProvider } from '@agenite/bedrock';
+// Import the tool you created
+import { calculatorTool } from './tools/calculator';
 
 // Basic agent construction
 const agent = new Agent({
   name: 'calculator-agent',
-  provider: new OpenAI(),
-  tools: [new Calculator()],
+  provider: new BedrockProvider({
+    model: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
+  }),
+  tools: [calculatorTool],
   instructions: 'You are a helpful math assistant. Use the calculator tool when needed.',
 });
 ```
@@ -319,11 +322,12 @@ To customize steps:
 
 ```typescript
 import { Agent, LLMStep } from '@agenite/agent';
+import { BedrockProvider } from '@agenite/bedrock';
 
 // Create an agent with a modified LLM step
 const agent = new Agent({
   name: 'custom-flow-agent',
-  provider: new OpenAI(),
+  provider: new BedrockProvider(),
   tools: [myCustomTool],
   instructions: 'You are a helpful assistant.',
   
@@ -421,7 +425,7 @@ Here's a practical example of creating a validation step that checks user input 
 
 ```typescript
 import { Agent, LLMStep } from '@agenite/agent';
-import { OpenAI } from '@agenite/provider-openai';
+import { BedrockProvider } from '@agenite/bedrock';
 import { BaseReturnValues } from '@agenite/agent';
 
 // Custom step that validates user input
@@ -505,7 +509,7 @@ const contentValidationStep = {
 // Create agent with the validation step
 const agent = new Agent({
   name: 'validated-agent',
-  provider: new OpenAI(),
+  provider: new BedrockProvider(),
   instructions: 'You are a helpful assistant.',
   steps: {
     'custom.validation': contentValidationStep,
@@ -856,7 +860,7 @@ const loggerMiddleware = (options = { verbose: false }) => {
 // Usage
 const agent = new Agent({
   name: 'verbose-agent',
-  provider: new OpenAI(),
+  provider: new BedrockProvider(),
   middlewares: [loggerMiddleware({ verbose: true })],
   // ... other config
 });
@@ -934,7 +938,7 @@ Middlewares are applied in the order provided, with the first middleware in the 
 ```typescript
 const agent = new Agent({
   name: 'enhanced-agent',
-  provider: new OpenAI(),
+  provider: new BedrockProvider(),
   middlewares: [
     loggerMiddleware({ verbose: true }),  // Applied first
     humanApprovalMiddleware(),           // Applied second
@@ -1002,7 +1006,7 @@ const enhancedMiddleware = () => {
 // Using the middleware
 const agent = new Agent({
   name: 'enhanced-agent',
-  provider: new OllamaProvider({ model: 'llama3.2' }),
+  provider: new BedrockProvider(),
   middlewares: [enhancedMiddleware()],
   // ... other config
 });
@@ -1146,7 +1150,7 @@ Agents can be composed into hierarchies, with coordinator agents delegating to s
 const mathAgent = new Agent({
   name: 'math-specialist',
   description: 'Expert at solving math problems',
-  provider: new OpenAI(),
+  provider: new BedrockProvider(),
   tools: [calculatorTool],
   instructions: 'You are an expert math assistant.',
 });
@@ -1154,7 +1158,7 @@ const mathAgent = new Agent({
 const weatherAgent = new Agent({
   name: 'weather-specialist',
   description: 'Expert at weather information',
-  provider: new OpenAI(),
+  provider: new BedrockProvider(),
   tools: [weatherTool],
   instructions: 'You provide accurate weather information.',
 });
@@ -1162,7 +1166,7 @@ const weatherAgent = new Agent({
 // Coordinator agent that can delegate to specialists
 const coordinatorAgent = new Agent({
   name: 'coordinator',
-  provider: new OpenAI(),
+  provider: new BedrockProvider(),
   agents: [mathAgent, weatherAgent], // Sub-agents this agent can call
   instructions: 'You coordinate between specialist agents. For math questions, delegate to math-specialist. For weather questions, delegate to weather-specialist.',
 });

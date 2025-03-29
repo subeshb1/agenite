@@ -271,7 +271,7 @@ To use tools with an agent, pass them in the `tools` array when creating an agen
 
 ```typescript
 import { Agent } from '@agenite/agent';
-import { OpenAI } from '@agenite/provider-openai';
+import { BedrockProvider } from '@agenite/bedrock';
 import { calculatorTool } from './tools/calculator';
 import { createWeatherTool } from './tools/weather';
 
@@ -279,7 +279,7 @@ const weatherTool = createWeatherTool('your-api-key');
 
 const agent = new Agent({
   name: 'helpful-assistant',
-  provider: new OpenAI(),
+  provider: new BedrockProvider(),
   tools: [calculatorTool, weatherTool],
   instructions: 'You are a helpful assistant. Use the calculator for math operations and the weather tool for weather information.',
 });

@@ -215,11 +215,10 @@ interface JSONSchema {
 ### Simple generation
 
 ```typescript
-import { OpenAI } from '@agenite/provider-openai';
+import { BedrockProvider } from '@agenite/bedrock';
 
-const provider = new OpenAI({
-  apiKey: 'your-api-key',
-  model: 'gpt-4-turbo',
+const provider = new BedrockProvider({
+  model: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
 });
 
 // Simple text input

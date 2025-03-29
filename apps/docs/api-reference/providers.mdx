@@ -47,19 +47,17 @@ Most providers extend the `BaseLLMProvider` class, which implements the `iterate
 ### Installation
 
 ```bash
-npm install @agenite/provider-openai
+npm install @agenite/openai
 ```
 
 ### Usage
 
 ```typescript
-import { OpenAI } from '@agenite/provider-openai';
+import { OpenAI } from '@agenite/openai';
 
 const provider = new OpenAI({
   apiKey: 'your-api-key',
   model: 'gpt-4-turbo-preview',
-  temperature: 0.7,
-  maxTokens: 1000,
 });
 
 const agent = new Agent({
@@ -103,13 +101,13 @@ interface BaseLLMConfig {
 ### Installation
 
 ```bash
-npm install @agenite/provider-anthropic
+npm install @agenite/anthropic
 ```
 
 ### Usage
 
 ```typescript
-import { Anthropic } from '@agenite/provider-anthropic';
+import { Anthropic } from '@agenite/anthropic';
 
 const provider = new Anthropic({
   apiKey: 'your-api-key',
@@ -140,21 +138,17 @@ interface AnthropicConfig extends BaseLLMConfig {
 ### Installation
 
 ```bash
-npm install @agenite/provider-bedrock
+npm install @agenite/bedrock
 ```
 
 ### Usage
 
 ```typescript
-import { Bedrock } from '@agenite/provider-bedrock';
+import { Bedrock } from '@agenite/bedrock';
 
 const provider = new Bedrock({
-  credentials: {
-    accessKeyId: 'your-access-key',
-    secretAccessKey: 'your-secret-key',
-  },
   region: 'us-west-2',
-  model: 'anthropic.claude-3-sonnet-20240229-v1:0',
+  model: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
 });
 
 const agent = new Agent({
@@ -168,11 +162,7 @@ const agent = new Agent({
 
 ```typescript
 interface BedrockConfig extends BaseLLMConfig {
-  credentials: {
-    accessKeyId: string;
-    secretAccessKey: string;
-  };
-  region: string;
+  region?: string;
   model: string;
   temperature?: number;
   maxTokens?: number;
@@ -186,13 +176,13 @@ interface BedrockConfig extends BaseLLMConfig {
 ### Installation
 
 ```bash
-npm install @agenite/provider-ollama
+npm install @agenite/ollama
 ```
 
 ### Usage
 
 ```typescript
-import { Ollama } from '@agenite/provider-ollama';
+import { Ollama } from '@agenite/ollama';
 
 const provider = new Ollama({
   model: 'llama3.2',
@@ -315,7 +305,7 @@ type StopReason = 'toolUse' | 'maxTokens' | 'stopSequence' | 'endTurn';
 2. **Rate limiting**: Respect provider rate limits
 3. **Token tracking**: Always include accurate token usage metrics
 4. **Streaming**: Implement efficient streaming to minimize latency
-5. **Content mapping**: Properly map provider-specific responses to Agenite's standard format
+5. **Content mapping**: Properly map specific responses to Agenite's standard format
 
 ## Next steps
 

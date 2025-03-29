@@ -310,7 +310,7 @@ const TransformStep: Step<
 ```typescript
 const agent = new Agent({
   name: 'custom-steps-agent',
-  provider: new OpenAI({ apiKey: 'YOUR_API_KEY' }),
+  provider: new BedrockProvider({ model: 'anthropic.claude-3-5-sonnet-20240620-v1:0' }),
   steps: {
     // Include custom steps
     'validation': ValidationStep,

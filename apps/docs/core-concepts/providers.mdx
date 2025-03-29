@@ -5,7 +5,7 @@ description: 'Understanding LLM providers and how they integrate with Agenite'
 
 # What are providers?
 
-**Providers** in Agenite are implementations of the `LLMProvider` interface that connect your agents to specific large language model services. They translate the standardized Agenite messaging format into provider-specific API calls and handle the response processing back into the Agenite format.
+**Providers** in Agenite are implementations of the `LLMProvider` interface that connect your agents to specific large language model services. They translate the standardized Agenite messaging format into specific API calls and handle the response processing back into the Agenite format.
 
 This provider abstraction allows your agents to:
 - Switch between different LLM services without changing your core agent code
@@ -31,7 +31,7 @@ Agenite includes official support for several popular LLM providers:
 The OpenAI provider connects to OpenAI's GPT models, including GPT-3.5 Turbo and GPT-4.
 
 ```typescript
-import { OpenAI } from '@agenite/provider-openai';
+import { OpenAI } from '@agenite/openai';
 
 const provider = new OpenAI({
   apiKey: 'your-api-key',
@@ -45,7 +45,7 @@ const provider = new OpenAI({
 The Anthropic provider connects to Anthropic's Claude models.
 
 ```typescript
-import { Anthropic } from '@agenite/provider-anthropic';
+import { Anthropic } from '@agenite/anthropic';
 
 const provider = new Anthropic({
   apiKey: 'your-api-key',
@@ -59,16 +59,11 @@ const provider = new Anthropic({
 The AWS Bedrock provider connects to various models available on the AWS Bedrock service, including Claude, Llama, and more.
 
 ```typescript
-import { Bedrock } from '@agenite/provider-bedrock';
+import { BedrockProvider } from '@agenite/bedrock';
 
-const provider = new Bedrock({
-  credentials: {
-    accessKeyId: 'your-access-key',
-    secretAccessKey: 'your-secret-key'
-  },
-  region: 'us-west-2',
-  model: 'anthropic.claude-3-sonnet-20240229',
-  temperature: 0.5
+const provider = new BedrockProvider({
+  model: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
+  temperature: 0.7
 });
 ```
 
@@ -77,7 +72,7 @@ const provider = new Bedrock({
 The Ollama provider connects to locally-hosted open-source models using Ollama.
 
 ```typescript
-import { Ollama } from '@agenite/provider-ollama';
+import { Ollama } from '@agenite/ollama';
 
 const provider = new Ollama({
   model: 'llama3.2',
@@ -117,7 +112,7 @@ Providers are passed to agents during initialization:
 
 ```typescript
 import { Agent } from '@agenite/agent';
-import { OpenAI } from '@agenite/provider-openai';
+import { OpenAI } from '@agenite/openai';
 import { Calculator } from '@agenite/tool';
 
 const agent = new Agent({
