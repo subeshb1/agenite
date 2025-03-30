@@ -7,7 +7,7 @@
     "light": "#569CFF",
     "dark": "#2563EB"
   },
-  "favicon": "/favicon.ico",
+  "favicon": "/favicon.svg",
   "integrations": {
     "ga4": {
       "measurementId": "G-REW76SJKTJ"
