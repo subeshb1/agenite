@@ -1,5 +1,16 @@
 # @agenite/tool
 
+## 0.5.0
+
+### Minor Changes
+
+- b2bc136: Update token usage and have common provider interface
+
+### Patch Changes
+
+- Updated dependencies [b2bc136]
+  - @agenite/llm@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes

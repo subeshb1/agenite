@@ -1,6 +1,6 @@
 {
   "name": "@agenite/tool",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Tool interface for Agenite",
   "private": false,
   "type": "module",
