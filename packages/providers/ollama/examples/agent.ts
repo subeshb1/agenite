@@ -52,7 +52,7 @@ async function simpleAgent(prompt: string) {
 
     console.log('Response:', JSON.stringify(response, null, 2));
     console.log('Stop Reason:', response.stopReason);
-    console.log('Token Usage:', JSON.stringify(response.tokens, null, 2));
+    console.log('Token Usage:', JSON.stringify(response.tokenUsage, null, 2));
 
     if (response.stopReason === 'toolUse') {
       const toolUse = response.content.find(

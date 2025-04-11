@@ -34,13 +34,15 @@ export function transformToToolDefinitions(
   }));
 }
 
-export type LLMCallYieldValues = {
-  type: 'agenite.llm-call.streaming';
-  content: PartialReturn;
-} | {
-  type: 'agenite.llm-call.input';
-  content: LLMCallInput;
-};
+export type LLMCallYieldValues =
+  | {
+      type: 'agenite.llm-call.streaming';
+      content: PartialReturn;
+    }
+  | {
+      type: 'agenite.llm-call.input';
+      content: LLMCallInput;
+    };
 
 type LLMCallParams = {
   provider: LLMProvider;
@@ -109,7 +111,7 @@ export const LLMStep: Step<
       role: 'assistant',
       content: response.value.content,
     } as const;
-    const tokenUsage = convertLLMTokenUsage(response.value.tokens);
+    const tokenUsage = convertLLMTokenUsage([response.value.tokenUsage].flat());
 
     if (response.value.stopReason === 'toolUse') {
       return {

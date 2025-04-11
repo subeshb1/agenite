@@ -57,9 +57,10 @@ export class BedrockProvider extends BaseLLMProvider {
     );
 
     // When reasoning is enabled, we set temperature to 1 as it's the only way to get reasoning
-    const temperature = this.config.enableReasoning
-      ? 1
-      : (options?.temperature ?? this.config.temperature ?? 0.7);
+    const temperature =
+      this.config.enableThinking || this.config.enableReasoning
+        ? 1
+        : (options?.temperature ?? this.config.temperature ?? 0.7);
 
     return {
       modelId: this.config.model || DEFAULT_MODEL,
@@ -78,14 +79,15 @@ export class BedrockProvider extends BaseLLMProvider {
             toolChoice: { auto: {} },
           }
         : undefined,
-      additionalModelRequestFields: this.config.enableReasoning
-        ? {
-            reasoning_config: {
-              type: 'enabled',
-              budget_tokens: this.config.reasoningBudgetTokens || 1024,
-            },
-          }
-        : undefined,
+      additionalModelRequestFields:
+        this.config.enableThinking || this.config.enableReasoning
+          ? {
+              reasoning_config: {
+                type: 'enabled',
+                budget_tokens: this.config.reasoningBudgetTokens || 1024,
+              },
+            }
+          : undefined,
     };
   }
 
@@ -100,20 +102,19 @@ export class BedrockProvider extends BaseLLMProvider {
     content: GenerateResponse['content'],
     stopReason: StopReason | undefined,
     inputTokens: number,
-    outputTokens: number,
-    startTime: number
+    outputTokens: number
   ): GenerateResponse {
     return {
       content,
       stopReason: mapStopReason(stopReason),
-      tokens: [
-        {
-          modelId: this.config.model || DEFAULT_MODEL,
-          inputTokens,
-          outputTokens,
-        },
-      ],
-      duration: Date.now() - startTime,
+      tokenUsage: {
+        model: this.config.model || DEFAULT_MODEL,
+        inputTokens,
+        outputTokens,
+        // TODO: introduce cost LLM
+        inputCost: 0,
+        outputCost: 0,
+      },
     };
   }
 
@@ -357,7 +358,6 @@ export class BedrockProvider extends BaseLLMProvider {
     input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    const startTime = Date.now();
     try {
       const requestBody = this.createRequestBody(input, options);
       const response = await this.client.send(
@@ -408,8 +408,7 @@ export class BedrockProvider extends BaseLLMProvider {
         mapContent(state.contentBlocks),
         finalStopReason,
         state.inputTokens,
-        state.outputTokens,
-        startTime
+        state.outputTokens
       );
     } catch (error) {
       this.handleError(error);
@@ -420,7 +419,6 @@ export class BedrockProvider extends BaseLLMProvider {
     input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
-    const startTime = Date.now();
     try {
       const requestBody = this.createRequestBody(input, options);
       const response = await this.client.send(
@@ -434,8 +432,7 @@ export class BedrockProvider extends BaseLLMProvider {
         mapContent(response.output?.message?.content || []),
         response.stopReason,
         response.usage?.inputTokens || 0,
-        response.usage?.outputTokens || 0,
-        startTime
+        response.usage?.outputTokens || 0
       );
     } catch (error) {
       this.handleError(error);

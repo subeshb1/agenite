@@ -30,8 +30,8 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.17.25",
+    "@types/node": "^20.17.30",
     "tsx": "^4.7.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }

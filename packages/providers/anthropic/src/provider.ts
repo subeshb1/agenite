@@ -158,7 +158,6 @@ export class AnthropicProvider extends BaseLLMProvider {
     input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
-    const startTime = Date.now();
     try {
       const messageArray = convertStringToMessages(input);
       const transformedMessages = convertMessages(messageArray);
@@ -175,14 +174,13 @@ export class AnthropicProvider extends BaseLLMProvider {
       return {
         content: mapContent(response.content),
         stopReason: mapStopReason(response.stop_reason),
-        tokens: [
-          {
-            modelId: response.model,
-            inputTokens: response.usage.input_tokens,
-            outputTokens: response.usage.output_tokens,
-          },
-        ],
-        duration: Date.now() - startTime,
+        tokenUsage: {
+          model: response.model,
+          inputTokens: response.usage.input_tokens,
+          outputTokens: response.usage.output_tokens,
+          inputCost: 0,
+          outputCost: 0,
+        },
       };
     } catch (error) {
       console.error('Anthropic generation failed:', error);
@@ -196,7 +194,6 @@ export class AnthropicProvider extends BaseLLMProvider {
     input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    const startTime = Date.now();
     try {
       const messageArray = convertStringToMessages(input);
       const transformedMessages = convertMessages(messageArray);
@@ -239,14 +236,13 @@ export class AnthropicProvider extends BaseLLMProvider {
       return {
         content: mapContent(finalMessage.content),
         stopReason: mapStopReason(finalMessage.stop_reason),
-        tokens: [
-          {
-            modelId: finalMessage.model,
-            inputTokens: finalMessage.usage.input_tokens,
-            outputTokens: finalMessage.usage.output_tokens,
-          },
-        ],
-        duration: Date.now() - startTime,
+        tokenUsage: {
+          model: finalMessage.model,
+          inputTokens: finalMessage.usage.input_tokens,
+          outputTokens: finalMessage.usage.output_tokens,
+          inputCost: 0,
+          outputCost: 0,
+        },
       };
     } catch (error) {
       console.error('Anthropic generation failed:', error);

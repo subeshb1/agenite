@@ -22,15 +22,15 @@
   },
   "dependencies": {
     "@agenite/llm": "workspace:*",
-    "@aws-sdk/client-bedrock-runtime": "^3.772.0"
+    "@aws-sdk/client-bedrock-runtime": "^3.785.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/tsup-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.17.25",
+    "@types/node": "^20.17.30",
     "tsup": "^8.4.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "publishConfig": {
     "access": "public",

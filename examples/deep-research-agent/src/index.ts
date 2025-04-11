@@ -65,28 +65,30 @@ async function main() {
           } else if (response.value.content.type === 'toolUse') {
             // Handle tool use
             const toolUse = response.value.content.toolUse;
-            switch (toolUse.name) {
-              case 'web_search':
-                console.log(
-                  chalk.yellow(
-                    `\n🔎 Searching the web for: "${(toolUse.input as { query: string }).query}"`
-                  )
-                );
-                break;
-              case 'web_scraper':
-                console.log(
-                  chalk.yellow(
-                    `\n🔎 Investigating: "${(toolUse.input as { url: string }).url}"`
-                  )
-                );
-                break;
-              case 'file_manager':
-                console.log(
-                  chalk.yellow(
-                    `\n💾 Writing the blog post to file: "${(toolUse.input as { filename: string }).filename}"`
-                  )
-                );
-                break;
+            if (toolUse) {
+              switch (toolUse.name) {
+                case 'web_search':
+                  console.log(
+                    chalk.yellow(
+                      `\n🔎 Searching the web for: "${(toolUse.input as { query: string }).query}"`
+                    )
+                  );
+                  break;
+                case 'web_scraper':
+                  console.log(
+                    chalk.yellow(
+                      `\n🔎 Investigating: "${(toolUse.input as { url: string }).url}"`
+                    )
+                  );
+                  break;
+                case 'file_manager':
+                  console.log(
+                    chalk.yellow(
+                      `\n💾 Writing the blog post to file: "${(toolUse.input as { filename: string }).filename}"`
+                    )
+                  );
+                  break;
+              }
             }
           }
           break;

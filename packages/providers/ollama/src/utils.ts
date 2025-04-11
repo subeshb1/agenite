@@ -6,6 +6,7 @@ import type {
   ToolDefinition,
   ToolUseBlock,
   ToolResultBlock,
+  TokenUsage,
 } from '@agenite/llm';
 import type { Tool } from 'ollama';
 import type {
@@ -18,17 +19,17 @@ import type {
  * Creates token information for a response
  */
 function createTokenInfo(
-  modelId: string,
+  model: string,
   inputTokens: number = 0,
   outputTokens: number = 0
 ) {
-  return [
-    {
-      inputTokens,
-      outputTokens,
-      modelId,
-    },
-  ];
+  return {
+    inputTokens,
+    outputTokens,
+    model,
+    inputCost: 0,
+    outputCost: 0,
+  } as TokenUsage;
 }
 
 /**
@@ -36,16 +37,14 @@ function createTokenInfo(
  */
 export function createResponse(
   content: ContentBlock[],
-  startTime: number,
-  modelId: string,
+  model: string,
   inputTokens: number = 0,
   outputTokens: number = 0,
   stopReason?: StopReason
 ): GenerateResponse {
   return {
     content,
-    tokens: createTokenInfo(modelId, inputTokens, outputTokens),
-    duration: Date.now() - startTime,
+    tokenUsage: createTokenInfo(model, inputTokens, outputTokens),
     stopReason,
   };
 }

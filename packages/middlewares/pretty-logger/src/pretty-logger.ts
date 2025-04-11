@@ -302,11 +302,11 @@ export const prettyLogger: () => AsyncGeneratorMiddleware = () => {
             addSeparation('tool', result.value.executionContext);
             const toolContent = result.value.content.toolUse;
             console.log(
-              chalk.cyan.bold(`${prefix}⚙️  Tool use: [${toolContent.name}]`)
+              chalk.cyan.bold(`${prefix}⚙️  Tool use: [${toolContent?.name}]`)
             );
             console.log(
               createStructuredBox(
-                JSON.stringify(toolContent.input, null, 2),
+                JSON.stringify(toolContent?.input, null, 2),
                 chalk.cyan,
                 prefix
               )

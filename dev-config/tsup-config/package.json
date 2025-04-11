@@ -8,6 +8,6 @@
     "tsup": "^8.4.0"
   },
   "devDependencies": {
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }

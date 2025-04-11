@@ -106,8 +106,16 @@ export interface BedrockConfig extends BaseLLMConfig {
     sessionToken?: string;
   };
   bedrockClientConfig?: Partial<BedrockRuntimeClientConfig>;
-  converseCommandConfig?: Partial<ConverseCommandInput> | Partial<ConverseStreamCommandInput>[];
+  converseCommandConfig?:
+    | Partial<ConverseCommandInput>
+    | Partial<ConverseStreamCommandInput>[];
+  /**
+   * @deprecated use enableThinking instead
+   */
   enableReasoning?: boolean;
+  /**
+   * Reasoning budget tokens
+   */
   reasoningBudgetTokens?: number;
 }
 

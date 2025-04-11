@@ -239,7 +239,7 @@ class CustomProvider extends BaseLLMProvider {
     
     return {
       content: [{ type: 'text', text: 'Response from custom LLM' }],
-      tokens: [{ modelId: 'my-model', inputTokens: 10, outputTokens: 20 }],
+      tokens: [{ model: 'my-model', inputTokens: 10, outputTokens: 20 }],
       duration: 500,
       stopReason: 'endTurn'
     };
@@ -259,7 +259,7 @@ class CustomProvider extends BaseLLMProvider {
     // 4. Return final response similar to generate
     return {
       content: [{ type: 'text', text: 'Complete response' }],
-      tokens: [{ modelId: 'my-model', inputTokens: 10, outputTokens: 20 }],
+      tokens: [{ model: 'my-model', inputTokens: 10, outputTokens: 20 }],
       duration: 500,
       stopReason: 'endTurn'
     };
@@ -274,9 +274,17 @@ class CustomProvider extends BaseLLMProvider {
 All providers return responses in a standardized format:
 
 ```typescript
+interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  inputCost: number;
+  outputCost: number;
+  model: string;
+}
+
 interface GenerateResponse {
   content: Array<ContentBlock>;
-  tokens: TokenUsage[];
+  tokenUsage: TokenUsage;
   duration: number;
   stopReason?: StopReason;
 }
@@ -289,12 +297,6 @@ type ContentBlock =
   | DocumentBlock      // { type: 'document', source: ... }
   | ThinkingBlock      // { type: 'thinking', thinking: string }
   | RedactedThinkingBlock;
-
-interface TokenUsage {
-  inputTokens: number;
-  outputTokens: number;
-  modelId: string;
-}
 
 type StopReason = 'toolUse' | 'maxTokens' | 'stopSequence' | 'endTurn';
 ```

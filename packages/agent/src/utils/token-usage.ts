@@ -70,19 +70,18 @@ export function convertLLMTokenUsage(
 
   // Process each model's token usage
   llmTokenUsages.forEach((usage) => {
-    const modelId = usage.modelId;
+    const model = usage.model;
     const inputTokens = usage.inputTokens;
     const outputTokens = usage.outputTokens;
     const totalTokens = inputTokens + outputTokens;
-    const inputCost = 0;
-    const outputCost = 0;
-    const totalCost = 0;
+    const inputCost = usage.inputCost;
+    const outputCost = usage.outputCost;
+    const totalCost = inputCost + outputCost;
 
-    modelBreakdown[modelId] = {
+    modelBreakdown[model] = {
       inputTokens,
       outputTokens,
       totalTokens,
-      // TODO: introduce cost LLM
       inputCost,
       outputCost,
       totalCost,

@@ -16,6 +16,13 @@ export type AnthropicModel =
  */
 export interface AnthropicConfig extends BaseLLMConfig {
   apiKey: string;
+  /**
+   * Base URL for the Anthropic API
+   */
+  baseURL?: string;
+  /**
+   * Model to use for the Anthropic API
+   */
   model?: AnthropicModel;
   /**
    * System prompt to be prepended to all messages

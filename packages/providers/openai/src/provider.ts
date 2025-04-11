@@ -85,9 +85,6 @@ export class OpenAIProvider extends BaseLLMProvider {
     super();
     this.client = new OpenAI({
       apiKey: config.apiKey,
-      organization: config.organization,
-      baseURL: config.baseURL,
-      maxRetries: config.maxRetries,
     });
     this.model = config.model ?? 'gpt-4-turbo-preview';
   }
@@ -96,7 +93,6 @@ export class OpenAIProvider extends BaseLLMProvider {
     input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
-    const startTime = Date.now();
     try {
       const messageArray = convertStringToMessages(input);
       const transformedMessages = convertMessages(messageArray);
@@ -130,14 +126,13 @@ export class OpenAIProvider extends BaseLLMProvider {
       return {
         content: mapContent(choice.message.content, choice.message.tool_calls),
         stopReason: mapStopReason(choice.finish_reason),
-        tokens: [
-          {
-            modelId: response.model,
-            inputTokens: response.usage?.prompt_tokens ?? 0,
-            outputTokens: response.usage?.completion_tokens ?? 0,
-          },
-        ],
-        duration: Date.now() - startTime,
+        tokenUsage: {
+          model: response.model,
+          inputTokens: response.usage?.prompt_tokens ?? 0,
+          outputTokens: response.usage?.completion_tokens ?? 0,
+          inputCost: 0,
+          outputCost: 0,
+        },
       };
     } catch (error) {
       console.error('OpenAI generation failed:', error);
@@ -151,7 +146,6 @@ export class OpenAIProvider extends BaseLLMProvider {
     input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    const startTime = Date.now();
     try {
       const messageArray = convertStringToMessages(input);
       const transformedMessages = convertMessages(messageArray);
@@ -226,14 +220,13 @@ export class OpenAIProvider extends BaseLLMProvider {
       return {
         content: mapContent(choice.message.content, choice.message.tool_calls),
         stopReason: mapStopReason(choice.finish_reason),
-        tokens: [
-          {
-            modelId: completion.model,
-            inputTokens: completion.usage?.prompt_tokens ?? 0,
-            outputTokens: completion.usage?.completion_tokens ?? 0,
-          },
-        ],
-        duration: Date.now() - startTime,
+        tokenUsage: {
+          model: completion.model,
+          inputTokens: completion.usage?.prompt_tokens ?? 0,
+          outputTokens: completion.usage?.completion_tokens ?? 0,
+          inputCost: 0,
+          outputCost: 0,
+        },
       };
     } catch (error) {
       console.error('OpenAI generation failed:', error);

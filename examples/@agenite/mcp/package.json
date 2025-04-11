@@ -16,12 +16,12 @@
     "@agenite/ollama": "workspace:*",
     "@agenite/pretty-logger": "workspace:*",
     "@agenite/tool": "workspace:*",
-    "@types/node": "^22.13.14"
+    "@types/node": "^22.14.0"
   },
   "devDependencies": {
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3",
+    "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@repo/eslint-config": "workspace:*"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }

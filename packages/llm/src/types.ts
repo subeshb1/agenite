@@ -14,9 +14,7 @@ export interface ThinkingBlock {
   type: 'thinking';
   thinking: string;
   [key: string]: unknown;
-  
 }
-
 
 export interface RedactedThinkingBlock {
   type: 'redactedThinking';
@@ -84,11 +82,15 @@ export interface BaseMessage {
 /**
  * Token usage statistics
  */
-export interface TokenUsage {
+export type TokenUsage = {
   inputTokens: number;
   outputTokens: number;
-  modelId: string;
-}
+
+  inputCost: number;
+  outputCost: number;
+
+  model: string;
+};
 
 /**
  * Stop reasons for generation
@@ -100,27 +102,52 @@ export type StopReason = 'toolUse' | 'maxTokens' | 'stopSequence' | 'endTurn';
  */
 export interface GenerateResponse {
   content: Array<ContentBlock>;
-  tokens: TokenUsage[];
-  duration: number;
+  tokenUsage: TokenUsage;
   stopReason?: StopReason;
 }
 
 /**
- * Base configuration for any LLM provider
+ * Base configuration for any LLM provider to use for the provider
+ * This maintains consistency across all providers, although some providers may not use all of these options
  */
 export interface BaseLLMConfig {
-  organization?: string;
+  /**
+   * Model ID to use for the provider
+   */
+  model?: string;
+  /**
+   * Whether to enable thinking
+   */
+  enableThinking?: boolean;
+  /**
+   * Base URL for the provider
+   */
   baseURL?: string;
-  maxRetries?: number;
-  timeout?: number;
 }
 
+/**
+ * Partial return type for streaming
+ */
 export type PartialReturn =
+  /**
+   * Text block
+   * isStart and isEnd are used to determine if the text is the start or end of the response
+   */
   | { type: 'text'; text: string; isStart?: boolean; isEnd?: boolean }
+  /**
+   * Thinking block
+   * isStart and isEnd are used to determine if the thinking is the start or end of the response
+   */
   | { type: 'thinking'; thinking: string; isStart?: boolean; isEnd?: boolean }
+  /**
+   * Tool use block
+   * isStart and isEnd are used to determine if the tool use is the start or end of the response
+   * toolUseInputString as string until the tool call is complete
+   */
   | {
       type: 'toolUse';
-      toolUse: ToolUseBlock;
+      toolUseInputString?: string;
+      toolUse?: ToolUseBlock;
       isStart?: boolean;
       isEnd?: boolean;
     };
@@ -147,9 +174,6 @@ export interface IterateGenerateOptions extends GenerateOptions {
  * Core LLM provider interface
  */
 export interface LLMProvider {
-  name: string;
-  version?: string;
-
   /**
    * Simple text generation with full response
    */

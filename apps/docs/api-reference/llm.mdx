@@ -131,7 +131,7 @@ interface IterateGenerateOptions extends GenerateOptions {
 ```typescript
 interface GenerateResponse {
   content: Array<ContentBlock>;
-  tokens: TokenUsage[];
+  tokenUsage: TokenUsage;
   duration: number;
   stopReason?: StopReason;
 }
@@ -139,7 +139,9 @@ interface GenerateResponse {
 interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
-  modelId: string;
+  inputCost: number;
+  outputCost: number;
+  model: string;
 }
 
 type StopReason = 'toolUse' | 'maxTokens' | 'stopSequence' | 'endTurn';
@@ -311,7 +313,7 @@ class CustomProvider extends BaseLLMProvider {
     // Return standardized response
     return {
       content: [{ type: 'text', text: 'Response from custom LLM' }],
-      tokens: [{ modelId: 'custom-model', inputTokens: 10, outputTokens: 20 }],
+      tokenUsage: { model: 'custom-model', inputTokens: 10, outputTokens: 20, inputCost: 0, outputCost: 0 },
       duration: 500,
     };
   }
@@ -327,7 +329,7 @@ class CustomProvider extends BaseLLMProvider {
     
     return {
       content: [{ type: 'text', text: 'Complete response' }],
-      tokens: [{ modelId: 'custom-model', inputTokens: 10, outputTokens: 20 }],
+      tokenUsage: { model: 'custom-model', inputTokens: 10, outputTokens: 20, inputCost: 0, outputCost: 0 },
       duration: 500,
     };
   }

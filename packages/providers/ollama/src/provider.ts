@@ -99,7 +99,6 @@ export class OllamaProvider extends BaseLLMProvider {
     input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): Promise<GenerateResponse> {
-    const startTime = Date.now();
     try {
       const ollamaMessages = this.prepareMessages(input);
       const response = await this.client.chat({
@@ -112,7 +111,6 @@ export class OllamaProvider extends BaseLLMProvider {
           response.message.content,
           response.message.tool_calls
         ),
-        startTime,
         this.config.model,
         response.prompt_eval_count,
         response.eval_count,
@@ -127,7 +125,6 @@ export class OllamaProvider extends BaseLLMProvider {
     input: string | BaseMessage[],
     options?: Partial<GenerateOptions>
   ): AsyncGenerator<PartialReturn, GenerateResponse, unknown> {
-    const startTime = Date.now();
     try {
       const ollamaMessages = this.prepareMessages(input);
       let buffer = '';
@@ -139,10 +136,21 @@ export class OllamaProvider extends BaseLLMProvider {
         stream: true,
       } as const);
 
+      let hasTextStart = false;
+      let hasTextEnd = false;
+
       for await (const chunk of response) {
         // Handle text content
         const content = chunk.message?.content;
         if (content) {
+          if (!hasTextStart) {
+            yield {
+              type: 'text' as const,
+              text: '',
+              isStart: true,
+            };
+            hasTextStart = true;
+          }
           buffer += content;
           textAccumulator += content;
           // Yield chunks when buffer has reasonable size
@@ -162,7 +170,9 @@ export class OllamaProvider extends BaseLLMProvider {
             yield {
               type: 'text' as const,
               text: buffer,
+              isEnd: true,
             };
+            hasTextEnd = true;
             buffer = '';
           }
 
@@ -174,6 +184,7 @@ export class OllamaProvider extends BaseLLMProvider {
                 toolCall.function.name,
                 toolCall.function.arguments
               ),
+              isEnd: true,
             };
 
             toolCalls.push(toolCall);
@@ -190,6 +201,13 @@ export class OllamaProvider extends BaseLLMProvider {
         yield {
           type: 'text' as const,
           text: buffer,
+          isEnd: true,
+        };
+      } else if (!hasTextEnd && hasTextStart) {
+        yield {
+          type: 'text' as const,
+          text: '',
+          isEnd: true,
         };
       }
 
@@ -200,7 +218,6 @@ export class OllamaProvider extends BaseLLMProvider {
       // Return final response with combined content
       return createResponse(
         this.combineResponseContent(textAccumulator, toolCalls),
-        startTime,
         this.config.model,
         finalResponse.prompt_eval_count,
         finalResponse.eval_count,
